@@ -875,64 +875,252 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    age: number | null
+    currentMonthlyIncome: number | null
+    savingAmount: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    age: number | null
+    currentMonthlyIncome: number | null
+    savingAmount: number | null
   }
 
   export type UserMinAggregateOutputType = {
     id: string | null
     email: string | null
     name: string | null
+    profileComplete: boolean | null
     refreshToken: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    firstname: string | null
+    lastname: string | null
+    maritalStatus: string | null
+    gender: string | null
+    age: number | null
+    phone: string | null
+    dateOfBirth: Date | null
+    hasDisability: boolean | null
+    disabilityType: string | null
+    city: string | null
+    followUpPreference: string | null
+    highestEducationLevel: string | null
+    sourceOfIncome: string | null
+    currentMonthlyIncome: number | null
+    doYouSaveRegularly: boolean | null
+    savingFrequency: string | null
+    savingAmount: number | null
+    lifeControlRating: string | null
+    lifeSatisfactionRating: string | null
+    happinessRating: string | null
+    senseOfPurpose: string | null
+    lackOfIncomeSource: boolean | null
+    addiction: boolean | null
+    underageParent: boolean | null
+    lonelinessOrIsolation: boolean | null
+    otherChallenges: string | null
   }
 
   export type UserMaxAggregateOutputType = {
     id: string | null
     email: string | null
     name: string | null
+    profileComplete: boolean | null
     refreshToken: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    firstname: string | null
+    lastname: string | null
+    maritalStatus: string | null
+    gender: string | null
+    age: number | null
+    phone: string | null
+    dateOfBirth: Date | null
+    hasDisability: boolean | null
+    disabilityType: string | null
+    city: string | null
+    followUpPreference: string | null
+    highestEducationLevel: string | null
+    sourceOfIncome: string | null
+    currentMonthlyIncome: number | null
+    doYouSaveRegularly: boolean | null
+    savingFrequency: string | null
+    savingAmount: number | null
+    lifeControlRating: string | null
+    lifeSatisfactionRating: string | null
+    happinessRating: string | null
+    senseOfPurpose: string | null
+    lackOfIncomeSource: boolean | null
+    addiction: boolean | null
+    underageParent: boolean | null
+    lonelinessOrIsolation: boolean | null
+    otherChallenges: string | null
   }
 
   export type UserCountAggregateOutputType = {
     id: number
     email: number
     name: number
+    profileComplete: number
     refreshToken: number
     createdAt: number
     updatedAt: number
+    firstname: number
+    lastname: number
+    maritalStatus: number
+    gender: number
+    age: number
+    phone: number
+    dateOfBirth: number
+    hasDisability: number
+    disabilityType: number
+    city: number
+    followUpPreference: number
+    highestEducationLevel: number
+    sourceOfIncome: number
+    currentMonthlyIncome: number
+    doYouSaveRegularly: number
+    savingFrequency: number
+    savingAmount: number
+    lifeControlRating: number
+    lifeSatisfactionRating: number
+    happinessRating: number
+    senseOfPurpose: number
+    lackOfIncomeSource: number
+    addiction: number
+    underageParent: number
+    lonelinessOrIsolation: number
+    otherChallenges: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    age?: true
+    currentMonthlyIncome?: true
+    savingAmount?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    age?: true
+    currentMonthlyIncome?: true
+    savingAmount?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
     email?: true
     name?: true
+    profileComplete?: true
     refreshToken?: true
     createdAt?: true
     updatedAt?: true
+    firstname?: true
+    lastname?: true
+    maritalStatus?: true
+    gender?: true
+    age?: true
+    phone?: true
+    dateOfBirth?: true
+    hasDisability?: true
+    disabilityType?: true
+    city?: true
+    followUpPreference?: true
+    highestEducationLevel?: true
+    sourceOfIncome?: true
+    currentMonthlyIncome?: true
+    doYouSaveRegularly?: true
+    savingFrequency?: true
+    savingAmount?: true
+    lifeControlRating?: true
+    lifeSatisfactionRating?: true
+    happinessRating?: true
+    senseOfPurpose?: true
+    lackOfIncomeSource?: true
+    addiction?: true
+    underageParent?: true
+    lonelinessOrIsolation?: true
+    otherChallenges?: true
   }
 
   export type UserMaxAggregateInputType = {
     id?: true
     email?: true
     name?: true
+    profileComplete?: true
     refreshToken?: true
     createdAt?: true
     updatedAt?: true
+    firstname?: true
+    lastname?: true
+    maritalStatus?: true
+    gender?: true
+    age?: true
+    phone?: true
+    dateOfBirth?: true
+    hasDisability?: true
+    disabilityType?: true
+    city?: true
+    followUpPreference?: true
+    highestEducationLevel?: true
+    sourceOfIncome?: true
+    currentMonthlyIncome?: true
+    doYouSaveRegularly?: true
+    savingFrequency?: true
+    savingAmount?: true
+    lifeControlRating?: true
+    lifeSatisfactionRating?: true
+    happinessRating?: true
+    senseOfPurpose?: true
+    lackOfIncomeSource?: true
+    addiction?: true
+    underageParent?: true
+    lonelinessOrIsolation?: true
+    otherChallenges?: true
   }
 
   export type UserCountAggregateInputType = {
     id?: true
     email?: true
     name?: true
+    profileComplete?: true
     refreshToken?: true
     createdAt?: true
     updatedAt?: true
+    firstname?: true
+    lastname?: true
+    maritalStatus?: true
+    gender?: true
+    age?: true
+    phone?: true
+    dateOfBirth?: true
+    hasDisability?: true
+    disabilityType?: true
+    city?: true
+    followUpPreference?: true
+    highestEducationLevel?: true
+    sourceOfIncome?: true
+    currentMonthlyIncome?: true
+    doYouSaveRegularly?: true
+    savingFrequency?: true
+    savingAmount?: true
+    lifeControlRating?: true
+    lifeSatisfactionRating?: true
+    happinessRating?: true
+    senseOfPurpose?: true
+    lackOfIncomeSource?: true
+    addiction?: true
+    underageParent?: true
+    lonelinessOrIsolation?: true
+    otherChallenges?: true
     _all?: true
   }
 
@@ -974,6 +1162,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -1004,6 +1204,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -1012,10 +1214,39 @@ export namespace Prisma {
     id: string
     email: string
     name: string | null
+    profileComplete: boolean
     refreshToken: string | null
     createdAt: Date
     updatedAt: Date
+    firstname: string | null
+    lastname: string | null
+    maritalStatus: string | null
+    gender: string | null
+    age: number | null
+    phone: string | null
+    dateOfBirth: Date | null
+    hasDisability: boolean | null
+    disabilityType: string | null
+    city: string | null
+    followUpPreference: string | null
+    highestEducationLevel: string | null
+    sourceOfIncome: string | null
+    currentMonthlyIncome: number | null
+    doYouSaveRegularly: boolean | null
+    savingFrequency: string | null
+    savingAmount: number | null
+    lifeControlRating: string | null
+    lifeSatisfactionRating: string | null
+    happinessRating: string | null
+    senseOfPurpose: string | null
+    lackOfIncomeSource: boolean | null
+    addiction: boolean | null
+    underageParent: boolean | null
+    lonelinessOrIsolation: boolean | null
+    otherChallenges: string | null
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -1038,39 +1269,147 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     name?: boolean
+    profileComplete?: boolean
     refreshToken?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    maritalStatus?: boolean
+    gender?: boolean
+    age?: boolean
+    phone?: boolean
+    dateOfBirth?: boolean
+    hasDisability?: boolean
+    disabilityType?: boolean
+    city?: boolean
+    followUpPreference?: boolean
+    highestEducationLevel?: boolean
+    sourceOfIncome?: boolean
+    currentMonthlyIncome?: boolean
+    doYouSaveRegularly?: boolean
+    savingFrequency?: boolean
+    savingAmount?: boolean
+    lifeControlRating?: boolean
+    lifeSatisfactionRating?: boolean
+    happinessRating?: boolean
+    senseOfPurpose?: boolean
+    lackOfIncomeSource?: boolean
+    addiction?: boolean
+    underageParent?: boolean
+    lonelinessOrIsolation?: boolean
+    otherChallenges?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     email?: boolean
     name?: boolean
+    profileComplete?: boolean
     refreshToken?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    maritalStatus?: boolean
+    gender?: boolean
+    age?: boolean
+    phone?: boolean
+    dateOfBirth?: boolean
+    hasDisability?: boolean
+    disabilityType?: boolean
+    city?: boolean
+    followUpPreference?: boolean
+    highestEducationLevel?: boolean
+    sourceOfIncome?: boolean
+    currentMonthlyIncome?: boolean
+    doYouSaveRegularly?: boolean
+    savingFrequency?: boolean
+    savingAmount?: boolean
+    lifeControlRating?: boolean
+    lifeSatisfactionRating?: boolean
+    happinessRating?: boolean
+    senseOfPurpose?: boolean
+    lackOfIncomeSource?: boolean
+    addiction?: boolean
+    underageParent?: boolean
+    lonelinessOrIsolation?: boolean
+    otherChallenges?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     email?: boolean
     name?: boolean
+    profileComplete?: boolean
     refreshToken?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    maritalStatus?: boolean
+    gender?: boolean
+    age?: boolean
+    phone?: boolean
+    dateOfBirth?: boolean
+    hasDisability?: boolean
+    disabilityType?: boolean
+    city?: boolean
+    followUpPreference?: boolean
+    highestEducationLevel?: boolean
+    sourceOfIncome?: boolean
+    currentMonthlyIncome?: boolean
+    doYouSaveRegularly?: boolean
+    savingFrequency?: boolean
+    savingAmount?: boolean
+    lifeControlRating?: boolean
+    lifeSatisfactionRating?: boolean
+    happinessRating?: boolean
+    senseOfPurpose?: boolean
+    lackOfIncomeSource?: boolean
+    addiction?: boolean
+    underageParent?: boolean
+    lonelinessOrIsolation?: boolean
+    otherChallenges?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
     email?: boolean
     name?: boolean
+    profileComplete?: boolean
     refreshToken?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    firstname?: boolean
+    lastname?: boolean
+    maritalStatus?: boolean
+    gender?: boolean
+    age?: boolean
+    phone?: boolean
+    dateOfBirth?: boolean
+    hasDisability?: boolean
+    disabilityType?: boolean
+    city?: boolean
+    followUpPreference?: boolean
+    highestEducationLevel?: boolean
+    sourceOfIncome?: boolean
+    currentMonthlyIncome?: boolean
+    doYouSaveRegularly?: boolean
+    savingFrequency?: boolean
+    savingAmount?: boolean
+    lifeControlRating?: boolean
+    lifeSatisfactionRating?: boolean
+    happinessRating?: boolean
+    senseOfPurpose?: boolean
+    lackOfIncomeSource?: boolean
+    addiction?: boolean
+    underageParent?: boolean
+    lonelinessOrIsolation?: boolean
+    otherChallenges?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "refreshToken" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "profileComplete" | "refreshToken" | "createdAt" | "updatedAt" | "firstname" | "lastname" | "maritalStatus" | "gender" | "age" | "phone" | "dateOfBirth" | "hasDisability" | "disabilityType" | "city" | "followUpPreference" | "highestEducationLevel" | "sourceOfIncome" | "currentMonthlyIncome" | "doYouSaveRegularly" | "savingFrequency" | "savingAmount" | "lifeControlRating" | "lifeSatisfactionRating" | "happinessRating" | "senseOfPurpose" | "lackOfIncomeSource" | "addiction" | "underageParent" | "lonelinessOrIsolation" | "otherChallenges", ExtArgs["result"]["user"]>
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
@@ -1079,9 +1418,36 @@ export namespace Prisma {
       id: string
       email: string
       name: string | null
+      profileComplete: boolean
       refreshToken: string | null
       createdAt: Date
       updatedAt: Date
+      firstname: string | null
+      lastname: string | null
+      maritalStatus: string | null
+      gender: string | null
+      age: number | null
+      phone: string | null
+      dateOfBirth: Date | null
+      hasDisability: boolean | null
+      disabilityType: string | null
+      city: string | null
+      followUpPreference: string | null
+      highestEducationLevel: string | null
+      sourceOfIncome: string | null
+      currentMonthlyIncome: number | null
+      doYouSaveRegularly: boolean | null
+      savingFrequency: string | null
+      savingAmount: number | null
+      lifeControlRating: string | null
+      lifeSatisfactionRating: string | null
+      happinessRating: string | null
+      senseOfPurpose: string | null
+      lackOfIncomeSource: boolean | null
+      addiction: boolean | null
+      underageParent: boolean | null
+      lonelinessOrIsolation: boolean | null
+      otherChallenges: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -1508,9 +1874,36 @@ export namespace Prisma {
     readonly id: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
+    readonly profileComplete: FieldRef<"User", 'Boolean'>
     readonly refreshToken: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly firstname: FieldRef<"User", 'String'>
+    readonly lastname: FieldRef<"User", 'String'>
+    readonly maritalStatus: FieldRef<"User", 'String'>
+    readonly gender: FieldRef<"User", 'String'>
+    readonly age: FieldRef<"User", 'Int'>
+    readonly phone: FieldRef<"User", 'String'>
+    readonly dateOfBirth: FieldRef<"User", 'DateTime'>
+    readonly hasDisability: FieldRef<"User", 'Boolean'>
+    readonly disabilityType: FieldRef<"User", 'String'>
+    readonly city: FieldRef<"User", 'String'>
+    readonly followUpPreference: FieldRef<"User", 'String'>
+    readonly highestEducationLevel: FieldRef<"User", 'String'>
+    readonly sourceOfIncome: FieldRef<"User", 'String'>
+    readonly currentMonthlyIncome: FieldRef<"User", 'Float'>
+    readonly doYouSaveRegularly: FieldRef<"User", 'Boolean'>
+    readonly savingFrequency: FieldRef<"User", 'String'>
+    readonly savingAmount: FieldRef<"User", 'Float'>
+    readonly lifeControlRating: FieldRef<"User", 'String'>
+    readonly lifeSatisfactionRating: FieldRef<"User", 'String'>
+    readonly happinessRating: FieldRef<"User", 'String'>
+    readonly senseOfPurpose: FieldRef<"User", 'String'>
+    readonly lackOfIncomeSource: FieldRef<"User", 'Boolean'>
+    readonly addiction: FieldRef<"User", 'Boolean'>
+    readonly underageParent: FieldRef<"User", 'Boolean'>
+    readonly lonelinessOrIsolation: FieldRef<"User", 'Boolean'>
+    readonly otherChallenges: FieldRef<"User", 'String'>
   }
     
 
@@ -1895,9 +2288,36 @@ export namespace Prisma {
     id: 'id',
     email: 'email',
     name: 'name',
+    profileComplete: 'profileComplete',
     refreshToken: 'refreshToken',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    firstname: 'firstname',
+    lastname: 'lastname',
+    maritalStatus: 'maritalStatus',
+    gender: 'gender',
+    age: 'age',
+    phone: 'phone',
+    dateOfBirth: 'dateOfBirth',
+    hasDisability: 'hasDisability',
+    disabilityType: 'disabilityType',
+    city: 'city',
+    followUpPreference: 'followUpPreference',
+    highestEducationLevel: 'highestEducationLevel',
+    sourceOfIncome: 'sourceOfIncome',
+    currentMonthlyIncome: 'currentMonthlyIncome',
+    doYouSaveRegularly: 'doYouSaveRegularly',
+    savingFrequency: 'savingFrequency',
+    savingAmount: 'savingAmount',
+    lifeControlRating: 'lifeControlRating',
+    lifeSatisfactionRating: 'lifeSatisfactionRating',
+    happinessRating: 'happinessRating',
+    senseOfPurpose: 'senseOfPurpose',
+    lackOfIncomeSource: 'lackOfIncomeSource',
+    addiction: 'addiction',
+    underageParent: 'underageParent',
+    lonelinessOrIsolation: 'lonelinessOrIsolation',
+    otherChallenges: 'otherChallenges'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -1947,6 +2367,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1972,6 +2399,20 @@ export namespace Prisma {
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
   /**
    * Deep Input Types
    */
@@ -1984,18 +2425,72 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
     name?: StringNullableFilter<"User"> | string | null
+    profileComplete?: BoolFilter<"User"> | boolean
     refreshToken?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    firstname?: StringNullableFilter<"User"> | string | null
+    lastname?: StringNullableFilter<"User"> | string | null
+    maritalStatus?: StringNullableFilter<"User"> | string | null
+    gender?: StringNullableFilter<"User"> | string | null
+    age?: IntNullableFilter<"User"> | number | null
+    phone?: StringNullableFilter<"User"> | string | null
+    dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
+    hasDisability?: BoolNullableFilter<"User"> | boolean | null
+    disabilityType?: StringNullableFilter<"User"> | string | null
+    city?: StringNullableFilter<"User"> | string | null
+    followUpPreference?: StringNullableFilter<"User"> | string | null
+    highestEducationLevel?: StringNullableFilter<"User"> | string | null
+    sourceOfIncome?: StringNullableFilter<"User"> | string | null
+    currentMonthlyIncome?: FloatNullableFilter<"User"> | number | null
+    doYouSaveRegularly?: BoolNullableFilter<"User"> | boolean | null
+    savingFrequency?: StringNullableFilter<"User"> | string | null
+    savingAmount?: FloatNullableFilter<"User"> | number | null
+    lifeControlRating?: StringNullableFilter<"User"> | string | null
+    lifeSatisfactionRating?: StringNullableFilter<"User"> | string | null
+    happinessRating?: StringNullableFilter<"User"> | string | null
+    senseOfPurpose?: StringNullableFilter<"User"> | string | null
+    lackOfIncomeSource?: BoolNullableFilter<"User"> | boolean | null
+    addiction?: BoolNullableFilter<"User"> | boolean | null
+    underageParent?: BoolNullableFilter<"User"> | boolean | null
+    lonelinessOrIsolation?: BoolNullableFilter<"User"> | boolean | null
+    otherChallenges?: StringNullableFilter<"User"> | string | null
   }
 
   export type UserOrderByWithRelationInput = {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrderInput | SortOrder
+    profileComplete?: SortOrder
     refreshToken?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    firstname?: SortOrderInput | SortOrder
+    lastname?: SortOrderInput | SortOrder
+    maritalStatus?: SortOrderInput | SortOrder
+    gender?: SortOrderInput | SortOrder
+    age?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    dateOfBirth?: SortOrderInput | SortOrder
+    hasDisability?: SortOrderInput | SortOrder
+    disabilityType?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    followUpPreference?: SortOrderInput | SortOrder
+    highestEducationLevel?: SortOrderInput | SortOrder
+    sourceOfIncome?: SortOrderInput | SortOrder
+    currentMonthlyIncome?: SortOrderInput | SortOrder
+    doYouSaveRegularly?: SortOrderInput | SortOrder
+    savingFrequency?: SortOrderInput | SortOrder
+    savingAmount?: SortOrderInput | SortOrder
+    lifeControlRating?: SortOrderInput | SortOrder
+    lifeSatisfactionRating?: SortOrderInput | SortOrder
+    happinessRating?: SortOrderInput | SortOrder
+    senseOfPurpose?: SortOrderInput | SortOrder
+    lackOfIncomeSource?: SortOrderInput | SortOrder
+    addiction?: SortOrderInput | SortOrder
+    underageParent?: SortOrderInput | SortOrder
+    lonelinessOrIsolation?: SortOrderInput | SortOrder
+    otherChallenges?: SortOrderInput | SortOrder
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -2005,21 +2500,77 @@ export namespace Prisma {
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
     name?: StringNullableFilter<"User"> | string | null
+    profileComplete?: BoolFilter<"User"> | boolean
     refreshToken?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    firstname?: StringNullableFilter<"User"> | string | null
+    lastname?: StringNullableFilter<"User"> | string | null
+    maritalStatus?: StringNullableFilter<"User"> | string | null
+    gender?: StringNullableFilter<"User"> | string | null
+    age?: IntNullableFilter<"User"> | number | null
+    phone?: StringNullableFilter<"User"> | string | null
+    dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
+    hasDisability?: BoolNullableFilter<"User"> | boolean | null
+    disabilityType?: StringNullableFilter<"User"> | string | null
+    city?: StringNullableFilter<"User"> | string | null
+    followUpPreference?: StringNullableFilter<"User"> | string | null
+    highestEducationLevel?: StringNullableFilter<"User"> | string | null
+    sourceOfIncome?: StringNullableFilter<"User"> | string | null
+    currentMonthlyIncome?: FloatNullableFilter<"User"> | number | null
+    doYouSaveRegularly?: BoolNullableFilter<"User"> | boolean | null
+    savingFrequency?: StringNullableFilter<"User"> | string | null
+    savingAmount?: FloatNullableFilter<"User"> | number | null
+    lifeControlRating?: StringNullableFilter<"User"> | string | null
+    lifeSatisfactionRating?: StringNullableFilter<"User"> | string | null
+    happinessRating?: StringNullableFilter<"User"> | string | null
+    senseOfPurpose?: StringNullableFilter<"User"> | string | null
+    lackOfIncomeSource?: BoolNullableFilter<"User"> | boolean | null
+    addiction?: BoolNullableFilter<"User"> | boolean | null
+    underageParent?: BoolNullableFilter<"User"> | boolean | null
+    lonelinessOrIsolation?: BoolNullableFilter<"User"> | boolean | null
+    otherChallenges?: StringNullableFilter<"User"> | string | null
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrderInput | SortOrder
+    profileComplete?: SortOrder
     refreshToken?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    firstname?: SortOrderInput | SortOrder
+    lastname?: SortOrderInput | SortOrder
+    maritalStatus?: SortOrderInput | SortOrder
+    gender?: SortOrderInput | SortOrder
+    age?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    dateOfBirth?: SortOrderInput | SortOrder
+    hasDisability?: SortOrderInput | SortOrder
+    disabilityType?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    followUpPreference?: SortOrderInput | SortOrder
+    highestEducationLevel?: SortOrderInput | SortOrder
+    sourceOfIncome?: SortOrderInput | SortOrder
+    currentMonthlyIncome?: SortOrderInput | SortOrder
+    doYouSaveRegularly?: SortOrderInput | SortOrder
+    savingFrequency?: SortOrderInput | SortOrder
+    savingAmount?: SortOrderInput | SortOrder
+    lifeControlRating?: SortOrderInput | SortOrder
+    lifeSatisfactionRating?: SortOrderInput | SortOrder
+    happinessRating?: SortOrderInput | SortOrder
+    senseOfPurpose?: SortOrderInput | SortOrder
+    lackOfIncomeSource?: SortOrderInput | SortOrder
+    addiction?: SortOrderInput | SortOrder
+    underageParent?: SortOrderInput | SortOrder
+    lonelinessOrIsolation?: SortOrderInput | SortOrder
+    otherChallenges?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -2029,72 +2580,288 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"User"> | string
     email?: StringWithAggregatesFilter<"User"> | string
     name?: StringNullableWithAggregatesFilter<"User"> | string | null
+    profileComplete?: BoolWithAggregatesFilter<"User"> | boolean
     refreshToken?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    firstname?: StringNullableWithAggregatesFilter<"User"> | string | null
+    lastname?: StringNullableWithAggregatesFilter<"User"> | string | null
+    maritalStatus?: StringNullableWithAggregatesFilter<"User"> | string | null
+    gender?: StringNullableWithAggregatesFilter<"User"> | string | null
+    age?: IntNullableWithAggregatesFilter<"User"> | number | null
+    phone?: StringNullableWithAggregatesFilter<"User"> | string | null
+    dateOfBirth?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    hasDisability?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    disabilityType?: StringNullableWithAggregatesFilter<"User"> | string | null
+    city?: StringNullableWithAggregatesFilter<"User"> | string | null
+    followUpPreference?: StringNullableWithAggregatesFilter<"User"> | string | null
+    highestEducationLevel?: StringNullableWithAggregatesFilter<"User"> | string | null
+    sourceOfIncome?: StringNullableWithAggregatesFilter<"User"> | string | null
+    currentMonthlyIncome?: FloatNullableWithAggregatesFilter<"User"> | number | null
+    doYouSaveRegularly?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    savingFrequency?: StringNullableWithAggregatesFilter<"User"> | string | null
+    savingAmount?: FloatNullableWithAggregatesFilter<"User"> | number | null
+    lifeControlRating?: StringNullableWithAggregatesFilter<"User"> | string | null
+    lifeSatisfactionRating?: StringNullableWithAggregatesFilter<"User"> | string | null
+    happinessRating?: StringNullableWithAggregatesFilter<"User"> | string | null
+    senseOfPurpose?: StringNullableWithAggregatesFilter<"User"> | string | null
+    lackOfIncomeSource?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    addiction?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    underageParent?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    lonelinessOrIsolation?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    otherChallenges?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type UserCreateInput = {
     id?: string
     email: string
     name?: string | null
+    profileComplete?: boolean
     refreshToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    firstname?: string | null
+    lastname?: string | null
+    maritalStatus?: string | null
+    gender?: string | null
+    age?: number | null
+    phone?: string | null
+    dateOfBirth?: Date | string | null
+    hasDisability?: boolean | null
+    disabilityType?: string | null
+    city?: string | null
+    followUpPreference?: string | null
+    highestEducationLevel?: string | null
+    sourceOfIncome?: string | null
+    currentMonthlyIncome?: number | null
+    doYouSaveRegularly?: boolean | null
+    savingFrequency?: string | null
+    savingAmount?: number | null
+    lifeControlRating?: string | null
+    lifeSatisfactionRating?: string | null
+    happinessRating?: string | null
+    senseOfPurpose?: string | null
+    lackOfIncomeSource?: boolean | null
+    addiction?: boolean | null
+    underageParent?: boolean | null
+    lonelinessOrIsolation?: boolean | null
+    otherChallenges?: string | null
   }
 
   export type UserUncheckedCreateInput = {
     id?: string
     email: string
     name?: string | null
+    profileComplete?: boolean
     refreshToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    firstname?: string | null
+    lastname?: string | null
+    maritalStatus?: string | null
+    gender?: string | null
+    age?: number | null
+    phone?: string | null
+    dateOfBirth?: Date | string | null
+    hasDisability?: boolean | null
+    disabilityType?: string | null
+    city?: string | null
+    followUpPreference?: string | null
+    highestEducationLevel?: string | null
+    sourceOfIncome?: string | null
+    currentMonthlyIncome?: number | null
+    doYouSaveRegularly?: boolean | null
+    savingFrequency?: string | null
+    savingAmount?: number | null
+    lifeControlRating?: string | null
+    lifeSatisfactionRating?: string | null
+    happinessRating?: string | null
+    senseOfPurpose?: string | null
+    lackOfIncomeSource?: boolean | null
+    addiction?: boolean | null
+    underageParent?: boolean | null
+    lonelinessOrIsolation?: boolean | null
+    otherChallenges?: string | null
   }
 
   export type UserUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    profileComplete?: BoolFieldUpdateOperationsInput | boolean
     refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    firstname?: NullableStringFieldUpdateOperationsInput | string | null
+    lastname?: NullableStringFieldUpdateOperationsInput | string | null
+    maritalStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    gender?: NullableStringFieldUpdateOperationsInput | string | null
+    age?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hasDisability?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    disabilityType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    followUpPreference?: NullableStringFieldUpdateOperationsInput | string | null
+    highestEducationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceOfIncome?: NullableStringFieldUpdateOperationsInput | string | null
+    currentMonthlyIncome?: NullableFloatFieldUpdateOperationsInput | number | null
+    doYouSaveRegularly?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    savingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    savingAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    lifeControlRating?: NullableStringFieldUpdateOperationsInput | string | null
+    lifeSatisfactionRating?: NullableStringFieldUpdateOperationsInput | string | null
+    happinessRating?: NullableStringFieldUpdateOperationsInput | string | null
+    senseOfPurpose?: NullableStringFieldUpdateOperationsInput | string | null
+    lackOfIncomeSource?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    addiction?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    underageParent?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    lonelinessOrIsolation?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    otherChallenges?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    profileComplete?: BoolFieldUpdateOperationsInput | boolean
     refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    firstname?: NullableStringFieldUpdateOperationsInput | string | null
+    lastname?: NullableStringFieldUpdateOperationsInput | string | null
+    maritalStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    gender?: NullableStringFieldUpdateOperationsInput | string | null
+    age?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hasDisability?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    disabilityType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    followUpPreference?: NullableStringFieldUpdateOperationsInput | string | null
+    highestEducationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceOfIncome?: NullableStringFieldUpdateOperationsInput | string | null
+    currentMonthlyIncome?: NullableFloatFieldUpdateOperationsInput | number | null
+    doYouSaveRegularly?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    savingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    savingAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    lifeControlRating?: NullableStringFieldUpdateOperationsInput | string | null
+    lifeSatisfactionRating?: NullableStringFieldUpdateOperationsInput | string | null
+    happinessRating?: NullableStringFieldUpdateOperationsInput | string | null
+    senseOfPurpose?: NullableStringFieldUpdateOperationsInput | string | null
+    lackOfIncomeSource?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    addiction?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    underageParent?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    lonelinessOrIsolation?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    otherChallenges?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserCreateManyInput = {
     id?: string
     email: string
     name?: string | null
+    profileComplete?: boolean
     refreshToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    firstname?: string | null
+    lastname?: string | null
+    maritalStatus?: string | null
+    gender?: string | null
+    age?: number | null
+    phone?: string | null
+    dateOfBirth?: Date | string | null
+    hasDisability?: boolean | null
+    disabilityType?: string | null
+    city?: string | null
+    followUpPreference?: string | null
+    highestEducationLevel?: string | null
+    sourceOfIncome?: string | null
+    currentMonthlyIncome?: number | null
+    doYouSaveRegularly?: boolean | null
+    savingFrequency?: string | null
+    savingAmount?: number | null
+    lifeControlRating?: string | null
+    lifeSatisfactionRating?: string | null
+    happinessRating?: string | null
+    senseOfPurpose?: string | null
+    lackOfIncomeSource?: boolean | null
+    addiction?: boolean | null
+    underageParent?: boolean | null
+    lonelinessOrIsolation?: boolean | null
+    otherChallenges?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    profileComplete?: BoolFieldUpdateOperationsInput | boolean
     refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    firstname?: NullableStringFieldUpdateOperationsInput | string | null
+    lastname?: NullableStringFieldUpdateOperationsInput | string | null
+    maritalStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    gender?: NullableStringFieldUpdateOperationsInput | string | null
+    age?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hasDisability?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    disabilityType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    followUpPreference?: NullableStringFieldUpdateOperationsInput | string | null
+    highestEducationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceOfIncome?: NullableStringFieldUpdateOperationsInput | string | null
+    currentMonthlyIncome?: NullableFloatFieldUpdateOperationsInput | number | null
+    doYouSaveRegularly?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    savingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    savingAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    lifeControlRating?: NullableStringFieldUpdateOperationsInput | string | null
+    lifeSatisfactionRating?: NullableStringFieldUpdateOperationsInput | string | null
+    happinessRating?: NullableStringFieldUpdateOperationsInput | string | null
+    senseOfPurpose?: NullableStringFieldUpdateOperationsInput | string | null
+    lackOfIncomeSource?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    addiction?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    underageParent?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    lonelinessOrIsolation?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    otherChallenges?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    profileComplete?: BoolFieldUpdateOperationsInput | boolean
     refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    firstname?: NullableStringFieldUpdateOperationsInput | string | null
+    lastname?: NullableStringFieldUpdateOperationsInput | string | null
+    maritalStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    gender?: NullableStringFieldUpdateOperationsInput | string | null
+    age?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hasDisability?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    disabilityType?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    followUpPreference?: NullableStringFieldUpdateOperationsInput | string | null
+    highestEducationLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceOfIncome?: NullableStringFieldUpdateOperationsInput | string | null
+    currentMonthlyIncome?: NullableFloatFieldUpdateOperationsInput | number | null
+    doYouSaveRegularly?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    savingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    savingAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    lifeControlRating?: NullableStringFieldUpdateOperationsInput | string | null
+    lifeSatisfactionRating?: NullableStringFieldUpdateOperationsInput | string | null
+    happinessRating?: NullableStringFieldUpdateOperationsInput | string | null
+    senseOfPurpose?: NullableStringFieldUpdateOperationsInput | string | null
+    lackOfIncomeSource?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    addiction?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    underageParent?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    lonelinessOrIsolation?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    otherChallenges?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -2127,6 +2894,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2138,6 +2910,44 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -2147,27 +2957,120 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    profileComplete?: SortOrder
     refreshToken?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    maritalStatus?: SortOrder
+    gender?: SortOrder
+    age?: SortOrder
+    phone?: SortOrder
+    dateOfBirth?: SortOrder
+    hasDisability?: SortOrder
+    disabilityType?: SortOrder
+    city?: SortOrder
+    followUpPreference?: SortOrder
+    highestEducationLevel?: SortOrder
+    sourceOfIncome?: SortOrder
+    currentMonthlyIncome?: SortOrder
+    doYouSaveRegularly?: SortOrder
+    savingFrequency?: SortOrder
+    savingAmount?: SortOrder
+    lifeControlRating?: SortOrder
+    lifeSatisfactionRating?: SortOrder
+    happinessRating?: SortOrder
+    senseOfPurpose?: SortOrder
+    lackOfIncomeSource?: SortOrder
+    addiction?: SortOrder
+    underageParent?: SortOrder
+    lonelinessOrIsolation?: SortOrder
+    otherChallenges?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    age?: SortOrder
+    currentMonthlyIncome?: SortOrder
+    savingAmount?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    profileComplete?: SortOrder
     refreshToken?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    maritalStatus?: SortOrder
+    gender?: SortOrder
+    age?: SortOrder
+    phone?: SortOrder
+    dateOfBirth?: SortOrder
+    hasDisability?: SortOrder
+    disabilityType?: SortOrder
+    city?: SortOrder
+    followUpPreference?: SortOrder
+    highestEducationLevel?: SortOrder
+    sourceOfIncome?: SortOrder
+    currentMonthlyIncome?: SortOrder
+    doYouSaveRegularly?: SortOrder
+    savingFrequency?: SortOrder
+    savingAmount?: SortOrder
+    lifeControlRating?: SortOrder
+    lifeSatisfactionRating?: SortOrder
+    happinessRating?: SortOrder
+    senseOfPurpose?: SortOrder
+    lackOfIncomeSource?: SortOrder
+    addiction?: SortOrder
+    underageParent?: SortOrder
+    lonelinessOrIsolation?: SortOrder
+    otherChallenges?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    profileComplete?: SortOrder
     refreshToken?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    firstname?: SortOrder
+    lastname?: SortOrder
+    maritalStatus?: SortOrder
+    gender?: SortOrder
+    age?: SortOrder
+    phone?: SortOrder
+    dateOfBirth?: SortOrder
+    hasDisability?: SortOrder
+    disabilityType?: SortOrder
+    city?: SortOrder
+    followUpPreference?: SortOrder
+    highestEducationLevel?: SortOrder
+    sourceOfIncome?: SortOrder
+    currentMonthlyIncome?: SortOrder
+    doYouSaveRegularly?: SortOrder
+    savingFrequency?: SortOrder
+    savingAmount?: SortOrder
+    lifeControlRating?: SortOrder
+    lifeSatisfactionRating?: SortOrder
+    happinessRating?: SortOrder
+    senseOfPurpose?: SortOrder
+    lackOfIncomeSource?: SortOrder
+    addiction?: SortOrder
+    underageParent?: SortOrder
+    lonelinessOrIsolation?: SortOrder
+    otherChallenges?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    age?: SortOrder
+    currentMonthlyIncome?: SortOrder
+    savingAmount?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -2206,6 +3109,14 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2220,6 +3131,60 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -2228,8 +3193,36 @@ export namespace Prisma {
     set?: string | null
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -2260,6 +3253,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2269,6 +3267,44 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -2316,15 +3352,12 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -2339,6 +3372,60 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
 
