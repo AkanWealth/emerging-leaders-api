@@ -23,8 +23,6 @@ model User {
   refreshToken         String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-
-  // New fields for full profile
   firstname            String?
   lastname             String?
   maritalStatus        String?
@@ -53,4 +51,38 @@ model User {
   otherChallenges      String?
 }
 
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  startDate   DateTime
+  endDate     DateTime
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  goals       Goal[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  icon        String
+  title       String
+  description String
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Goal {
+  id        String   @id @default(uuid())
+  title     String
+  repeat    String?
+  date      DateTime
+  time      String?
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 

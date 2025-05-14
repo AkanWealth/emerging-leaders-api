@@ -156,6 +156,37 @@ exports.Prisma.UserScalarFieldEnum = {
   otherChallenges: 'otherChallenges'
 };
 
+exports.Prisma.ProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  categoryId: 'categoryId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CategoryScalarFieldEnum = {
+  id: 'id',
+  icon: 'icon',
+  title: 'title',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.GoalScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  repeat: 'repeat',
+  date: 'date',
+  time: 'time',
+  projectId: 'projectId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -173,7 +204,10 @@ exports.Prisma.NullsOrder = {
 
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  Project: 'Project',
+  Category: 'Category',
+  Goal: 'Goal'
 };
 
 /**

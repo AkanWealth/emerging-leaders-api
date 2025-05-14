@@ -8,10 +8,16 @@ import { UsersModule } from './users/users.module';
 import { PrismaService } from './prisma/prisma.service';
 import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
+import { ProjectService } from './project/project.service';
+import { ProjectModule } from './project/project.module';
+import { CategoryController } from './category/category.controller';
+import { CategoryService } from './category/category.service';
+import { CategoryModule } from './category/category.module';
+import { GoalsModule } from './goals/goals.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, MailModule],
-  controllers: [AppController, AuthController],
-  providers: [AppService, AuthService, PrismaService, MailService],
+  imports: [AuthModule, UsersModule, MailModule, ProjectModule, CategoryModule, GoalsModule],
+  controllers: [AppController, AuthController, CategoryController],
+  providers: [AppService, AuthService, PrismaService, MailService, ProjectService, CategoryService],
 })
 export class AppModule {}
