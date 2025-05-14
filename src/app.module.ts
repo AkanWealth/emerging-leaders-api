@@ -14,9 +14,10 @@ import { CategoryController } from './category/category.controller';
 import { CategoryService } from './category/category.service';
 import { CategoryModule } from './category/category.module';
 import { GoalsModule } from './goals/goals.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, MailModule, ProjectModule, CategoryModule, GoalsModule],
+  imports: [AuthModule, UsersModule, MailModule, ProjectModule, CategoryModule, GoalsModule, PrismaModule],
   controllers: [AppController, AuthController, CategoryController],
   providers: [AppService, AuthService, PrismaService, MailService, ProjectService, CategoryService],
 })
