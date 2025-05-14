@@ -5,7 +5,7 @@ import { CreateGoalDto } from './dto/create-goal.dto';
 
 @ApiTags('Goals')
 @Controller('goals')
-export class GoalController {
+export class GoalsController {
   constructor(private readonly goalService: GoalService) {}
 
   @Post()
