@@ -17,8 +17,10 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  console.log('Starting server on port:', process.env.PORT);
-  await app.listen(process.env.PORT ?? 8000);
+ const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
+console.log(`Starting server on port: ${port}`);
+await app.listen(port);
+
 
 }
 bootstrap();
