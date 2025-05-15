@@ -15,40 +15,56 @@ datasource db {
 }
 
 model User {
-  id                   String   @id @default(uuid())
-  email                String   @unique
-  name                 String?
-  profileComplete      Boolean  @default(false)
-  refreshToken         String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  firstname            String?
-  lastname             String?
-  maritalStatus        String?
-  gender               String?
-  age                  Int?
-  phone                String?
-  dateOfBirth          DateTime?
-  hasDisability        Boolean? 
-  disabilityType       String?
-  city                 String?
-  followUpPreference   String? // email, calls, calls & email
+  id                    String   @id @default(uuid())
+  email                 String   @unique
+  password              String
+  name                  String?
+  profileComplete       Boolean  @default(false)
+  refreshToken          String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  firstname             String?
+  lastname              String?
+  maritalStatus         String?
+  gender                String?
+  age                   Int?
+  phone                 String?
+  dateOfBirth           DateTime?
+  hasDisability         Boolean? 
+  disabilityType        String?
+  city                  String?
+  followUpPreference    String?  // email, calls, calls & email
   highestEducationLevel String?
-  sourceOfIncome       String?
-  currentMonthlyIncome Float?
-  doYouSaveRegularly   Boolean?
-  savingFrequency      String? // irregularly, daily, weekly, monthly
-  savingAmount         Float?
-  lifeControlRating    String?
+  sourceOfIncome        String?
+  currentMonthlyIncome  Float?
+  doYouSaveRegularly    Boolean?
+  savingFrequency       String?  // irregularly, daily, weekly, monthly
+  savingAmount          Float?
+  lifeControlRating     String?
   lifeSatisfactionRating String?
-  happinessRating      String?
-  senseOfPurpose       String?
-  lackOfIncomeSource   Boolean?
-  addiction            Boolean?
-  underageParent       Boolean?
+  happinessRating       String?
+  senseOfPurpose        String?
+  lackOfIncomeSource    Boolean?
+  addiction             Boolean?
+  underageParent        Boolean?
   lonelinessOrIsolation Boolean?
-  otherChallenges      String?
+  otherChallenges       String?
+
+  otp                   Otp[]     // A user can have many OTP records
 }
+
+model Otp {
+  id        String   @id @default(uuid())
+  otp       String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])  // Foreign key to User
+
+  @@index([userId])  // Add an index for performance on userId
+}
+
+
 
 model Project {
   id          String   @id @default(uuid())

@@ -1,11 +1,11 @@
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common'; 
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
-import { MailService } from '../mail/mail.service'; //Import MailService
+import { MailService } from '../mail/mail.service'; // Import MailService
 
 @Injectable()
 export class AuthService {
@@ -44,15 +44,23 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async refresh(userId: string, refreshToken: string) {
-    const valid = await this.usersService.validateRefreshToken(userId, refreshToken);
-    if (!valid) throw new UnauthorizedException('Invalid refresh token');
-
-    const user = await this.usersService.findById(userId);
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+ async refresh(userId: string, refreshToken: string) {
+  const valid = await this.usersService.validateRefreshToken(userId, refreshToken);
+  if (!valid) {
+    throw new UnauthorizedException('Invalid refresh token');
   }
+
+  const user = await this.usersService.findById(userId);
+  if (!user) {
+    throw new UnauthorizedException('User not found');
+  }
+
+  const tokens = await this.getTokens(user.id, user.email);
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+  return tokens;
+}
+
 
   // Google login support
   async verifyGoogleIdToken(idToken: string) {
@@ -71,23 +79,28 @@ export class AuthService {
   }
 
   // Register with OTP
-  async register(dto: CreateUserDto) {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) throw new UnauthorizedException('Email already in use');
+ async register(dto: CreateUserDto) {
+  const existing = await this.usersService.findByEmail(dto.email);
+  if (existing) throw new UnauthorizedException('Email already in use');
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const otp = this.generateOtp();
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
+  const otp = this.generateOtp();
 
-    const user = await this.usersService.createUser(dto.email, hashedPassword, otp);
+  // Create user
+  const user = await this.usersService.createUser(dto.email, hashedPassword);
 
-    // Send OTP email
-    await this.sendOtpToEmail(dto.email, otp);
+  // Save OTP to OTP table
+  await this.usersService.saveOtp(user.id, otp);
 
-    return { message: 'OTP sent to your email for verification' };
-  }
+  // Send OTP email
+  await this.sendOtpToEmail(dto.email, otp);
+
+  return { message: 'OTP sent to your email for verification' };
+}
+
 
   generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
   }
 
   // Replace this with Postmark email service
@@ -95,22 +108,31 @@ export class AuthService {
     await this.mailService.sendVerificationEmail(email, otp);
   }
 
-async verifyOtp(email: string, otp: string) {
+  // OTP verification during registration or password reset
+ async verifyOtp(email: string, otp: string) {
   const user = await this.usersService.findByEmail(email);
+  
+  if (!user) {
+    throw new UnauthorizedException('User not found');
+  }
 
-  if (!user || user.otp !== otp) {
+  // Fetch the latest OTP record related to the user
+  const otpRecord = await this.usersService.findLatestOtpByUserId(user.id);
+
+  // Check if OTP is valid
+  if (!otpRecord || otpRecord.otp !== otp) {
     throw new UnauthorizedException('Invalid or expired OTP');
   }
 
-  // Optional: clear the OTP after successful verification
+  // Optional: Clear the OTP after successful verification
   await this.usersService.clearOtp(user.id);
 
-  // Optional: mark profile complete if needed (you can control this with a flag or status)
+  // Optional: Mark profile complete if needed (e.g., after successful verification)
   if (!user.profileComplete) {
     await this.usersService.markProfileComplete(user.id);
   }
 
-  // Generate tokens
+  // Generate tokens for the user
   const tokens = await this.getTokens(user.id, user.email);
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
@@ -121,7 +143,7 @@ async verifyOtp(email: string, otp: string) {
   };
 }
 
-
+  // Complete profile after OTP verification
   async completeProfile(userId: string, updateDto: UpdateProfileDto) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException('User not found');
@@ -129,29 +151,29 @@ async verifyOtp(email: string, otp: string) {
     return this.usersService.updateProfile(userId, updateDto);
   }
 
+  // Forgot password logic
   async forgotPassword(email: string) {
-  const user = await this.usersService.findByEmail(email);
-  if (!user) throw new UnauthorizedException('User not found');
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new UnauthorizedException('User not found');
 
-  const otp = this.generateOtp();
-  await this.usersService.updateOtp(user.id, otp); // Save OTP to user table
+    const otp = this.generateOtp();
+    await this.usersService.updateOtp(user.id, otp); // Save OTP to user table
 
-  await this.sendOtpToEmail(email, otp);
-  return { message: 'OTP sent to your email for password reset' };
-}
-
-async resetPassword(email: string, newPassword: string, confirmPassword: string) {
-  if (newPassword !== confirmPassword) {
-    throw new BadRequestException('Passwords do not match');
+    await this.sendOtpToEmail(email, otp);
+    return { message: 'OTP sent to your email for password reset' };
   }
 
-  const user = await this.usersService.findByEmail(email);
-  if (!user) throw new NotFoundException('User not found');
+  // Reset password logic
+  async resetPassword(email: string, newPassword: string, confirmPassword: string) {
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
 
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new NotFoundException('User not found');
 
-  return this.usersService.updatePassword(user.id, hashedPassword);
-}
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-
+    return this.usersService.updatePassword(user.id, hashedPassword);
+  }
 }
