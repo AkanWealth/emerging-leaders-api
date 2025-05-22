@@ -7,14 +7,16 @@ export class CategoryService {
   constructor(private prisma: PrismaService) {}
 
   create(dto: CreateCategoryDto) {
-    return this.prisma.category.create({
-      data: {
-        icon: dto.icon,
-        title: dto.title,
-        description: dto.description,
-      },
-    });
-  }
+  return this.prisma.category.create({
+    data: {
+      icon: dto.icon,
+      title: dto.title,
+      description: dto.description,
+      usageContext: dto.usageContext,
+    },
+  });
+}
+
 
   findAll() {
     return this.prisma.category.findMany();

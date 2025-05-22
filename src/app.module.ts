@@ -9,6 +9,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProjectModule } from './project/project.module';
 import { CategoryModule } from './category/category.module';
 import { GoalsModule } from './goals/goals.module';
+import { IncomeService } from './income/income.service';
+import { IncomeController } from './income/income.controller';
+import { IncomeModule } from './income/income.module';
+import { SavingsGoalModule } from './savings-goal/savings-goal.module';
+import { BudgetController } from './budget/budget.controller';
+import { BudgetService } from './budget/budget.service';
+import { BudgetModule } from './budget/budget.module';
+import { ExpenseModule } from './expense/expense.module';
 
 @Module({
   imports: [
@@ -19,8 +27,12 @@ import { GoalsModule } from './goals/goals.module';
     ProjectModule,
     CategoryModule,
     GoalsModule,
+    IncomeModule,
+    SavingsGoalModule,
+    BudgetModule,
+    ExpenseModule,
   ],
-  controllers: [AppController], // Only controllers here that don't belong to other modules
-  providers: [AppService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService],      // Same with providers
 })
 export class AppModule {}
