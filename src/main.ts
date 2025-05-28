@@ -41,8 +41,8 @@ async function bootstrap() {
   app.useLogger(new Logger());
 
   // Security middleware
-  app.use(helmet());
-  app.use(cookieParser());
+  // app.use(helmet());
+  // app.use(cookieParser());
 
   // Enable CORS
   app.enableCors({
