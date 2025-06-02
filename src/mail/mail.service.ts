@@ -22,9 +22,9 @@ export class MailService {
       to: email,
       templateAlias: 'verify-otp', // Match this with your Postmark template alias
       templateModel: {
-        product_name: 'Your App Name',
+        product_name: 'Emerging Leaders',
         otp_code: otpCode,
-        support_email: 'support@yourapp.com',
+        support_email: 'charity@emerging-leaders.net',
       },
     });
   }
@@ -73,7 +73,7 @@ export class MailService {
     templateModel: Record<string, unknown>;
   }) {
     await this.client.sendEmailWithTemplate({
-      From: process.env.MAIL_FROM || 'support@yourapp.com',
+      From: process.env.MAIL_FROM || 'charity@emerging-leaders.net',
       To: to,
       TemplateAlias: templateAlias,
       TemplateModel: templateModel,
