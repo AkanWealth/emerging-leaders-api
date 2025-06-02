@@ -17,9 +17,14 @@ import { BudgetController } from './budget/budget.controller';
 import { BudgetService } from './budget/budget.service';
 import { BudgetModule } from './budget/budget.module';
 import { ExpenseModule } from './expense/expense.module';
+import { ConfigModule } from '@nestjs/config';
+
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // <-- this makes ConfigService available app-wide
+    }),
     AuthModule,
     UsersModule,
     MailModule,
