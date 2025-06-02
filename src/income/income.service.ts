@@ -7,16 +7,18 @@ import { UpdateIncomeDto } from './dto/update-income.dto';
 export class IncomeService {
   constructor(private prisma: PrismaService) {}
 
- async create(userId: string, dto: CreateIncomeDto) {
+async create(userId: string, dto: CreateIncomeDto) {
   return await this.prisma.income.create({
     data: {
       userId,
       amount: dto.amount,
       description: dto.description || '',
-      categoryId: dto.categoryId,
+      categoryId: dto.categoryId || 'default-category-id', // i will replace with actual fallback
     },
   });
 }
+
+
 
 
   async findAll(userId: string) {
