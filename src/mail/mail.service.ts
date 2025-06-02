@@ -1,97 +1,163 @@
-import { Injectable } from '@nestjs/common';
-import { Client } from 'postmark';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as postmark from 'postmark';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class MailService {
-  private client: Client;
+  private client: postmark.ServerClient;
+  private senderEmail: string;
+  private readonly logger = new Logger(MailService.name);
 
-  constructor() {
-    const postmarkApiKey = process.env.POSTMARK_API_KEY;
-    if (!postmarkApiKey) {
-      throw new Error('POSTMARK_API_KEY is not defined in the environment');
+  constructor(private readonly configService: ConfigService) {
+    const apiToken = this.configService.get<string>('POSTMARK_API_KEY');
+
+    if (!apiToken) {
+      this.logger.error('Postmark API token is missing! Check your .env file.');
+      throw new Error('Postmark API token is required but missing.');
     }
 
-    this.client = new Client(postmarkApiKey);
+    this.client = new postmark.ServerClient(apiToken);
+    this.senderEmail =
+      this.configService.get<string>('MAIL_FROM') || '"Support" <charity@emerging-leaders.net>';
+
+    this.logger.log(`MailService initialized. Sender Email: ${this.senderEmail}`);
   }
 
-  /**
-   * Send a verification email using Postmark TemplateId
-   */
-  async sendVerificationEmail(email: string, otpCode: string) {
-    await this.sendWithTemplate({
-      to: email,
-      templateId: 1234567, // replace with your actual verification template ID
-      templateModel: {
-        product_name: 'Emerging Leaders',
-        otp_code: otpCode,
-        support_email: 'charity@emerging-leaders.net',
-      },
-    });
+  public getFormattedHtml(template: string, replacements: Record<string, string>): string {
+    return Object.entries(replacements).reduce((html, [key, value]) => {
+      const pattern = new RegExp(`\\[${key.toUpperCase()}\\]`, 'g');
+      return html.replace(pattern, value);
+    }, template);
   }
 
-  /**
-   * Send OTP email using Postmark TemplateId
-   */
-  async sendOtpToEmail(email: string, otp: string) {
-    await this.sendWithTemplate({
-      to: email,
-      templateId: 40266727, 
-      templateModel: {
-        product_name: 'Emerging Leaders',
-        otp_code: otp,
-        support_email: 'charity@emerging-leaders.net',
-      },
-    });
+  async sendCustomHtmlEmail(
+    to: string,
+    subject: string,
+    templateName: string,
+    replacements: Record<string, string>,
+  ) {
+    const templatePath = path.join(__dirname, '..', 'templates', templateName);
+    const rawHtml = fs.readFileSync(templatePath, 'utf8');
+    const formattedHtml = this.getFormattedHtml(rawHtml, replacements);
+
+    try {
+      await this.client.sendEmail({
+        From: this.senderEmail,
+        To: to,
+        Subject: subject,
+        HtmlBody: formattedHtml,
+        TextBody: 'Please view this email in an HTML-compatible email client.',
+        MessageStream: 'outbound',
+      });
+
+      this.logger.log(`Custom email sent to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send email to ${to}`, error.stack || error.message);
+    }
   }
 
-  /**
-   * Send a password reset email using Postmark TemplateId
-   */
-  async sendResetPasswordEmail(email: string, resetUrl: string) {
-    await this.sendWithTemplate({
-      to: email,
-      templateId: 2345678, // replace with your actual reset password template ID
-      templateModel: {
-        product_name: 'Your App Name',
-        reset_link: resetUrl,
-        support_email: 'support@yourapp.com',
-      },
-    });
+  async sendEmailWithTemplate(to: string, templateId: number, templateModel: any) {
+    try {
+      await this.client.sendEmailWithTemplate({
+        From: this.senderEmail,
+        To: to,
+        TemplateId: templateId,
+        TemplateModel: templateModel,
+      });
+
+      this.logger.log(`Template email sent to: ${to}`);
+    } catch (error) {
+      this.logger.error(`Postmark failed to send email to ${to}:`, error);
+      throw new Error(`Could not send email to ${to}: ${error.message}`);
+    }
   }
 
-  /**
-   * Send admin credentials email using Postmark TemplateId
-   */
+  async sendMail(to: string, subject: string, message: string) {
+    try {
+      await this.client.sendEmail({
+        From: this.senderEmail,
+        To: to,
+        Subject: subject,
+        TextBody: message,
+        MessageStream: 'outbound',
+      });
+
+      this.logger.log(`Notification email sent to: ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send notification email to ${to}:`, error);
+    }
+  }
+
+  async sendVerificationEmail(email: string, token: string) {
+    try {
+      const verificationLink = `${this.configService.get<string>('APP_URL')}/ConfirmVerification?token=${token}`;
+      await this.sendEmailWithTemplate(email, 39584066, {
+        verification_link: verificationLink,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send verification email to ${email}:`, error);
+    }
+  }
+
+  async sendResetPasswordEmail(email: string, token: string) {
+    try {
+      const resetLink = `${this.configService.get<string>('APP_URL')}/auth/reset-password?token=${token}`;
+      await this.sendEmailWithTemplate(email, 39585799, {
+        reset_link: resetLink,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send password reset email to ${email}:`, error);
+    }
+  }
+
+  async sendAccountDeletionEmail(email: string, token: string) {
+    try {
+      const link = `${this.configService.get<string>('APP_URL')}/confirm-delete?token=${token}`;
+      await this.sendEmailWithTemplate(email, 39608732, {
+        name: email,
+        link,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send account deletion email to ${email}:`, error);
+    }
+  }
+
   async sendAdminCredentials(email: string, firstname: string, password: string) {
-    await this.sendWithTemplate({
-      to: email,
-      templateId: 3456789, // replace with your actual admin credentials template ID
-      templateModel: {
+    try {
+      await this.sendEmailWithTemplate(email, 40200331, {
         firstname,
         email,
         password,
-        login_url: 'https://yourapp.com/login',
-      },
-    });
+        login_url: `${this.configService.get<string>('APP_URL')}/login`,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send admin credentials to ${email}:`, error);
+    }
+  }
+
+  async sendResponseEmail(to: string, name: string, response: string) {
+    try {
+      await this.sendEmailWithTemplate(to, 39585790, {
+        firstname: name,
+        email: to,
+        response,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send response email to ${to}:`, error);
+    }
   }
 
   /**
-   * Reusable wrapper for sending emails using Postmark TemplateId
+   * Send OTP Email (for verification or login)
    */
-  private async sendWithTemplate({
-    to,
-    templateId,
-    templateModel,
-  }: {
-    to: string;
-    templateId: number;
-    templateModel: Record<string, unknown>;
-  }) {
-    await this.client.sendEmailWithTemplate({
-      From: process.env.MAIL_FROM || 'charity@emerging-leaders.net',
-      To: to,
-      TemplateId: templateId,
-      TemplateModel: templateModel,
-    });
+  async sendOtpEmail(email: string, otp: string) {
+    try {
+      await this.sendEmailWithTemplate(email, 40266727, { otp }); // Replace with your Postmark OTP template ID
+      this.logger.log(`OTP email sent to: ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send OTP email to ${email}:`, error);
+    }
   }
 }
