@@ -35,7 +35,7 @@ export class MailService {
   async sendOtpToEmail(email: string, otp: string) {
     await this.sendWithTemplate({
       to: email,
-      templateId: 40266285, 
+      templateId: 40266727, 
       templateModel: {
         product_name: 'Emerging Leaders',
         otp_code: otp,
