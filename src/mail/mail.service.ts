@@ -15,12 +15,12 @@ export class MailService {
   }
 
   /**
-   * Send a verification email with Postmark template
+   * Send a verification email using Postmark TemplateId
    */
   async sendVerificationEmail(email: string, otpCode: string) {
     await this.sendWithTemplate({
       to: email,
-      templateAlias: 'verify-otp', // Match this with your Postmark template alias
+      templateId: 1234567, // replace with your actual verification template ID
       templateModel: {
         product_name: 'Emerging Leaders',
         otp_code: otpCode,
@@ -29,10 +29,13 @@ export class MailService {
     });
   }
 
-   async sendOtpToEmail(email: string, otp: string) {
+  /**
+   * Send OTP email using Postmark TemplateId
+   */
+  async sendOtpToEmail(email: string, otp: string) {
     await this.sendWithTemplate({
       to: email,
-      templateAlias: 'verify-otp', // Match this with your Postmark template alias
+      templateId: 40266285, 
       templateModel: {
         product_name: 'Emerging Leaders',
         otp_code: otp,
@@ -42,12 +45,12 @@ export class MailService {
   }
 
   /**
-   * Send a password reset email with Postmark template
+   * Send a password reset email using Postmark TemplateId
    */
   async sendResetPasswordEmail(email: string, resetUrl: string) {
     await this.sendWithTemplate({
       to: email,
-      templateAlias: 'reset-password', // Match with your Postmark template alias
+      templateId: 2345678, // replace with your actual reset password template ID
       templateModel: {
         product_name: 'Your App Name',
         reset_link: resetUrl,
@@ -57,12 +60,12 @@ export class MailService {
   }
 
   /**
-   * Send credentials email to admin
+   * Send admin credentials email using Postmark TemplateId
    */
   async sendAdminCredentials(email: string, firstname: string, password: string) {
     await this.sendWithTemplate({
       to: email,
-      templateAlias: 'admin-credentials',
+      templateId: 3456789, // replace with your actual admin credentials template ID
       templateModel: {
         firstname,
         email,
@@ -73,21 +76,21 @@ export class MailService {
   }
 
   /**
-   * Reusable wrapper for sending email using Postmark templates
+   * Reusable wrapper for sending emails using Postmark TemplateId
    */
   private async sendWithTemplate({
     to,
-    templateAlias,
+    templateId,
     templateModel,
   }: {
     to: string;
-    templateAlias: string;
+    templateId: number;
     templateModel: Record<string, unknown>;
   }) {
     await this.client.sendEmailWithTemplate({
       From: process.env.MAIL_FROM || 'charity@emerging-leaders.net',
       To: to,
-      TemplateAlias: templateAlias,
+      TemplateId: templateId,
       TemplateModel: templateModel,
     });
   }
