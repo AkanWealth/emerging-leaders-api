@@ -17,13 +17,13 @@ export class MailService {
   /**
    * Send a verification email with Postmark template
    */
-  async sendVerificationEmail(email: string, otpCode: string) {
+  async sendOtpToEmail(email: string, otp: string) {
     await this.sendWithTemplate({
       to: email,
       templateAlias: 'verify-otp', // Match this with your Postmark template alias
       templateModel: {
         product_name: 'Emerging Leaders',
-        otp_code: otpCode,
+        otp_code: otp,
         support_email: 'charity@emerging-leaders.net',
       },
     });
