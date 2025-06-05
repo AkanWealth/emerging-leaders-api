@@ -4,8 +4,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
+import { JwtStrategy } from './jwt.strategy';  // <-- import JwtStrategy here
 import { MailModule } from '../mail/mail.module';
-import { UsersModule } from '../users/users.module';  // relative path
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -15,9 +16,9 @@ import { UsersModule } from '../users/users.module';  // relative path
       signOptions: { expiresIn: '7d' },
     }),
     MailModule,
-    UsersModule,   // <== import the module that exports UsersService
+    UsersModule,
   ],
-  providers: [AuthService, GoogleStrategy],  // no need to add UsersService here
+  providers: [AuthService, GoogleStrategy, JwtStrategy],  // <-- add JwtStrategy here
   controllers: [AuthController],
 })
 export class AuthModule {}
