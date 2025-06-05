@@ -6,13 +6,16 @@ import {
   Param,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ExpenseService } from './expense.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Expense')
+@UseGuards(JwtAuthGuard) // Ensure all expense routes are protected
 @Controller('expense')
 export class ExpenseController {
   constructor(private readonly service: ExpenseService) {}

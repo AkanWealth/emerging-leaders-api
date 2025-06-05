@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Categories')
+@UseGuards(JwtAuthGuard) // Ensure all category routes are protected
 @Controller('categories')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}

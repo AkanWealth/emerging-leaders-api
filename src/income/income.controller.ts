@@ -7,6 +7,7 @@ import {
   Delete,
   Body,
   Req,
+  UseGuards
 } from '@nestjs/common';
 import { IncomeService } from './income.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
@@ -19,9 +20,11 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Income')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard) // Ensure all income routes are protected
 @Controller('income')
 export class IncomeController {
   constructor(private readonly incomeService: IncomeService) {}

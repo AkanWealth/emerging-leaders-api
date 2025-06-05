@@ -6,13 +6,16 @@ import {
   Param,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BudgetService } from './budget.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Budget')
+@UseGuards(JwtAuthGuard) // Ensure all budget routes are protected
 @Controller('budget')
 export class BudgetController {
   constructor(private readonly service: BudgetService) {}

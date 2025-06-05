@@ -1,9 +1,11 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Projects')
+@UseGuards(JwtAuthGuard) // Ensure all project routes are protected
 @Controller('projects')
 export class ProjectController {
   constructor(private readonly service: ProjectService) {}

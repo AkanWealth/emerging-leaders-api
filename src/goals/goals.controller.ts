@@ -1,9 +1,11 @@
-import { Controller, Post, Get, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { GoalService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Goals')
+@UseGuards(JwtAuthGuard) // Ensure all goal routes are protected
 @Controller('goals')
 export class GoalsController {
   constructor(private readonly goalService: GoalService) {}
