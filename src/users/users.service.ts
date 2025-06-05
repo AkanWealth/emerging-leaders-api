@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -97,15 +97,27 @@ async saveOtp(userId: string, otp: string) {
   }
 
   // Update the user's profile after OTP verification
-  async updateProfile(userId: string, updateDto: UpdateProfileDto) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...updateDto,
-        updatedAt: new Date(),
-      },
-    });
+async updateProfile(userId: string, updateDto: UpdateProfileDto) {
+  if (!userId) {
+    throw new BadRequestException('User ID is required');
   }
+
+  const dataToUpdate = Object.fromEntries(
+    Object.entries({
+      ...updateDto,
+      updatedAt: new Date(),
+      dateOfBirth: updateDto.dateOfBirth
+        ? new Date(updateDto.dateOfBirth)
+        : undefined,
+    }).filter(([_, v]) => v !== undefined)
+  );
+
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: dataToUpdate,
+  });
+}
+
 
   async clearOtp(userId: string) {
     // Clear OTP after successful verification or password reset

@@ -6,6 +6,9 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { MailService } from '../mail/mail.service'; // Import MailService
+import { PrismaService } from '../prisma/prisma.service'; // Import PrismaService if needed
+import { LoginDto } from './dto/login.dto';
+
 
 @Injectable()
 export class AuthService {
@@ -14,7 +17,8 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private mailService: MailService, // Inject MailService
+    private mailService: MailService, 
+    private prisma: PrismaService, 
   ) {}
 
   async validateOrCreateUser(email: string, name: string) {
@@ -30,6 +34,7 @@ export class AuthService {
     return tokens;
   }
 
+  
   async getTokens(userId: string, email: string) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
@@ -59,7 +64,7 @@ export class AuthService {
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
   return tokens;
-}
+}             
 
 
   // Google login support
@@ -105,34 +110,41 @@ export class AuthService {
 
   // Replace this with Postmark email service
   async sendOtpToEmail(email: string, otp: string) {
-    await this.mailService.sendVerificationEmail(email, otp);
+    await this.mailService.sendOtpEmail(email, otp);
   }
 
   // OTP verification during registration or password reset
- async verifyOtp(email: string, otp: string) {
+async verifyOtp(email: string, otp: string) {
   const user = await this.usersService.findByEmail(email);
-  
+
   if (!user) {
     throw new UnauthorizedException('User not found');
   }
 
-  // Fetch the latest OTP record related to the user
+  // Fetch the latest OTP record
   const otpRecord = await this.usersService.findLatestOtpByUserId(user.id);
 
-  // Check if OTP is valid
-  if (!otpRecord || otpRecord.otp !== otp) {
-    throw new UnauthorizedException('Invalid or expired OTP');
+  if (!otpRecord) {
+    throw new UnauthorizedException('No OTP record found');
   }
 
-  // Optional: Clear the OTP after successful verification
+  const now = new Date();
+
+  if (otpRecord.otp !== otp) {
+    throw new UnauthorizedException('Invalid OTP');
+  }
+
+  if (otpRecord.expiresAt < now) {
+    throw new UnauthorizedException('OTP has expired');
+  }
+
+  // OTP is valid — clean up and proceed
   await this.usersService.clearOtp(user.id);
 
-  // Optional: Mark profile complete if needed (e.g., after successful verification)
   if (!user.profileComplete) {
     await this.usersService.markProfileComplete(user.id);
   }
 
-  // Generate tokens for the user
   const tokens = await this.getTokens(user.id, user.email);
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
@@ -142,6 +154,8 @@ export class AuthService {
     tokens,
   };
 }
+
+
 
   // Complete profile after OTP verification
   async completeProfile(userId: string, updateDto: UpdateProfileDto) {
@@ -176,4 +190,62 @@ export class AuthService {
 
     return this.usersService.updatePassword(user.id, hashedPassword);
   }
+
+async loginWithCredentials(email: string, password: string) {
+  const user = await this.prisma.user.findUnique({ where: { email } });
+  if (!user || !user.password) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
+
+  const passwordValid = await bcrypt.compare(password, user.password);
+  if (!passwordValid) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
+
+  const tokens = await this.getTokens(user.id, user.email);
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+  // Return tokens plus user info (you can pick fields you want)
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      // add more fields if you want here
+    },
+    tokens,
+  };
+}
+
+
+// Inside auth.service.ts
+
+async loginWithGoogle(email: string, name: string) {
+  // Try to find user by email
+  let user = await this.prisma.user.findUnique({ where: { email } });
+
+  // If not found, create a new user
+  if (!user) {
+    user = await this.prisma.user.create({
+      data: {
+        email,
+        name,
+        password: 'google_oauth_placeholder_password',
+        // You may set other defaults if needed
+        profileComplete: true, // Assuming profile is complete for Google users
+      },
+    });
+  }
+
+  // Issue tokens
+  const tokens = await this.getTokens(user.id, email);
+
+  // Store refresh token in DB
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+
+  return tokens;
+}
+
+
 }

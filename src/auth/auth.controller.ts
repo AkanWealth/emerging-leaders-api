@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { LoginDto } from './dto/login.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -123,4 +124,16 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.email, dto.newPassword, dto.confirmPassword);
   }
+
+   @Post('signin')
+  @ApiOperation({ summary: 'Login with email/password or Gmail' })
+  @ApiResponse({ status: 200, description: 'Successfully logged in with token pair' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Body() dto: LoginDto) {
+    if (dto.password) {
+      // Login with email & password
+      return this.authService.loginWithCredentials(dto.email, dto.password);
+    } 
+  }
+
 }
