@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -118,6 +118,36 @@ async updateProfile(userId: string, updateDto: UpdateProfileDto) {
   });
 }
 
+async getAllVerifiedUsers() {
+  return this.prisma.user.findMany({
+    where: {
+      profileComplete: true, // Only return users with complete profiles
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+async getAllUsers() {
+  return this.prisma.user.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+async getUserById(id: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!user) {
+    throw new NotFoundException(`User with ID ${id} not found`);
+  }
+
+  return user;
+}
 
   async clearOtp(userId: string) {
     // Clear OTP after successful verification or password reset
