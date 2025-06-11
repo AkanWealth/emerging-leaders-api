@@ -67,7 +67,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get all verified users (To be implemented)' })
   @ApiResponse({ status: 200, description: 'List of verified users returned successfully', type: [UpdateProfileDto] })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getAllVerifiedUsers(): Promise<User[]> {
+  async  getAllVerifiedUsers(): Promise<User[]> {
     return this.userService.getAllUsers(); // Replace with actual logic for "verified"
   }
 
