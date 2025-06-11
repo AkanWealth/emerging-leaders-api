@@ -9,7 +9,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "nest build && prisma generate && prisma migrate deploy",
+    "build": "nest build",
     "deploy": "prisma generate && yarn build && node dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "yarn prisma generate && node dist/main",
