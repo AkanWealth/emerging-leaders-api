@@ -10,5 +10,5 @@ export class LoginDto {
   @ApiProperty({ example: 'password123', description: 'Password for login', required: false })
   @IsString()
   @IsOptional()
-  password?: string;
+  password: string;
 }

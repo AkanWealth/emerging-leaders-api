@@ -42,6 +42,11 @@ export class UpdateProfileDto {
   @IsOptional()
   age?: number;
 
+   @ApiPropertyOptional({ description: 'Age Group', example: '40-50' })
+  @IsString()
+  @IsOptional()
+  ageGroup?: string;
+
   @ApiPropertyOptional({ description: 'Date of birth in YYYY-MM-DD format', example: '1993-04-15' })
   @IsString()
   @IsOptional()

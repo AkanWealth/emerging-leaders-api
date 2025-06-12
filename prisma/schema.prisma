@@ -25,6 +25,7 @@ model User {
   maritalStatus           String?
   gender                  String?
   age                     Int?
+  ageGroup                String?
   phone                   String?
   dateOfBirth             DateTime?
   hasDisability           Boolean?
