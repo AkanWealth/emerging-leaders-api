@@ -22,4 +22,12 @@ export class CreateExpenseDto {
   })
   @IsString()
   categoryId: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'b1c2d3e4-f5g6-7h8i-9j0k-l1m2n3o4p5q6',
+    description: 'The ID of the budget this expense is associated with (UUID format)',
+  })
+  @IsString()
+  budgetId?: string;
 }

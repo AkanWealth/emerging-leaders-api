@@ -7,8 +7,10 @@ import {
   Patch,
   Delete,
   UseGuards,
+  Req,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ExpenseService } from './expense.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -54,4 +56,17 @@ export class ExpenseController {
   remove(@Param('userId') userId: string, @Param('id') id: string) {
     return this.service.remove(id, userId);
   }
+
+    @ApiOperation({ summary: 'Get income analytics' })
+    @ApiResponse({ status: 200, description: 'Income analytics data' }) 
+    @ApiParam({ name: 'filter', required: false, description: 'Filter type (weekly, monthly, yearly)' })
+    @ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'], description: 'Filter type for analytics' })
+    @Get('analytics')
+    getIncomeAnalytics(
+      @Query('filter') filter: 'weekly' | 'monthly' | 'yearly' = 'monthly',
+      @Req() req: any,
+    ) {
+      const userId = req.user.id;
+      return this.service.getExpenseAnalytics(userId, filter);
+    }
 }

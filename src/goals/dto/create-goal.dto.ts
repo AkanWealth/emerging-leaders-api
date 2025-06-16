@@ -1,43 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsDateString } from 'class-validator';
 
 export class CreateGoalDto {
-  @ApiProperty({
-    example: 'Finish writing project report',
-    description: 'The title or name of the goal',
-  })
+  @ApiProperty({ example: 'Complete final report' })
   @IsString()
   title: string;
 
-  @ApiProperty({
-    required: false,
-    example: 'weekly',
-    description: 'Optional repeat pattern (e.g., daily, weekly, monthly)',
-  })
+  @ApiProperty({ example: 'daily', required: false })
   @IsOptional()
   @IsString()
   repeat?: string;
 
-  @ApiProperty({
-    example: '2025-06-10',
-    description: 'Target date for the goal (in ISO date format, e.g., YYYY-MM-DD)',
-  })
+  @ApiProperty({ example: '2025-06-16T08:00:00Z' })
   @IsDateString()
-  date: string;
+  startDate: string;
 
-  @ApiProperty({
-    required: false,
-    example: '14:30',
-    description: 'Optional time for the goal (HH:mm format)',
-  })
+  @ApiProperty({ example: '2025-06-16T17:00:00Z' })
+  @IsDateString()
+  endDate: string;
+
+  @ApiProperty({ example: '08:00', required: false })
   @IsOptional()
   @IsString()
-  time?: string;
+  startTime?: string;
 
-  @ApiProperty({
-    example: 'b7e23ec2-35b6-4e7b-9b0d-2936f2c78c4f',
-    description: 'The ID of the associated project (UUID format)',
-  })
+  @ApiProperty({ example: '17:00', required: false })
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isCompleted?: boolean;
+
+  @ApiProperty({ example: 'https://cdn.app/icons/goal-check.png', required: false })
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @ApiProperty({ example: 'project-uuid' })
   @IsString()
   projectId: string;
 }

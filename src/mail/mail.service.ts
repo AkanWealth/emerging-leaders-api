@@ -160,4 +160,60 @@ export class MailService {
       this.logger.error(`Failed to send OTP email to ${email}:`, error);
     }
   }
+
+  // mail/mail.service.ts
+
+
+async sendWelcomeEmailWithPassword(email: string, tempPassword: string) {
+  try {
+    await this.client.sendEmail({
+      From: this.senderEmail,
+      To: email,
+      Subject: 'Welcome to the Platform',
+      TextBody: `Welcome! Your temporary password is: ${tempPassword}`,
+      HtmlBody: `<p>Welcome!</p><p>Your temporary password is: <strong>${tempPassword}</strong></p>`,
+      MessageStream: 'outbound',
+    });
+
+    this.logger.log(`Welcome email sent to ${email}`);
+  } catch (error) {
+    this.logger.error(`Failed to send welcome email to ${email}:`, error);
+    throw new Error(`Could not send welcome email to ${email}: ${error.message}`);
+  }
+}
+
+async sendAdminInvite(email: string, token: string) {
+  const link = `${this.configService.get<string>('APP_URL')}/admin/invite/${token}`;
+
+  try {
+    await this.client.sendEmail({
+      From: this.senderEmail,
+      To: email,
+      Subject: 'You’ve been invited to become an admin',
+      TextBody: `Click this link to accept the invite: ${link}`,
+      HtmlBody: `<p>You’ve been invited to become an admin.</p><p><a href="${link}">Click here to accept the invite</a></p>`,
+      MessageStream: 'outbound',
+    });
+
+    this.logger.log(`Admin invite sent to ${email}`);
+  } catch (error) {
+    this.logger.error(`Failed to send admin invite to ${email}:`, error);
+    throw new Error(`Could not send admin invite to ${email}: ${error.message}`);
+  }
+}
+
+// async sendWelcomeEmailWithPassword(email: string, tempPassword: string) {
+//   await this.sendEmailWithTemplate(email, 12345678, {
+//     temp_password: tempPassword,
+//     login_url: `${this.configService.get<string>('APP_URL')}/login`,
+//   });
+// }
+
+// async sendAdminInvite(email: string, token: string) {
+//   await this.sendEmailWithTemplate(email, 87654321, {
+//     invite_link: `${this.configService.get<string>('APP_URL')}/admin/invite/${token}`,
+//   });
+// }
+
+
 }

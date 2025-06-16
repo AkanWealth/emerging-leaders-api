@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsDateString } from 'class-validator';
+import { IsString, IsDateString, Matches } from 'class-validator';
 
 export class CreateProjectDto {
   @ApiProperty({
@@ -15,6 +15,16 @@ export class CreateProjectDto {
   })
   @IsString()
   description: string;
+
+  @ApiProperty({
+    example: '#1D4ED8',
+    description: 'Hex color code for project (e.g., #1D4ED8)',
+  })
+  @IsString()
+  @Matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
+    message: 'projectColor must be a valid hex color code',
+  })
+  projectColor: string;
 
   @ApiProperty({
     example: '2025-07-01T00:00:00Z',

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UseGuards, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { GoalService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
@@ -34,7 +34,7 @@ export class GoalsController {
     return this.goalService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a goal by ID' })
   @ApiParam({ name: 'id', description: 'The ID of the goal to update' })
   @ApiResponse({ status: 200, description: 'Goal updated successfully' })

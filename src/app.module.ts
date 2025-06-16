@@ -18,6 +18,14 @@ import { BudgetService } from './budget/budget.service';
 import { BudgetModule } from './budget/budget.module';
 import { ExpenseModule } from './expense/expense.module';
 import { ConfigModule } from '@nestjs/config';
+import { AnalyticsController } from './analytics/analytics.controller';
+import { AnalyticsService } from './analytics/analytics.service';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { AdminModule } from './admin/admin.module';
+import { AdminUserService } from './admin-user/admin-user.service';
+import { AdminUserController } from './admin-user/admin-user.controller';
+import { AdminUserModule } from './admin-user/admin-user.module';
+import { ContentModule } from './content/content.module';
 
 
 @Module({
@@ -36,8 +44,12 @@ import { ConfigModule } from '@nestjs/config';
     SavingsGoalModule,
     BudgetModule,
     ExpenseModule,
+    AnalyticsModule,
+    AdminModule,
+    AdminUserModule,
+    ContentModule,
   ],
-  controllers: [AppController, IncomeController, BudgetController], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService],      // Same with providers
 })
 export class AppModule {}

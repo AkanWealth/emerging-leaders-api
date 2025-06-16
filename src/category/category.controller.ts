@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -34,7 +34,7 @@ export class CategoryController {
     return this.categoryService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a category by ID' })
   @ApiParam({ name: 'id', description: 'The ID of the category to update' })
   @ApiResponse({ status: 200, description: 'Category successfully updated' })

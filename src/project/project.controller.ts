@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -34,7 +34,7 @@ export class ProjectController {
     return this.service.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a project by ID' })
   @ApiParam({ name: 'id', description: 'The ID of the project to update' })
   @ApiResponse({ status: 200, description: 'Project updated successfully' })

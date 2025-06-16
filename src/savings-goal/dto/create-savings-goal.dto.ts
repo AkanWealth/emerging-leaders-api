@@ -15,7 +15,7 @@ export class CreateSavingsGoalDto {
     description: 'The initial amount being saved towards the goal',
   })
   @IsNumber()
-  amount: number;
+  monthlyIncome: number;
 
   @ApiProperty({
     example: true,

@@ -7,7 +7,8 @@ import {
   Delete,
   Body,
   Req,
-  UseGuards
+  UseGuards,
+  Query,
 } from '@nestjs/common';
 import { IncomeService } from './income.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
@@ -19,6 +20,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -59,6 +61,19 @@ export class IncomeController {
   @ApiBody({ type: UpdateIncomeDto })
   update(@Req() req, @Param('id') id: string, @Body() dto: UpdateIncomeDto) {
     return this.incomeService.update(id, req.user.id, dto);
+  }
+
+  @ApiOperation({ summary: 'Get income analytics' })
+  @ApiResponse({ status: 200, description: 'Income analytics data' }) 
+  @ApiParam({ name: 'filter', required: false, description: 'Filter type (weekly, monthly, yearly)' })
+  @ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'], description: 'Filter type for analytics' })
+  @Get('analytics')
+  getIncomeAnalytics(
+    @Query('filter') filter: 'weekly' | 'monthly' | 'yearly' = 'monthly',
+    @Req() req: any,
+  ) {
+    const userId = req.user.id;
+    return this.incomeService.getIncomeAnalytics(userId, filter);
   }
 
   @Delete(':id')

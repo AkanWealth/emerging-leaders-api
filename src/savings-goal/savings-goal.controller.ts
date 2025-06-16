@@ -2,12 +2,12 @@ import {
   Controller,
   Post,
   Get,
-  Put,
   Delete,
   Param,
   Body,
   Request,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -37,7 +37,7 @@ export class SavingsGoalController {
     return this.savingsGoalService.findOne(id, req.user.id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   update(@Param('id') id: string, @Request() req, @Body() dto: UpdateSavingsGoalDto) {
     return this.savingsGoalService.update(id, req.user.id, dto);
   }

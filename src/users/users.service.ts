@@ -52,8 +52,9 @@ async saveOtp(userId: string, otp: string) {
   }
 
   // Create the user with incomplete profile (pending OTP verification)
-  async createUser(email: string, password: string) {
-    const user = await this.prisma.user.create({
+ async createUser(email: string, password: string) {
+  return this.prisma.$transaction(async (prisma) => {
+    const user = await prisma.user.create({
       data: {
         email,
         password,
@@ -61,17 +62,27 @@ async saveOtp(userId: string, otp: string) {
       },
     });
 
-    // Create an OTP record for the user
-    await this.prisma.otp.create({
+    // Create Wallet for the user
+    await prisma.wallet.create({
       data: {
-        otp: this.generateOtp(),  // You need to implement OTP generation
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins expiry
+        userId: user.id,
+        balance: 0, // optional since Prisma schema sets default
+      },
+    });
+
+    // Create OTP
+    await prisma.otp.create({
+      data: {
+        otp: this.generateOtp(), // Make sure this method exists in your service
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins
         userId: user.id,
       },
     });
 
     return user;
-  }
+  });
+}
+
 
   // Helper function to generate OTP
   private generateOtp(): string {
