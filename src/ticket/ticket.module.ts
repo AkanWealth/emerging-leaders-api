@@ -6,6 +6,7 @@ import { AdminGuard } from '../common/decorators/guards/admin.guard';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { PassportModule } from '@nestjs/passport';
     }), 
   ],
   controllers: [TicketController],
-  providers: [TicketService, JwtStrategy, AdminGuard],
+  providers: [TicketService, JwtStrategy, AdminGuard, ActivityLogService],
 })
 export class TicketModule {}

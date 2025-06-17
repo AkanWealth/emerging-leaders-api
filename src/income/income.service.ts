@@ -3,24 +3,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { getDateRange } from 'src/helpers/date-utils';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class IncomeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly activityLogService: ActivityLogService,) {}
 
 async create(userId: string, dto: CreateIncomeDto) {
   const { amount, description, categoryId } = dto;
 
-  // 1. Ensure wallet exists
-  const wallet = await this.prisma.wallet.findUnique({
-    where: { userId },
-  });
+  const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
 
   if (!wallet) {
     throw new NotFoundException('Wallet not found for user');
   }
 
-  // 2. Create the income entry
   const income = await this.prisma.income.create({
     data: {
       userId,
@@ -30,7 +27,6 @@ async create(userId: string, dto: CreateIncomeDto) {
     },
   });
 
-  // 3. Update wallet balance
   await this.prisma.wallet.update({
     where: { userId },
     data: {
@@ -40,8 +36,11 @@ async create(userId: string, dto: CreateIncomeDto) {
     },
   });
 
+  await this.activityLogService.log(userId, `Added income of ₦${amount}`);
+
   return income;
 }
+
 
   async findAll(userId: string) {
     return this.prisma.income.findMany({

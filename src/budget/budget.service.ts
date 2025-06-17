@@ -2,16 +2,21 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class BudgetService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService,  private readonly activityLogService: ActivityLogService,) {}
 
-  async create(userId: string, dto: CreateBudgetDto) {
-    return this.prisma.budget.create({
-      data: { ...dto, userId },
-    });
-  }
+async create(userId: string, dto: CreateBudgetDto) {
+  const budget = await this.prisma.budget.create({
+    data: { ...dto, userId },
+  });
+
+  await this.activityLogService.log(userId, `Created a budget of ₦${dto.limit}`);
+  return budget;
+}
+
 
   async findAll(userId: string) {
     return this.prisma.budget.findMany({

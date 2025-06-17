@@ -1,28 +1,47 @@
-import { Controller, Post, Body, Get, Param, Delete, UseGuards, Patch } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Delete,
+  UseGuards,
+  Patch,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Request } from 'express';
+import { RequestWithUser } from 'src/types/request-with-user'; 
 
 @ApiTags('Projects')
-@UseGuards(JwtAuthGuard) // Ensure all project routes are protected
+@UseGuards(JwtAuthGuard) // Protect all routes
 @Controller('projects')
 export class ProjectController {
-  constructor(private readonly service: ProjectService) {}
+  constructor(private readonly projectService: ProjectService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new project' })
   @ApiResponse({ status: 201, description: 'Project created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  create(@Body() dto: CreateProjectDto) {
-    return this.service.create(dto);
+  @ApiBody({ type: CreateProjectDto })
+  create(req: RequestWithUser, @Body() dto: CreateProjectDto) {
+    const user = req.user as { id: string };
+    return this.projectService.create(user.id, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all projects' })
   @ApiResponse({ status: 200, description: 'List of all projects' })
   findAll() {
-    return this.service.findAll();
+    return this.projectService.findAll();
   }
 
   @Get(':id')
@@ -31,7 +50,7 @@ export class ProjectController {
   @ApiResponse({ status: 200, description: 'Project retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+    return this.projectService.findOne(id);
   }
 
   @Patch(':id')
@@ -41,7 +60,7 @@ export class ProjectController {
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   update(@Param('id') id: string, @Body() dto: CreateProjectDto) {
-    return this.service.update(id, dto);
+    return this.projectService.update(id, dto);
   }
 
   @Delete(':id')
@@ -50,6 +69,6 @@ export class ProjectController {
   @ApiResponse({ status: 200, description: 'Project deleted successfully' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   remove(@Param('id') id: string) {
-    return this.service.remove(id);
+    return this.projectService.remove(id);
   }
 }

@@ -3,56 +3,51 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { getDateRange } from 'src/helpers/date-utils';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class ExpenseService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly activityLogService: ActivityLogService,) {}
 
 async create(userId: string, dto: CreateExpenseDto) {
   return this.prisma.$transaction(async (prisma) => {
-    // Step 1: Validate amount
     if (dto.amount === undefined || dto.amount <= 0) {
       throw new BadRequestException('A valid expense amount is required');
     }
 
-    // Step 2: Fetch user's wallet
-    const wallet = await prisma.wallet.findUnique({
-      where: { userId },
-    });
+    const wallet = await prisma.wallet.findUnique({ where: { userId } });
 
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
     }
 
-    // Step 3: Check if wallet has sufficient balance
     if (wallet.balance < dto.amount) {
-      throw new BadRequestException('Insufficient wallet balance for this expense');
+      throw new BadRequestException('Insufficient wallet balance');
     }
 
-    // Step 4: Deduct the expense from wallet
     await prisma.wallet.update({
       where: { userId },
       data: {
-        balance: {
-          decrement: dto.amount,
-        },
+        balance: { decrement: dto.amount },
       },
     });
 
-    // Step 5: Create expense
     const expense = await prisma.expense.create({
       data: {
         userId,
         amount: dto.amount,
         description: dto.description,
         categoryId: dto.categoryId,
-        budgetId: dto.budgetId, // optional
+        budgetId: dto.budgetId,
       },
     });
+
+    await this.activityLogService.log(userId, `Logged an expense of ₦${dto.amount}`);
 
     return expense;
   });
 }
+
 
 
   async findAll(userId: string) {

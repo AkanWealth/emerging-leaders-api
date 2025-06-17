@@ -29,6 +29,7 @@ import { ContentModule } from './content/content.module';
 import { TicketService } from './ticket/ticket.service';
 import { TicketController } from './ticket/ticket.controller';
 import { TicketModule } from './ticket/ticket.module';
+import { ActivityLogModule } from './activity-log/activity-log.module';
 
 
 @Module({
@@ -52,6 +53,7 @@ import { TicketModule } from './ticket/ticket.module';
     AdminUserModule,
     ContentModule,
     TicketModule,
+    ActivityLogModule,
   ],
   controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController], // Only controllers here that don't belong to other modules
   providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService],      // Same with providers

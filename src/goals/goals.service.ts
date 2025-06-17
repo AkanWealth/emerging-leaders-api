@@ -4,10 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { addDays, addWeeks, addMonths } from 'date-fns';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class GoalService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly activityLogService: ActivityLogService,) {}
 
   async autoCompletePastGoals() {
     const now = new Date();
@@ -22,20 +23,24 @@ export class GoalService {
     });
   }
 
-  async create(dto: CreateGoalDto) {
-    return this.prisma.goal.create({
-      data: {
-        title: dto.title,
-        repeat: dto.repeat,
-        isCompleted: dto.isCompleted ?? false,
-        startDate: new Date(dto.startDate),
-        endDate: new Date(dto.endDate),
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-        projectId: dto.projectId,
-      },
-    });
-  }
+ async create(userId: string, dto: CreateGoalDto) {
+  const goal = await this.prisma.goal.create({
+    data: {
+      title: dto.title,
+      repeat: dto.repeat,
+      isCompleted: dto.isCompleted ?? false,
+      startDate: new Date(dto.startDate),
+      endDate: new Date(dto.endDate),
+      startTime: dto.startTime,
+      endTime: dto.endTime,
+      projectId: dto.projectId,
+    },
+  });
+
+  await this.activityLogService.log(userId, `Created goal: ${dto.title}`);
+  return goal;
+}
+
 
   async findAll() {
     await this.autoCompletePastGoals();

@@ -3,16 +3,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
  import { TicketStatus } from '@prisma/client'; // ensure this is imported
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class TicketService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private readonly activityLogService: ActivityLogService,) {}
 
-  create(dto: CreateTicketDto, userId: string) {
-    return this.prisma.ticket.create({
-      data: { ...dto, userId },
-    });
-  }
+async create(dto: CreateTicketDto, userId: string) {
+  const ticket = await this.prisma.ticket.create({
+    data: { ...dto, userId },
+  });
+
+  await this.activityLogService.log(userId, `Opened support ticket: ${dto.subject}`);
+  return ticket;
+}
+
 
   findUserTickets(userId: string) {
     return this.prisma.ticket.findMany({

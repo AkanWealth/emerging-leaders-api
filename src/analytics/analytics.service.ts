@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { subDays, subMonths, subYears, format } from 'date-fns';
 
+
 @Injectable()
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
@@ -101,5 +102,94 @@ getTimeBuckets(period: 'weekly' | 'monthly' | 'yearly'): { label: string; from: 
 
   return buckets;
 }
+
+  async getUserStats() {
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [totalUsers, newUsersThisMonth, newUsersLastMonth, activeUsers] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.count({ where: { createdAt: { gte: startOfThisMonth } } }),
+      this.prisma.user.count({ where: { createdAt: { gte: startOfLastMonth, lt: startOfThisMonth } } }),
+      this.prisma.user.count({ where: { updatedAt: { gte: startOfThisMonth } } }),
+    ]);
+
+    const userGrowth = ((newUsersThisMonth - newUsersLastMonth) / (newUsersLastMonth || 1)) * 100;
+
+    return {
+      totalUsers,
+      newUsersThisMonth,
+      newUsersLastMonth,
+      activeUsers,
+      userGrowthPercent: parseFloat(userGrowth.toFixed(2)),
+    };
+  }
+
+ async getMonthlyUserGrowthChart(): Promise<{ month: string; count: number }[]> {
+  const now = new Date();
+  const data: { month: string; count: number }[] = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+
+    const count = await this.prisma.user.count({
+      where: {
+        createdAt: {
+          gte: start,
+          lt: end,
+        },
+      },
+    });
+
+    data.push({
+      month: start.toLocaleString('default', { month: 'short' }), // e.g., "Jan", "Feb"
+      count,
+    });
+  }
+
+  return data;
+}
+
+  async getRecentActivities(limit = 10) {
+    return this.prisma.activityLog.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true, email: true } },
+      },
+    });
+  }
+
+  async getLeaderboard() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        savingsGoals: true,
+        projects: {
+          include: {
+            goals: true,
+          },
+        },
+      },
+    });
+
+    const leaderboard = users.map((user) => {
+      const totalProjects = user.projects.length;
+      const totalGoals = user.projects.flatMap(p => p.goals).filter(g => g.isCompleted).length;
+      const consistency = totalGoals; // optionally enhanced with streak tracking logic
+
+      return {
+        name: user.name,
+        projectsCompleted: totalProjects,
+        goalsCompleted: totalGoals,
+        consistencyStreak: consistency,
+      };
+    });
+
+    return leaderboard.sort((a, b) => b.consistencyStreak - a.consistencyStreak);
+  }
 
 }
