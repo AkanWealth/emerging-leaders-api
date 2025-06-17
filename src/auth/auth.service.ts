@@ -1,23 +1,16 @@
-
-
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
-  private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID_MOBILE);
 
   constructor(
     private readonly usersService: UsersService,
@@ -27,12 +20,12 @@ export class AuthService {
   ) {}
 
   /**
-   * Decodes and validates Google ID token, issues app tokens.
+   * For mobile apps – verify Google ID token from client SDK.
    */
   async verifyGoogleIdToken(idToken: string) {
     const ticket = await this.googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: process.env.GOOGLE_CLIENT_ID_MOBILE,
     });
 
     const payload = ticket.getPayload();
@@ -45,7 +38,7 @@ export class AuthService {
   }
 
   /**
-   * Login existing user or register new Google user.
+   * Login or create Google user.
    */
   async login(email: string, name: string) {
     let user = await this.usersService.findByEmail(email);
@@ -55,6 +48,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, email);
     await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
     return {
       user: {
         id: user.id,
@@ -64,6 +58,21 @@ export class AuthService {
       tokens,
     };
   }
+
+  // async getTokens(userId: string, email: string) {
+  //   const payload = { sub: userId, email };
+  //   const accessToken = await this.jwtService.signAsync(payload, {
+  //     expiresIn: '1h',
+  //   });
+  //   const refreshToken = await this.jwtService.signAsync(payload, {
+  //     expiresIn: '7d',
+  //   });
+
+  //   return {
+  //     accessToken,
+  //     refreshToken,
+  //   };
+  // }
 
   /**
    * Issues access and refresh tokens.

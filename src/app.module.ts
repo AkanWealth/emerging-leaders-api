@@ -26,6 +26,9 @@ import { AdminUserService } from './admin-user/admin-user.service';
 import { AdminUserController } from './admin-user/admin-user.controller';
 import { AdminUserModule } from './admin-user/admin-user.module';
 import { ContentModule } from './content/content.module';
+import { TicketService } from './ticket/ticket.service';
+import { TicketController } from './ticket/ticket.controller';
+import { TicketModule } from './ticket/ticket.module';
 
 
 @Module({
@@ -48,8 +51,9 @@ import { ContentModule } from './content/content.module';
     AdminModule,
     AdminUserModule,
     ContentModule,
+    TicketModule,
   ],
-  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService],      // Same with providers
 })
 export class AppModule {}
