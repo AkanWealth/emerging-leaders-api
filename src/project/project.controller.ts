@@ -28,14 +28,14 @@ import { RequestWithUser } from 'src/types/request-with-user';
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new project' })
-  @ApiResponse({ status: 201, description: 'Project created successfully' })
-  @ApiBody({ type: CreateProjectDto })
-  create(req: RequestWithUser, @Body() dto: CreateProjectDto) {
-    const user = req.user as { id: string };
-    return this.projectService.create(user.id, dto);
-  }
+@Post()
+@ApiOperation({ summary: 'Create a new project' })
+@ApiResponse({ status: 201, description: 'Project created successfully' })
+@ApiBody({ type: CreateProjectDto })
+create(@Req() req: RequestWithUser, @Body() dto: CreateProjectDto) {
+  const user = req.user as { id: string };
+  return this.projectService.create(user.id, dto);
+}
 
   @Get()
   @ApiOperation({ summary: 'Get all projects' })
