@@ -8,6 +8,7 @@ import {
   UseGuards,
   Patch,
   Req,
+  Query
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,6 +16,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery
 } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -62,13 +64,15 @@ create(@Req() req: RequestWithUser, @Body() dto: CreateProjectDto) {
   update(@Param('id') id: string, @Body() dto: CreateProjectDto) {
     return this.projectService.update(id, dto);
   }
+@Delete(':id')
+@ApiOperation({ summary: 'Delete a project by ID' })
+@ApiParam({ name: 'id', description: 'The ID of the project to delete' })
+@ApiQuery({ name: 'force', required: false, type: Boolean, description: 'Force delete even with goals' })
+@ApiResponse({ status: 200, description: 'Project deleted successfully' })
+@ApiResponse({ status: 404, description: 'Project not found' })
+@ApiResponse({ status: 400, description: 'Project has associated goals' })
+remove(@Param('id') id: string, @Query('force') force?: boolean) {
+  return this.projectService.remove(id, force);
+}
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a project by ID' })
-  @ApiParam({ name: 'id', description: 'The ID of the project to delete' })
-  @ApiResponse({ status: 200, description: 'Project deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(id);
-  }
 }

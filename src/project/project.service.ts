@@ -87,9 +87,32 @@ export class ProjectService {
     });
   }
 
-  remove(id: string) {
-    return this.prisma.project.delete({
-      where: { id },
+ async remove(id: string, force = false) {
+  const project = await this.prisma.project.findUnique({
+    where: { id },
+    include: { goals: true },
+  });
+
+  if (!project) {
+    throw new NotFoundException('Project not found');
+  }
+
+  if (!force && project.goals.length > 0) {
+    throw new BadRequestException(
+      'This project has associated goals. Please delete the goals first or confirm force deletion.'
+    );
+  }
+
+  // Optional: Delete goals first if force is true
+  if (force && project.goals.length > 0) {
+    await this.prisma.goal.deleteMany({
+      where: { projectId: id },
     });
   }
+
+  return this.prisma.project.delete({
+    where: { id },
+  });
+}
+
 }

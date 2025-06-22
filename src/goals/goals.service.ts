@@ -34,6 +34,7 @@ export class GoalService {
       startTime: dto.startTime,
       endTime: dto.endTime,
       projectId: dto.projectId,
+      icon: dto.icon ?? 'https://cdn.app/icons/goal-check.png', // Default icon if not provided
     },
   });
 
@@ -75,6 +76,7 @@ export class GoalService {
         startTime: dto.startTime,
         endTime: dto.endTime,
         projectId: dto.projectId,
+        icon: dto.icon ?? goal.icon, // Use existing icon if not provided
       },
     });
 
@@ -104,6 +106,7 @@ export class GoalService {
           startTime: goal.startTime,
           endTime: goal.endTime,
           projectId: goal.projectId,
+          icon: goal.icon, // Use existing icon
         },
       });
     }
