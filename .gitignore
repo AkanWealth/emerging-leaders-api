@@ -2,7 +2,8 @@
 /dist
 /node_modules
 /build
-firebase/*.json
+src/firebase/*.json
+/encoded.txt
 
 # Logs
 logs
