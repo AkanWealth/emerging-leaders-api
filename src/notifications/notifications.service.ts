@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { firebaseAdmin } from '../firebase/firebase.init';
 
 @Injectable()
-export class NotificationService {
+export class NotificationsService {
   async sendPushNotification(token: string, title: string, body: string, data?: Record<string, string>) {
     try {
       const message = {

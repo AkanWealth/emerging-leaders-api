@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { NotificationService } from '../notifications/notifications.service'; // Import your NotificationService
+import { NotificationsService } from '../notifications/notifications.service'; // Import your NotificationService
 
 @Injectable()
 export class UsersService {
@@ -10,7 +10,7 @@ export class UsersService {
   // Inject NotificationService in your constructor
 constructor(
   private readonly prisma: PrismaService,
-  private readonly notificationService: NotificationService,
+  private readonly notificationService: NotificationsService,
 ) {}
 
 async completeUserAccount(userId: string) {
