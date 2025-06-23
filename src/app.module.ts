@@ -30,6 +30,14 @@ import { TicketService } from './ticket/ticket.service';
 import { TicketController } from './ticket/ticket.controller';
 import { TicketModule } from './ticket/ticket.module';
 import { ActivityLogModule } from './activity-log/activity-log.module';
+import { RecurringIncomeController } from './recurring-income/recurring-income.controller';
+import { RecurringIncomeService } from './recurring-income/recurring-income.service';
+import { RecurringIncomeModule } from './recurring-income/recurring-income.module';
+import { RecurringIncomeCronModule } from './recurring-income-cron/recurring-income-cron.module';
+import { CurrencyService } from './currency/currency.service';
+import { CurrencyController } from './currency/currency.controller';
+import { CurrencyModule } from './currency/currency.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
@@ -37,6 +45,7 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     ConfigModule.forRoot({
       isGlobal: true, // <-- this makes ConfigService available app-wide
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     MailModule,
@@ -54,8 +63,11 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     ContentModule,
     TicketModule,
     ActivityLogModule,
+    RecurringIncomeModule,
+    RecurringIncomeCronModule,
+    CurrencyModule,
   ],
-  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService],      // Same with providers
 })
 export class AppModule {}

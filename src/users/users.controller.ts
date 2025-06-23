@@ -27,22 +27,29 @@ export class UsersController {
    * Update the authenticated user's profile after OTP verification.
    */
   @Patch('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update user profile after OTP verification' })
-  @ApiResponse({
-    status: 200,
-    description: 'User profile updated successfully',
-    type: UpdateProfileDto, // Optionally: Create a UserDto for full output
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateProfile(
-    @Req() req: any,
-    @Body() updateDto: UpdateProfileDto
-  ): Promise<User> {
-    const userId = req.user.id;
-    return this.userService.updateProfile(userId, updateDto);
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Update user profile and optionally set currency/salary' })
+@ApiResponse({
+  status: 200,
+  description: 'User profile updated successfully',
+  schema: {
+    example: {
+      message: 'Profile updated successfully'
+    }
   }
+})
+@ApiResponse({ status: 400, description: 'Bad request' })
+@ApiResponse({ status: 401, description: 'Unauthorized' })
+@ApiResponse({ status: 404, description: 'User not found' })
+async updateProfile(
+  @Req() req: any,
+  @Body() updateDto: UpdateProfileDto
+): Promise<{ message: string }> {
+  const userId = req.user.id;
+  return this.userService.updateProfile(userId, updateDto);
+}
+
 
   /**
    * Get all users (Admin access).

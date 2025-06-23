@@ -16,10 +16,9 @@ model User {
   refreshToken    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  isAdmin         Boolean  @default(false)
 
-  isAdmin Boolean @default(false)
-
-  // Personal Info
+  // Personal Info (same as before)...
   firstname              String?
   lastname               String?
   maritalStatus          String?
@@ -48,26 +47,33 @@ model User {
   lonelinessOrIsolation  Boolean?
   otherChallenges        String?
 
+  // ✅ Preferred Currency Relation
+  currencyId String?     // FK field
+  currency   Currency?   @relation(fields: [currencyId], references: [id])
+
   // Relations
-  otp          Otp[]
-  savingsGoals SavingsGoal[]
-  budgets      Budget[]
-  expenses     Expense[]
-  incomes      Income[]
-  contents     Content[]
-  tickets      Ticket[]
-  projects     Project[]
-  activityLogs ActivityLog[]
-  wallet       Wallet? // no @relation here
+  otp             Otp[]
+  savingsGoals    SavingsGoal[]
+  budgets         Budget[]
+  expenses        Expense[]
+  incomes         Income[]
+  contents        Content[]
+  tickets         Ticket[]
+  projects        Project[]
+  activityLogs    ActivityLog[]
+  wallet          Wallet?
+  RecurringIncome RecurringIncome[]
 }
 
+
 model Wallet {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-  balance   Float    @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id])
+  balance         Float             @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  RecurringIncome RecurringIncome[]
 }
 
 model Otp {
@@ -234,4 +240,55 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+enum Frequency {
+  DAILY
+  MONTHLY
+  YEARLY
+}
+
+enum IncomeType {
+  SALARY
+  GENERAL
+}
+
+model Currency {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  symbol    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]             // ← optional back relation
+  incomes  RecurringIncome[]
+}
+
+
+model RecurringIncome {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  walletId    String
+  wallet      Wallet     @relation(fields: [walletId], references: [id])
+  amount      Float
+  frequency   Frequency // Enum: DAILY, MONTHLY, YEARLY
+  description String?
+  type        IncomeType // Enum: SALARY, GENERAL
+  currencyId  String
+  currency    Currency   @relation(fields: [currencyId], references: [id])
+  startDate   DateTime
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  logs RecurringIncomeLog[]
+
+}
+
+model RecurringIncomeLog {
+  id               String   @id @default(uuid())
+  recurringIncomeId String
+  recurringIncome   RecurringIncome @relation(fields: [recurringIncomeId], references: [id])
+  creditedAt        DateTime @default(now())
 }

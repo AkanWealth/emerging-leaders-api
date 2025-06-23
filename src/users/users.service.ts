@@ -108,49 +108,178 @@ async saveOtp(userId: string, otp: string) {
   }
 
   // Update the user's profile after OTP verification
-async updateProfile(userId: string, updateDto: UpdateProfileDto) {
-  if (!userId) {
-    throw new BadRequestException('User ID is required');
+async updateProfile(userId: string, dto: UpdateProfileDto) {
+  if (!userId) throw new BadRequestException('User ID is required');
+
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+    include: { wallet: true },
+  });
+
+  if (!user) throw new NotFoundException('User not found');
+
+  // 🌍 Validate Currency Code
+  let currencyId: string | undefined = undefined;
+  if (dto.code) {
+    const currency = await this.prisma.currency.findUnique({
+      where: { code: dto.code },
+    });
+
+    if (!currency) throw new BadRequestException('Invalid currency code');
+    currencyId = currency.id;
   }
 
-  const dataToUpdate = Object.fromEntries(
+  // 💰 Handle Recurring Income (Salary)
+  if (dto.salaryAmount && dto.frequency && dto.startDate && currencyId) {
+    const existingSalary = await this.prisma.recurringIncome.findFirst({
+      where: {
+        userId,
+        type: 'SALARY',
+        isActive: true,
+      },
+    });
+
+    const recurringIncomeData = {
+      amount: dto.salaryAmount,
+      frequency: dto.frequency,
+      startDate: new Date(dto.startDate),
+      currencyId,
+    };
+
+    if (existingSalary) {
+      await this.prisma.recurringIncome.update({
+        where: { id: existingSalary.id },
+        data: recurringIncomeData,
+      });
+    } else if (user.wallet?.id) {
+      await this.prisma.recurringIncome.create({
+        data: {
+          userId,
+          walletId: user.wallet.id,
+          description: 'User salary',
+          type: 'SALARY',
+          ...recurringIncomeData,
+        },
+      });
+    }
+  }
+
+  // 🧼 Prepare User Update Payload
+  const {
+    code,          // Exclude from update
+    salaryAmount,  // Exclude salary fields from update
+    frequency,
+    startDate,
+    ...rest
+  } = dto;
+
+  const updatePayload = Object.fromEntries(
     Object.entries({
-      ...updateDto,
+      ...rest,
+      currencyId,
+      dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
       updatedAt: new Date(),
-      dateOfBirth: updateDto.dateOfBirth
-        ? new Date(updateDto.dateOfBirth)
-        : undefined,
     }).filter(([_, v]) => v !== undefined)
   );
 
-  return this.prisma.user.update({
+  await this.prisma.user.update({
     where: { id: userId },
-    data: dataToUpdate,
+    data: updatePayload,
   });
+
+  // ✅ Return Updated User
+  const updatedUser = await this.prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      wallet: true,
+      currency: true, // Make sure this relation exists in your schema
+    },
+  });
+
+  return {
+    message: 'Profile updated successfully',
+    data: updatedUser,
+  };
 }
+
+
+
 
 async getAllVerifiedUsers() {
   return this.prisma.user.findMany({
     where: {
-      profileComplete: true, // Only return users with complete profiles
+      profileComplete: true,
     },
     orderBy: {
       createdAt: 'desc',
     },
+    include: {
+      wallet: {
+        select: {
+          id: true,
+          balance: true,
+        },
+      },
+      RecurringIncome: {
+        where: { isActive: true },
+      },
+      currency: {
+        select: {
+          code: true,
+          symbol: true,
+        },
+      },
+    },
   });
 }
+
 
 async getAllUsers() {
   return this.prisma.user.findMany({
     orderBy: {
       createdAt: 'desc',
     },
+    include: {
+      wallet: {
+        select: {
+          id: true,
+          balance: true, // Include wallet balance
+        },  
+      },
+      RecurringIncome: {
+        where: { isActive: true }, // Optional filter
+      },
+      currency: {
+        select: {
+          code: true,
+          symbol: true, // Include currency code and symbol
+        }, // Ensure this relation exists in your Prisma schema
+      },
+    },
   });
 }
+
 
 async getUserById(id: string) {
   const user = await this.prisma.user.findUnique({
     where: { id },
+    include: {
+      wallet: {
+        select: {
+          id: true,
+          balance: true,
+        },
+      },
+      RecurringIncome: {
+        where: { isActive: true },
+      },
+      currency: {
+        select: {
+          code: true,
+          symbol: true,
+        },
+      },
+    },
   });
 
   if (!user) {
@@ -159,6 +288,7 @@ async getUserById(id: string) {
 
   return user;
 }
+
 
   async clearOtp(userId: string) {
     // Clear OTP after successful verification or password reset

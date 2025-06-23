@@ -5,6 +5,7 @@ import {
   IsNumber,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Frequency, IncomeType } from '@prisma/client'; // Enum types
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ description: 'Full name of the user', example: 'John Doe' })
@@ -146,4 +147,28 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   otherChallenges?: string;
+
+
+
+
+
+
+  @ApiPropertyOptional({ example: 'NGN', description: 'Currency code' })
+  @IsOptional()
+  @IsString()
+  code?: string; // Used to lookup and relate Currency model
+
+  @ApiPropertyOptional({ example: 50000, description: 'Salary amount' })
+  @IsOptional()
+  @IsNumber()
+  salaryAmount?: number;
+
+  @ApiPropertyOptional({ example: 'MONTHLY', enum: Frequency })
+  @IsOptional()
+  frequency?: Frequency;
+
+  @ApiPropertyOptional({ example: '2024-07-01', description: 'Salary start date' })
+  @IsOptional()
+  @IsString()
+  startDate?: string;
 }
