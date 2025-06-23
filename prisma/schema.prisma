@@ -48,8 +48,8 @@ model User {
   otherChallenges        String?
 
   // ✅ Preferred Currency Relation
-  currencyId String?     // FK field
-  currency   Currency?   @relation(fields: [currencyId], references: [id])
+  currencyId String? // FK field
+  currency   Currency? @relation(fields: [currencyId], references: [id])
 
   // Relations
   otp             Otp[]
@@ -63,8 +63,17 @@ model User {
   activityLogs    ActivityLog[]
   wallet          Wallet?
   RecurringIncome RecurringIncome[]
+  FcmToken        FcmToken[]
 }
 
+model FcmToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  platform  String // e.g. 'web' | 'android' | 'ios'
+  createdAt DateTime @default(now())
+}
 
 model Wallet {
   id              String            @id @default(uuid())
@@ -260,10 +269,9 @@ model Currency {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users    User[]             // ← optional back relation
-  incomes  RecurringIncome[]
+  users   User[] // ← optional back relation
+  incomes RecurringIncome[]
 }
-
 
 model RecurringIncome {
   id          String     @id @default(uuid())
@@ -281,14 +289,13 @@ model RecurringIncome {
   isActive    Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  
-  logs RecurringIncomeLog[]
 
+  logs RecurringIncomeLog[]
 }
 
 model RecurringIncomeLog {
-  id               String   @id @default(uuid())
+  id                String          @id @default(uuid())
   recurringIncomeId String
   recurringIncome   RecurringIncome @relation(fields: [recurringIncomeId], references: [id])
-  creditedAt        DateTime @default(now())
+  creditedAt        DateTime        @default(now())
 }

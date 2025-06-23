@@ -2,10 +2,33 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { NotificationService } from '../notifications/notifications.service'; // Import your NotificationService
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+
+  // Inject NotificationService in your constructor
+constructor(
+  private readonly prisma: PrismaService,
+  private readonly notificationService: NotificationService,
+) {}
+
+async completeUserAccount(userId: string) {
+  const tokens = await this.prisma.fcmToken.findMany({
+    where: { userId },
+  });
+
+  for (const { token } of tokens) {
+    await this.notificationService.sendPushNotification(
+      token,
+      '🎉 Account Created!',
+      'Your account has been successfully set up. Welcome!',
+      { screen: 'Dashboard' }
+    );
+  }
+}
+
+
 
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
@@ -187,7 +210,12 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
     data: updatePayload,
   });
 
-  // ✅ Return Updated User
+  //  If user just completed their profile, send notification
+if (!user.profileComplete && updatePayload.profileComplete === true) {
+  await this.completeUserAccount(userId);
+}
+
+  // Return Updated User
   const updatedUser = await this.prisma.user.findUnique({
     where: { id: userId },
     include: {

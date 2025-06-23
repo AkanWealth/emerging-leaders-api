@@ -243,4 +243,16 @@ export class AuthService {
   private async sendOtpToEmail(email: string, otp: string) {
     await this.mailService.sendOtpEmail(email, otp);
   }
+
+  // Called by mobile/web app when a new token is generated
+async saveFcmToken(userId: string, token: string, platform: string) {
+  // Avoid duplicates
+  const existing = await this.prisma.fcmToken.findUnique({ where: { token } });
+  if (!existing) {
+    await this.prisma.fcmToken.create({
+      data: { token, userId, platform },
+    });
+  }
+}
+
 }

@@ -38,6 +38,9 @@ import { CurrencyService } from './currency/currency.service';
 import { CurrencyController } from './currency/currency.controller';
 import { CurrencyModule } from './currency/currency.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { NotificationsController } from './notifications/notifications.controller';
+import { NotificationsService } from './notifications/notifications.service';
+import { NotificationsModule } from './notifications/notifications.module';
 
 
 @Module({
@@ -66,8 +69,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     RecurringIncomeModule,
     RecurringIncomeCronModule,
     CurrencyModule,
+    NotificationsModule,
   ],
-  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService],      // Same with providers
 })
 export class AppModule {}

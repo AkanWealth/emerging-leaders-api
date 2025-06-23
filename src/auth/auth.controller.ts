@@ -126,6 +126,18 @@ export class AuthController {
     );
   }
 
+  // auth.controller.ts
+@Post('fcm-token')
+@UseGuards(JwtAuthGuard)
+async registerFcmToken(
+  @Req() req: any, // or @Req() req: Request as you had
+  @Body() dto: { token: string; platform: string }
+) {
+  const user = req.user; //  Works just fine
+  return this.authService.saveFcmToken(user.id, dto.token, dto.platform);
+}
+
+
   // 👤 Complete profile after authentication
   @Post('complete-profile')
   @UseGuards(JwtAuthGuard)
