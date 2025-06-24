@@ -261,7 +261,15 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
   }
 
   // 💰 Handle Recurring Income (Salary)
-  if (dto.salaryAmount && dto.frequency && dto.startDate && user.wallet?.id && currencyId) {
+if (
+  dto.salaryAmount &&
+  dto.frequency &&
+  dto.startDate &&
+  user.wallet?.id &&
+  currencyId
+) {
+  const savingAmount = Number(dto.savingAmount ?? 0);
+
   const existingSalary = await this.prisma.recurringIncome.findFirst({
     where: {
       userId,
@@ -271,7 +279,7 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
   });
 
   const recurringIncomeData = {
-    amount: Number(dto.salaryAmount),
+    amount: dto.salaryAmount,
     frequency: dto.frequency,
     startDate: new Date(dto.startDate),
     currencyId,
@@ -292,37 +300,42 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
         ...recurringIncomeData,
       },
     });
+  }
 
-    // 💰 Allocate savings from salary to wallet or savings pool
-    if (dto.savingAmount && dto.savingAmount > 0) {
-      await this.prisma.wallet.update({
-        where: { id: user.wallet.id },
-        data: {
-          balance: {
-            increment: Number(dto.savingAmount),
-          },
+  // 💵 Always increment wallet if savingAmount is provided
+  if (savingAmount > 0) {
+    const updatedWallet = await this.prisma.wallet.update({
+      where: { id: user.wallet.id },
+      data: {
+        balance: {
+          increment: savingAmount,
         },
-      });
+      },
+    });
 
-      // 🔔 Notify user
-      const fcmToken = user.FcmToken?.[0]?.token;
-      if (fcmToken) {
-        await this.notificationsService.sendPushNotification(
-          fcmToken,
-          'Savings Allocated 💰',
-          `${selectedCurrency?.symbol || '₦'}${dto.savingAmount.toLocaleString()} saved from salary.`
-        );
-      }
+    console.log('✅ Wallet updated. New Balance:', updatedWallet.balance);
 
-      await this.sendIncomeNotification(user.email, {
-        amount: Number(dto.savingAmount).toLocaleString(),
-        currency: selectedCurrency?.symbol || '₦',
-        type: 'savings',
-        frequency: dto.savingFrequency?.toLowerCase() || 'monthly',
-      });
+    // 🔔 Send push notification
+    const fcmToken = user.FcmToken?.[0]?.token;
+    if (fcmToken) {
+      await this.notificationsService.sendPushNotification(
+        fcmToken,
+        '💰 Savings Updated',
+        `${selectedCurrency?.symbol || '₦'}${savingAmount.toLocaleString()} added to your wallet.`
+      );
     }
+
+    // 📧 Send email notification
+    await this.sendIncomeNotification(user.email, {
+      amount: savingAmount.toLocaleString(),
+      currency: selectedCurrency?.symbol || '₦',
+      type: 'savings',
+      frequency: dto.savingFrequency?.toLowerCase() || 'monthly',
+    });
   }
 }
+
+
 
   // 🧼 Prepare User Update Payload
   const {
