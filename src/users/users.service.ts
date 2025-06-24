@@ -1,16 +1,19 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { NotificationsService } from '../notifications/notifications.service'; // Import your NotificationService
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
-
+ private readonly logger = new Logger(UsersService.name);
   // Inject NotificationService in your constructor
 constructor(
   private readonly prisma: PrismaService,
-  private readonly notificationService: NotificationsService,
+  private readonly notificationsService: NotificationsService,
+  private readonly mailService: MailService,
+  // private readonly logger: Logger = new Logger('UsersService'),
 ) {}
 
 async completeUserAccount(userId: string) {
@@ -19,7 +22,7 @@ async completeUserAccount(userId: string) {
   });
 
   for (const { token } of tokens) {
-    await this.notificationService.sendPushNotification(
+    await this.notificationsService.sendPushNotification(
       token,
       '🎉 Account Created!',
       'Your account has been successfully set up. Welcome!',
@@ -131,18 +134,122 @@ async saveOtp(userId: string, otp: string) {
   }
 
   // Update the user's profile after OTP verification
+// async updateProfile(userId: string, dto: UpdateProfileDto) {
+//   if (!userId) throw new BadRequestException('User ID is required');
+
+//   const user = await this.prisma.user.findUnique({
+//     where: { id: userId },
+//     include: { wallet: true },
+//   });
+
+//   if (!user) throw new NotFoundException('User not found');
+
+//   // 🌍 Validate Currency Code
+//   let currencyId: string | undefined = undefined;
+//   if (dto.code) {
+//     const currency = await this.prisma.currency.findUnique({
+//       where: { code: dto.code },
+//     });
+
+//     if (!currency) throw new BadRequestException('Invalid currency code');
+//     currencyId = currency.id;
+//   }
+
+//   // 💰 Handle Recurring Income (Salary)
+//   if (dto.salaryAmount && dto.frequency && dto.startDate && currencyId) {
+//     const existingSalary = await this.prisma.recurringIncome.findFirst({
+//       where: {
+//         userId,
+//         type: 'SALARY',
+//         isActive: true,
+//       },
+//     });
+
+//     const recurringIncomeData = {
+//       amount: dto.salaryAmount,
+//       frequency: dto.frequency,
+//       startDate: new Date(dto.startDate),
+//       currencyId,
+//     };
+
+//     if (existingSalary) {
+//       await this.prisma.recurringIncome.update({
+//         where: { id: existingSalary.id },
+//         data: recurringIncomeData,
+//       });
+//     } else if (user.wallet?.id) {
+//       await this.prisma.recurringIncome.create({
+//         data: {
+//           userId,
+//           walletId: user.wallet.id,
+//           description: 'User salary',
+//           type: 'SALARY',
+//           ...recurringIncomeData,
+//         },
+//       });
+//     }
+//   }
+
+//   // 🧼 Prepare User Update Payload
+//   const {
+//     code,          // Exclude from update
+//     salaryAmount,  // Exclude salary fields from update
+//     frequency,
+//     startDate,
+//     ...rest
+//   } = dto;
+
+//   const updatePayload = Object.fromEntries(
+//     Object.entries({
+//       ...rest,
+//       currencyId,
+//       dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+//       updatedAt: new Date(),
+//     }).filter(([_, v]) => v !== undefined)
+//   );
+
+//   await this.prisma.user.update({
+//     where: { id: userId },
+//     data: updatePayload,
+//   });
+
+//   //  If user just completed their profile, send notification
+// if (!user.profileComplete && updatePayload.profileComplete === true) {
+//   await this.completeUserAccount(userId);
+// }
+
+//   // Return Updated User
+//   const updatedUser = await this.prisma.user.findUnique({
+//     where: { id: userId },
+//     include: {
+//       wallet: true,
+//       currency: true, // Make sure this relation exists in your schema
+//     },
+//   });
+
+//   return {
+//     message: 'Profile updated successfully',
+//     data: updatedUser,
+//   };
+// }
 async updateProfile(userId: string, dto: UpdateProfileDto) {
   if (!userId) throw new BadRequestException('User ID is required');
 
   const user = await this.prisma.user.findUnique({
     where: { id: userId },
-    include: { wallet: true },
+    include: {
+      wallet: true,
+      currency: true,
+      FcmToken: true,
+    },
   });
 
   if (!user) throw new NotFoundException('User not found');
 
-  // 🌍 Validate Currency Code
-  let currencyId: string | undefined = undefined;
+  // 🌍 Validate Currency Code or fallback to user's existing currency
+ let currencyId: string | undefined = typeof user.currencyId === 'string' ? user.currencyId : undefined;
+  let selectedCurrency = user.currency;
+
   if (dto.code) {
     const currency = await this.prisma.currency.findUnique({
       where: { code: dto.code },
@@ -150,47 +257,77 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
 
     if (!currency) throw new BadRequestException('Invalid currency code');
     currencyId = currency.id;
+    selectedCurrency = currency;
   }
 
   // 💰 Handle Recurring Income (Salary)
-  if (dto.salaryAmount && dto.frequency && dto.startDate && currencyId) {
-    const existingSalary = await this.prisma.recurringIncome.findFirst({
-      where: {
+  if (dto.salaryAmount && dto.frequency && dto.startDate && user.wallet?.id && currencyId) {
+  const existingSalary = await this.prisma.recurringIncome.findFirst({
+    where: {
+      userId,
+      type: 'SALARY',
+      isActive: true,
+    },
+  });
+
+  const recurringIncomeData = {
+    amount: Number(dto.salaryAmount),
+    frequency: dto.frequency,
+    startDate: new Date(dto.startDate),
+    currencyId,
+  };
+
+  if (existingSalary) {
+    await this.prisma.recurringIncome.update({
+      where: { id: existingSalary.id },
+      data: recurringIncomeData,
+    });
+  } else {
+    await this.prisma.recurringIncome.create({
+      data: {
         userId,
+        walletId: user.wallet.id,
+        description: 'User salary',
         type: 'SALARY',
-        isActive: true,
+        ...recurringIncomeData,
       },
     });
 
-    const recurringIncomeData = {
-      amount: dto.salaryAmount,
-      frequency: dto.frequency,
-      startDate: new Date(dto.startDate),
-      currencyId,
-    };
-
-    if (existingSalary) {
-      await this.prisma.recurringIncome.update({
-        where: { id: existingSalary.id },
-        data: recurringIncomeData,
-      });
-    } else if (user.wallet?.id) {
-      await this.prisma.recurringIncome.create({
+    // 💰 Allocate savings from salary to wallet or savings pool
+    if (dto.savingAmount && dto.savingAmount > 0) {
+      await this.prisma.wallet.update({
+        where: { id: user.wallet.id },
         data: {
-          userId,
-          walletId: user.wallet.id,
-          description: 'User salary',
-          type: 'SALARY',
-          ...recurringIncomeData,
+          balance: {
+            increment: Number(dto.savingAmount),
+          },
         },
+      });
+
+      // 🔔 Notify user
+      const fcmToken = user.FcmToken?.[0]?.token;
+      if (fcmToken) {
+        await this.notificationsService.sendPushNotification(
+          fcmToken,
+          'Savings Allocated 💰',
+          `${selectedCurrency?.symbol || '₦'}${dto.savingAmount.toLocaleString()} saved from salary.`
+        );
+      }
+
+      await this.sendIncomeNotification(user.email, {
+        amount: Number(dto.savingAmount).toLocaleString(),
+        currency: selectedCurrency?.symbol || '₦',
+        type: 'savings',
+        frequency: dto.savingFrequency?.toLowerCase() || 'monthly',
       });
     }
   }
+}
 
   // 🧼 Prepare User Update Payload
   const {
-    code,          // Exclude from update
-    salaryAmount,  // Exclude salary fields from update
+    code,          // exclude currency code
+    salaryAmount,  // exclude recurring income fields
     frequency,
     startDate,
     ...rest
@@ -210,17 +347,17 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
     data: updatePayload,
   });
 
-  //  If user just completed their profile, send notification
-if (!user.profileComplete && updatePayload.profileComplete === true) {
-  await this.completeUserAccount(userId);
-}
+  // 🟩 Complete account logic if profile just got completed
+  if (!user.profileComplete && updatePayload.profileComplete === true) {
+    await this.completeUserAccount(userId);
+  }
 
-  // Return Updated User
+  // ✅ Return updated user
   const updatedUser = await this.prisma.user.findUnique({
     where: { id: userId },
     include: {
       wallet: true,
-      currency: true, // Make sure this relation exists in your schema
+      currency: true,
     },
   });
 
@@ -228,6 +365,23 @@ if (!user.profileComplete && updatePayload.profileComplete === true) {
     message: 'Profile updated successfully',
     data: updatedUser,
   };
+}
+
+
+
+private async sendIncomeNotification(
+  to: string,
+  data: { amount: string; currency: string; type: string; frequency: string },
+) {
+  try {
+    await this.mailService.sendEmailWithTemplate(to, 40502898, {
+      amount: `${data.currency}${data.amount}`,
+      frequency: data.frequency,
+      type: data.type,
+    });
+  } catch (error) {
+    this.logger.error(`Failed to send income notification to ${to}`, error);
+  }
 }
 
 

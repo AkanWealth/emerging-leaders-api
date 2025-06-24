@@ -139,14 +139,15 @@ async registerFcmToken(
 
 
   // 👤 Complete profile after authentication
-  @Post('complete-profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Complete user profile after registration' })
-  @ApiResponse({ status: 200, description: 'Profile updated' })
-  async completeProfile(@Req() req, @Body() dto: UpdateProfileDto) {
-    return this.authService.completeProfile(req.user.sub, dto);
-  }
+ @Post('complete-profile')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Complete user profile after registration' })
+@ApiResponse({ status: 200, description: 'Profile updated' })
+async completeProfile(@Req() req, @Body() dto: UpdateProfileDto) {
+  return this.authService.completeProfile(req.user.id, dto); //FIXED
+}
+
 
   // 🙋‍♂️ Get authenticated user details
   @Get('me')

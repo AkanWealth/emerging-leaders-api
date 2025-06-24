@@ -163,12 +163,14 @@ export class AuthService {
     };
   }
 
-  async completeProfile(userId: string, dto: UpdateProfileDto) {
-    const user = await this.usersService.findById(userId);
-    if (!user) throw new UnauthorizedException('User not found');
+ async completeProfile(userId: string, dto: UpdateProfileDto) {
+  const user = await this.usersService.findById(userId);
+  if (!user) throw new UnauthorizedException('User not found');
 
-    return this.usersService.updateProfile(userId, dto);
-  }
+  // This triggers full profile logic including wallet/salary/notifications
+  return this.usersService.updateProfile(userId, dto);
+}
+
 
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
