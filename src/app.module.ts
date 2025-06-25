@@ -41,6 +41,13 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsController } from './notifications/notifications.controller';
 import { NotificationsService } from './notifications/notifications.service';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AssessmentCategoryService } from './assessment-category/assessment-category.service';
+import { AssessmentCategoryController } from './assessment-category/assessment-category.controller';
+import { AssessmentCategoryModule } from './assessment-category/assessment-category.module';
+import { AssessmentModule } from './assessment/assessment.module';
+import { NotebookController } from './notebook/notebook.controller';
+import { NotebookService } from './notebook/notebook.service';
+import { NotebookModule } from './notebook/notebook.module';
 
 
 @Module({
@@ -70,8 +77,11 @@ import { NotificationsModule } from './notifications/notifications.module';
     RecurringIncomeCronModule,
     CurrencyModule,
     NotificationsModule,
+    AssessmentCategoryModule,
+    AssessmentModule,
+    NotebookModule,
   ],
-  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService],      // Same with providers
 })
 export class AppModule {}

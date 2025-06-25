@@ -148,7 +148,10 @@ export class UpdateProfileDto {
   @IsOptional()
   otherChallenges?: string;
 
-
+  @ApiPropertyOptional({ description: 'User Profile Picture', example: 'https://imgul.default-image.png' })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
 
 
 
