@@ -154,8 +154,6 @@ export class UpdateProfileDto {
   profilePicture?: string;
 
 
-
-
   @ApiPropertyOptional({ example: 'NGN', description: 'Currency code' })
   @IsOptional()
   @IsString()

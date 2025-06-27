@@ -48,6 +48,7 @@ import { AssessmentModule } from './assessment/assessment.module';
 import { NotebookController } from './notebook/notebook.controller';
 import { NotebookService } from './notebook/notebook.service';
 import { NotebookModule } from './notebook/notebook.module';
+import { SavingsModule } from './savings/savings.module';
 
 
 @Module({
@@ -80,6 +81,7 @@ import { NotebookModule } from './notebook/notebook.module';
     AssessmentCategoryModule,
     AssessmentModule,
     NotebookModule,
+    SavingsModule,
   ],
   controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController], // Only controllers here that don't belong to other modules
   providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService],      // Same with providers

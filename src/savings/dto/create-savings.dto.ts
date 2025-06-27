@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsDateString } from 'class-validator';
 
-export class CreateSavingsGoalDto {
+export class CreateSavingsDto {
   @ApiProperty({ example: '🏠', description: 'Emoji icon representing the savings goal' })
   @IsString()
   icon: string;
@@ -18,5 +18,7 @@ export class CreateSavingsGoalDto {
   @IsDateString()
   targetDate: string;
 
+  @ApiProperty({ example: '12345', description: 'Optional budget ID to link the goal' })
+  @IsString() 
   budgetId?: string;
 }
