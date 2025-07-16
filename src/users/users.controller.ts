@@ -64,6 +64,14 @@ async updateProfile(
     return this.userService.getAllUsers();
   }
 
+  @Get('user/stats-summary')
+@UseGuards(JwtAuthGuard)
+@ApiOperation({ summary: 'Get user goal/project/assessment stats' })
+async getUserStats(@Req() req) {
+  const userId = req.user.id;
+  return this.userService.getUserStats(userId);
+}
+
   /**
    * Get all verified users.
    * (Assuming this is a placeholder — implement logic later)

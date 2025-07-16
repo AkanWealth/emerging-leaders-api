@@ -593,4 +593,37 @@ async getUserById(id: string) {
       orderBy: { createdAt: 'desc' }, // Get the latest OTP
     });
   }
+
+  async getUserStats(userId: string) {
+  const [completedGoals, completedProjects, userAssessments] = await Promise.all([
+    this.prisma.goal.count({
+      where: {
+        isCompleted: true,
+        project: {
+          userId: userId,
+        },
+      },
+    }),
+
+    this.prisma.project.count({
+      where: {
+        completed: true,
+        userId: userId,
+      },
+    }),
+
+    this.prisma.userAssessment.count({
+      where: {
+        userId: userId,
+      },
+    }),
+  ]);
+
+  return {
+    completedGoals,
+    completedProjects,
+    assessmentsTaken: userAssessments,
+  };
+}
+
 }

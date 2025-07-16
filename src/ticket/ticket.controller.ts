@@ -26,13 +26,13 @@ export class TicketController {
   @Post()
   @ApiOperation({ summary: 'User creates a new support ticket' })
   create(@Req() req, @Body() dto: CreateTicketDto) {
-    return this.ticketService.create(dto, req.user.sub);
+    return this.ticketService.create(dto, req.user.id);
   }
 
   @Get('my')
   @ApiOperation({ summary: 'User views their own tickets' })
   findMyTickets(@Req() req) {
-    return this.ticketService.findUserTickets(req.user.sub);
+    return this.ticketService.findUserTickets(req.user.id);
   }
 
   // ADMIN ROUTES

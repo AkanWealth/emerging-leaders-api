@@ -126,6 +126,7 @@ model Project {
   id           String   @id @default(uuid())
   name         String
   description  String
+  completed    Boolean  @default(false)
   startDate    DateTime
   endDate      DateTime
   categoryId   String

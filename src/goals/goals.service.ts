@@ -114,6 +114,29 @@ export class GoalService {
     return updatedGoal;
   }
 
+async getUpcomingGoals(userId: string) {
+  const now = new Date();
+
+  return this.prisma.goal.findMany({
+    where: {
+      isCompleted: false,
+      startDate: {
+        gte: now,
+      },
+      project: {
+        userId,
+      },
+    },
+    include: {
+      project: true,
+    },
+    orderBy: {
+      startDate: 'asc',
+    },
+  });
+}
+
+
   async remove(id: string) {
     return this.prisma.goal.delete({
       where: { id },
