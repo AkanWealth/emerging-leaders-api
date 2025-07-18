@@ -58,6 +58,9 @@ model User {
   RecurringIncome        RecurringIncome[]
   savingsGoals           SavingsGoal[]
   SavingsTopUp           SavingsTopUp[]
+  module1s               Module1[]
+  module2s               Module2[]
+  module3s               Module3[]
   tickets                Ticket[]
   currency               Currency?         @relation(fields: [currencyId], references: [id])
   UserAssessment         UserAssessment[]
@@ -333,7 +336,7 @@ model Note {
 }
 
 model SavingsTopUp {
-  id            String      @id @default(uuid())  // ✅ generate automatically
+  id            String      @id @default(uuid()) // ✅ generate automatically
   savingsGoalId String
   userId        String
   amount        Float
@@ -377,4 +380,115 @@ enum QuestionType {
 enum AssessmentStatus {
   OPEN
   LOCKED
+}
+
+model Workbook {
+  id        String   @id @default(uuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module1s Module1[]
+  module2s Module2[]
+  module3s Module3[]
+}
+
+model Module1 {
+  id                            String   @id @default(uuid())
+  workbookId                    String
+  userId                        String
+  mindset                       String
+  areasGivenAwayPen             String
+  whatWentWell                  String
+  whatCouldBeBetter             String
+  whatCouldYouDoForFree         String
+  goodCharacteristicsToDevelop  String
+  dreams                        String
+  characterGoals                String
+  legacy                        String
+  relationshipStoryChange       String
+  howToGetThere                 String
+  threeFocusPoints1             String
+  whoDoYouKnow                  String
+  whoDoYouNeedToKnow            String
+  threeFocusPoints2             String
+  leadershipStepToTake          String
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  workbook                      Workbook @relation(fields: [workbookId], references: [id])
+  user                          User     @relation(fields: [userId], references: [id])
+
+  @@unique([workbookId, userId]) // ✅ This ensures one module1 per user per workbook
+}
+
+
+model Module2 {
+  id         String @id @default(uuid())
+  workbookId String
+  userId     String
+
+  workbook Workbook @relation(fields: [workbookId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  goodFinancialManagement  String
+  badFinancialManagement   String
+  biggerYesShortTerm       String
+  biggerYesMediumTerm      String
+  biggerYesLongTerm        String
+  leadershipMindsetInMoney String
+  savingFor                String
+  howMuchToSave            Float
+  incomeAmount             Float
+  expensesToCut            String
+  savingsLocation          String
+  trackSavings             String
+  wantsVsNeeds             String
+
+  income1     Float
+  income2     Float
+  income3     Float
+  otherIncome Float
+  food        Float
+  house       Float
+  travel      Float
+  rent        Float
+  mobile      Float
+  medical     Float
+  education   Float
+  funFund     Float
+  other1      Float
+  other2      Float
+
+  financeLeadershipStep String
+
+  @@unique([workbookId, userId])
+}
+
+model Module3 {
+  id         String @id @default(uuid())
+  workbookId String
+  userId     String
+
+  workbook Workbook @relation(fields: [workbookId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  projectPurpose      String
+  skills              String
+  experience          String
+  resources           String
+  people              String
+  timeAvailability    String
+  focusPoint1         String
+  focusPoint2         String
+  focusPoint3         String
+  peopleIKnow         String
+  peopleINeedToKnow   String
+  what                String
+  when                String
+  who                 String
+  leadYourProjectNote String
+  additionalNotes     String
+
+  @@unique([workbookId, userId])
 }
