@@ -49,6 +49,12 @@ import { NotebookController } from './notebook/notebook.controller';
 import { NotebookService } from './notebook/notebook.service';
 import { NotebookModule } from './notebook/notebook.module';
 import { SavingsModule } from './savings/savings.module';
+import { WorkbookModule } from './workbook/workbook.module';
+import { Module1Module } from './module1/module1.module';
+import { Module2Controller } from './module2/module2.controller';
+import { Module2Service } from './module2/module2.service';
+import { Module2Module } from './module2/module2.module';
+import { Module3Module } from './module3/module3.module';
 
 
 @Module({
@@ -82,8 +88,12 @@ import { SavingsModule } from './savings/savings.module';
     AssessmentModule,
     NotebookModule,
     SavingsModule,
+    WorkbookModule,
+    Module1Module,
+    Module2Module,
+    Module3Module,
   ],
-  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController, Module2Controller], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService, Module2Service],      // Same with providers
 })
 export class AppModule {}
