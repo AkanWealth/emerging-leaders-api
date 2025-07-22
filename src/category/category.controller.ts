@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Patch, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RequestWithUser } from 'src/types/request-with-user'; 
 
 @ApiTags('Categories')
 @UseGuards(JwtAuthGuard) // Ensure all category routes are protected
@@ -11,12 +12,19 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new category' })
-  @ApiResponse({ status: 201, description: 'Category successfully created' })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  create(@Body() dto: CreateCategoryDto) {
-    return this.categoryService.create(dto);
-  }
+@ApiOperation({ summary: 'Create a new category' })
+@ApiResponse({ status: 201, description: 'Category successfully created' })
+@ApiResponse({ status: 400, description: 'Invalid input data' })
+create(@Req() req: RequestWithUser, @Body() dto: CreateCategoryDto) {
+  return this.categoryService.create(req.user.id, dto);  
+}
+
+@Get('user-categories')
+@ApiOperation({ summary: 'Get all categories for the current user' })
+@ApiResponse({ status: 200, description: 'List of categories' })
+findAllUserCate(@Req() req: RequestWithUser) {
+  return this.categoryService.findAllUserCate(req.user.id); 
+}
 
   @Get()
   @ApiOperation({ summary: 'Get all categories' })

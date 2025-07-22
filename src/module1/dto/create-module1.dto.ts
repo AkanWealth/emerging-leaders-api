@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
 export class CreateModule1Dto {
+  @ApiProperty() @IsString() userId: string;
   @ApiProperty() @IsString() mindset: string;
   @ApiProperty() @IsString() areasGivenAwayPen: string;
   @ApiProperty() @IsString() whatWentWell: string;

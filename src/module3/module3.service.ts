@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateModule3Dto } from './dto/create-module3.dto';
 import { UpdateModule3Dto } from './dto/update-module3.dto';
@@ -7,55 +7,38 @@ import { UpdateModule3Dto } from './dto/update-module3.dto';
 export class Module3Service {
   constructor(private prisma: PrismaService) {}
 
-  async create(workbookId: string, userId: string, dto: CreateModule3Dto) {
-    const workbook = await this.prisma.workbook.findUnique({ where: { id: workbookId } });
-    if (!workbook) throw new NotFoundException('Workbook not found');
+  async create(userId: string, dto: CreateModule3Dto) {
+    const existing = await this.prisma.module3.findUnique({ where: { userId } });
+    if (existing) throw new ConflictException('Module3 already exists for this user');
 
     return this.prisma.module3.create({
       data: {
-        workbookId,
         userId,
         ...dto,
       },
     });
   }
 
-  async findOne(workbookId: string, userId: string) {
+  async findOne(userId: string) {
     const module = await this.prisma.module3.findUnique({
-      where: {
-        workbookId_userId: {
-          workbookId,
-          userId,
-        },
-      },
+      where: { userId },
     });
-
-    if (!module) throw new NotFoundException('Module3 not found for this user and workbook');
+    if (!module) throw new NotFoundException('Module3 not found for this user');
     return module;
   }
 
-  async update(workbookId: string, userId: string, dto: UpdateModule3Dto) {
-    await this.findOne(workbookId, userId);
+  async update(userId: string, dto: UpdateModule3Dto) {
+    await this.findOne(userId);
     return this.prisma.module3.update({
-      where: {
-        workbookId_userId: {
-          workbookId,
-          userId,
-        },
-      },
+      where: { userId },
       data: dto,
     });
   }
 
-  async remove(workbookId: string, userId: string) {
-    await this.findOne(workbookId, userId);
+  async remove(userId: string) {
+    await this.findOne(userId);
     return this.prisma.module3.delete({
-      where: {
-        workbookId_userId: {
-          workbookId,
-          userId,
-        },
-      },
+      where: { userId },
     });
   }
 }

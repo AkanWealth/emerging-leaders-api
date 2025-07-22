@@ -4,7 +4,6 @@ import {
   Get,
   Patch,
   Delete,
-  Param,
   Body,
   Req,
   UseGuards,
@@ -17,7 +16,6 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -25,53 +23,41 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 @ApiTags('Module3 - Lead Your Project')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('workbooks/:workbookId/module3')
+@Controller('module3')
 export class Module3Controller {
   constructor(private readonly service: Module3Service) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create Module3 for a workbook' })
-  @ApiParam({ name: 'workbookId', type: String })
+  @ApiOperation({ summary: 'Create Module3 for current user' })
   @ApiBody({ type: CreateModule3Dto })
   @ApiResponse({ status: 201, description: 'Module3 created successfully' })
-  @ApiResponse({ status: 404, description: 'Workbook not found' })
-  create(
-    @Param('workbookId') workbookId: string,
-    @Body() dto: CreateModule3Dto,
-    @Req() req: any,
-  ) {
-    return this.service.create(workbookId, req.user.id, dto);
+  @ApiResponse({ status: 409, description: 'Module3 already exists' })
+  create(@Body() dto: CreateModule3Dto, @Req() req: any) {
+    return this.service.create(req.user.id, dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get Module3 of a workbook for the current user' })
-  @ApiParam({ name: 'workbookId', type: String })
+  @ApiOperation({ summary: 'Get Module3 for current user' })
   @ApiResponse({ status: 200, description: 'Module3 retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Module3 not found' })
-  findOne(@Param('workbookId') workbookId: string, @Req() req: any) {
-    return this.service.findOne(workbookId, req.user.id);
+  findOne(@Req() req: any) {
+    return this.service.findOne(req.user.id);
   }
 
   @Patch()
-  @ApiOperation({ summary: 'Update Module3 of a workbook for the current user' })
-  @ApiParam({ name: 'workbookId', type: String })
+  @ApiOperation({ summary: 'Update Module3 for current user' })
   @ApiBody({ type: UpdateModule3Dto })
   @ApiResponse({ status: 200, description: 'Module3 updated successfully' })
   @ApiResponse({ status: 404, description: 'Module3 not found' })
-  update(
-    @Param('workbookId') workbookId: string,
-    @Body() dto: UpdateModule3Dto,
-    @Req() req: any,
-  ) {
-    return this.service.update(workbookId, req.user.id, dto);
+  update(@Body() dto: UpdateModule3Dto, @Req() req: any) {
+    return this.service.update(req.user.id, dto);
   }
 
   @Delete()
-  @ApiOperation({ summary: 'Delete Module3 of a workbook for the current user' })
-  @ApiParam({ name: 'workbookId', type: String })
+  @ApiOperation({ summary: 'Delete Module3 for current user' })
   @ApiResponse({ status: 200, description: 'Module3 deleted successfully' })
   @ApiResponse({ status: 404, description: 'Module3 not found' })
-  remove(@Param('workbookId') workbookId: string, @Req() req: any) {
-    return this.service.remove(workbookId, req.user.id);
+  remove(@Req() req: any) {
+    return this.service.remove(req.user.id);
   }
 }

@@ -7,55 +7,34 @@ import { UpdateModule2Dto } from './dto/update-module2.dto';
 export class Module2Service {
   constructor(private prisma: PrismaService) {}
 
-  async create(workbookId: string, userId: string, dto: CreateModule2Dto) {
-  const workbook = await this.prisma.workbook.findUnique({ where: { id: workbookId } });
-  if (!workbook) throw new NotFoundException('Workbook not found');
+  async create(userId: string, dto: CreateModule2Dto) {
+    return this.prisma.module2.upsert({
+      where: { userId },
+      update: dto,
+      create: { userId, ...dto },
+    });
+  }
 
-  return this.prisma.module2.create({
-    data: {
-      workbookId,
-      userId,
-      ...dto,
-    },
-  });
-}
+  async findOne(userId: string) {
+    const module = await this.prisma.module2.findUnique({
+      where: { userId },
+    });
+    if (!module) throw new NotFoundException('Module2 not found for this user');
+    return module;
+  }
 
-async findOne(workbookId: string, userId: string) {
-  const module = await this.prisma.module2.findUnique({
-    where: {
-      workbookId_userId: {
-        workbookId,
-        userId,
-      },
-    },
-  });
-  if (!module) throw new NotFoundException('Module2 not found for this workbook and user');
-  return module;
-}
+  async update(userId: string, dto: UpdateModule2Dto) {
+    await this.findOne(userId);
+    return this.prisma.module2.update({
+      where: { userId },
+      data: dto,
+    });
+  }
 
-async update(workbookId: string, userId: string, dto: UpdateModule2Dto) {
-  await this.findOne(workbookId, userId);
-  return this.prisma.module2.update({
-    where: {
-      workbookId_userId: {
-        workbookId,
-        userId,
-      },
-    },
-    data: dto,
-  });
-}
-
-async remove(workbookId: string, userId: string) {
-  await this.findOne(workbookId, userId);
-  return this.prisma.module2.delete({
-    where: {
-      workbookId_userId: {
-        workbookId,
-        userId,
-      },
-    },
-  });
-}
-
+  async remove(userId: string) {
+    await this.findOne(userId);
+    return this.prisma.module2.delete({
+      where: { userId },
+    });
+  }
 }

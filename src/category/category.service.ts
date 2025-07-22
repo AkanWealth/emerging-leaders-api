@@ -6,13 +6,14 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 export class CategoryService {
   constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateCategoryDto) {
+  create(userId: string, dto: CreateCategoryDto) {
   return this.prisma.category.create({
     data: {
       icon: dto.icon,
       title: dto.title,
       description: dto.description,
       usageContext: dto.usageContext,
+      userId, // attach the user here
     },
   });
 }
@@ -21,6 +22,17 @@ export class CategoryService {
   findAll() {
     return this.prisma.category.findMany();
   }
+
+  findAllUserCate(userId: string) {
+  return this.prisma.category.findMany({
+    where: {
+      userId, // 👈 filter by user
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
 
   findOne(id: string) {
     return this.prisma.category.findUnique({

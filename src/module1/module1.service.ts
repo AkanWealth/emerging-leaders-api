@@ -7,45 +7,32 @@ import { UpdateModule1Dto } from './dto/update-module1.dto';
 export class Module1Service {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(workbookId: string, userId: string, dto: CreateModule1Dto) {
-    // Upsert so user can only have one per workbook
+  async create(userId: string, dto: CreateModule1Dto) {
     return this.prisma.module1.upsert({
-      where: {
-        workbookId_userId: { workbookId, userId },
-      },
+      where: { userId },
       update: dto,
-      create: {
-        ...dto,
-        workbookId,
-        userId,
-      },
+      create: { ...dto, userId },
     });
   }
 
-  async findOne(workbookId: string, userId: string) {
+  async findOne(userId: string) {
     const record = await this.prisma.module1.findUnique({
-      where: {
-        workbookId_userId: { workbookId, userId },
-      },
+      where: { userId },
     });
     if (!record) throw new NotFoundException('Module1 not found');
     return record;
   }
 
-  async update(workbookId: string, userId: string, dto: UpdateModule1Dto) {
+  async update(userId: string, dto: UpdateModule1Dto) {
     return this.prisma.module1.update({
-      where: {
-        workbookId_userId: { workbookId, userId },
-      },
+      where: { userId },
       data: dto,
     });
   }
 
-  async remove(workbookId: string, userId: string) {
+  async remove(userId: string) {
     return this.prisma.module1.delete({
-      where: {
-        workbookId_userId: { workbookId, userId },
-      },
+      where: { userId },
     });
   }
 }

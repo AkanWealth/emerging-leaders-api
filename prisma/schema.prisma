@@ -64,7 +64,9 @@ model User {
   tickets                Ticket[]
   currency               Currency?         @relation(fields: [currencyId], references: [id])
   UserAssessment         UserAssessment[]
+   financeSetups FinanceSetup[]
   wallet                 Wallet?
+  Category               Category[]
 }
 
 model FcmToken {
@@ -110,6 +112,9 @@ model Category {
   expenses     Expense[]
   incomes      Income[]
   projects     Project[]
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 }
 
 model Content {
@@ -246,6 +251,7 @@ model Currency {
   updatedAt DateTime          @updatedAt
   code      String            @unique
   incomes   RecurringIncome[]
+  financeSetups FinanceSetup[]
   users     User[]
 }
 
@@ -382,27 +388,17 @@ enum AssessmentStatus {
   LOCKED
 }
 
-model Workbook {
-  id        String   @id @default(uuid())
-  title     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  module1s Module1[]
-  module2s Module2[]
-  module3s Module3[]
-}
-
 model Module1 {
   id                            String   @id @default(uuid())
-  workbookId                    String
-  userId                        String
+  userId                        String   @unique
+  user                          User     @relation(fields: [userId], references: [id])
+
   mindset                       String
   areasGivenAwayPen             String
   whatWentWell                  String
   whatCouldBeBetter             String
   whatCouldYouDoForFree         String
-  goodCharacteristicsToDevelop  String
+  goodCharacteristicsToDevelop String
   dreams                        String
   characterGoals                String
   legacy                        String
@@ -413,23 +409,16 @@ model Module1 {
   whoDoYouNeedToKnow            String
   threeFocusPoints2             String
   leadershipStepToTake          String
+
   createdAt                     DateTime @default(now())
   updatedAt                     DateTime @updatedAt
-
-  workbook                      Workbook @relation(fields: [workbookId], references: [id])
-  user                          User     @relation(fields: [userId], references: [id])
-
-  @@unique([workbookId, userId]) // ✅ This ensures one module1 per user per workbook
 }
 
 
 model Module2 {
   id         String @id @default(uuid())
-  workbookId String
-  userId     String
-
-  workbook Workbook @relation(fields: [workbookId], references: [id])
-  user     User     @relation(fields: [userId], references: [id])
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id])
 
   goodFinancialManagement  String
   badFinancialManagement   String
@@ -462,16 +451,14 @@ model Module2 {
 
   financeLeadershipStep String
 
-  @@unique([workbookId, userId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Module3 {
   id         String @id @default(uuid())
-  workbookId String
-  userId     String
-
-  workbook Workbook @relation(fields: [workbookId], references: [id])
-  user     User     @relation(fields: [userId], references: [id])
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id])
 
   projectPurpose      String
   skills              String
@@ -490,5 +477,24 @@ model Module3 {
   leadYourProjectNote String
   additionalNotes     String
 
-  @@unique([workbookId, userId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FinanceSetup {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+
+  currencyId   String
+  currency     Currency @relation(fields: [currencyId], references: [id])
+
+  salaryAmount Float
+  icon         String?
+  title        String
+  targetAmount Float
+  targetDate   DateTime
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
