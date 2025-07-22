@@ -21,16 +21,16 @@ export class SavingsGoalService {
         throw new BadRequestException('A valid target amount is required');
       }
 
-      const wallet = await prisma.wallet.findUnique({ where: { userId } });
-      if (!wallet) throw new NotFoundException('Wallet not found');
-      if (wallet.balance < dto.targetAmount) {
-        throw new BadRequestException('Insufficient wallet balance');
-      }
+      // const wallet = await prisma.wallet.findUnique({ where: { userId } });
+      // if (!wallet) throw new NotFoundException('Wallet not found');
+      // if (wallet.balance < dto.targetAmount) {
+      //   throw new BadRequestException('Insufficient wallet balance');
+      // }
 
-      await prisma.wallet.update({
-        where: { userId },
-        data: { balance: { decrement: dto.targetAmount } },
-      });
+      // await prisma.wallet.update({
+      //   where: { userId },
+      //   data: { balance: { decrement: dto.targetAmount } },
+      // });
 
       const goal = await prisma.savingsGoal.create({
         data: {
