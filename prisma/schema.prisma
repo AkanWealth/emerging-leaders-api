@@ -494,6 +494,7 @@ model FinanceSetup {
   title        String
   targetAmount Float
   targetDate   DateTime
+  financeCompleted Boolean @default(false)
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

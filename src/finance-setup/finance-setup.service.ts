@@ -9,7 +9,7 @@ export class FinanceSetupService {
 
   create(userId: string, dto: CreateFinanceSetupDto) {
     return this.prisma.financeSetup.create({
-      data: { ...dto, userId },
+      data: { ...dto, userId, financeCompleted: true},
       include: { currency: true },
     });
   }
