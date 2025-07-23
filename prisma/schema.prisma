@@ -456,9 +456,9 @@ model Module2 {
 }
 
 model Module3 {
-  id         String @id @default(uuid())
-  userId     String @unique
-  user       User   @relation(fields: [userId], references: [id])
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id])
 
   projectPurpose      String
   skills              String
@@ -477,9 +477,36 @@ model Module3 {
   leadYourProjectNote String
   additionalNotes     String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  oneYearFromNow      String
+
+  week1Income         String
+  week1Total          String
+  week1Expenses       String
+  week1ProfitLoss     String
+  week1Cashflow       String
+
+  week2Income         String
+  week2Total          String
+  week2Expenses       String
+  week2ProfitLoss     String
+  week2Cashflow       String
+
+  week3Income         String
+  week3Total          String
+  week3Expenses       String
+  week3ProfitLoss     String
+  week3Cashflow       String
+
+  week4Income         String
+  week4Total          String
+  week4Expenses       String
+  week4ProfitLoss     String
+  week4Cashflow       String
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
+
 
 model FinanceSetup {
   id           String   @id @default(uuid())
