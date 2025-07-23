@@ -46,6 +46,13 @@ create(@Req() req: RequestWithUser, @Body() dto: CreateProjectDto) {
     return this.projectService.findAll();
   }
 
+@Get('user-project')
+@ApiOperation({ summary: 'Get all project for the current user' })
+@ApiResponse({ status: 200, description: 'List of projects' })
+findAllUserProject(@Req() req: RequestWithUser) {
+  return this.projectService.findAllUserProject(req.user.id); 
+}
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a project by ID' })
   @ApiParam({ name: 'id', description: 'The ID of the project' })

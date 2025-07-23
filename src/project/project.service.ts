@@ -63,6 +63,21 @@ export class ProjectService {
     });
   }
 
+  findAllUserProject(userId: string) {
+  return this.prisma.project.findMany({
+    where: {
+      userId, 
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    include:{
+      category: true,
+      goals: true,
+    },
+  });
+}
+
   findOne(id: string) {
     return this.prisma.project.findUnique({
       where: { id },

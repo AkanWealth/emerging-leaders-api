@@ -26,7 +26,7 @@ export class CategoryService {
   findAllUserCate(userId: string) {
   return this.prisma.category.findMany({
     where: {
-      userId, // 👈 filter by user
+      userId, 
     },
     orderBy: {
       createdAt: 'desc',
