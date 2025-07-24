@@ -7,12 +7,24 @@ import { UpdateFinanceSetupDto } from './dto/update-finance-setup.dto';
 export class FinanceSetupService {
   constructor(private prisma: PrismaService) {}
 
-  create(userId: string, dto: CreateFinanceSetupDto) {
-    return this.prisma.financeSetup.create({
-      data: { ...dto, userId, financeCompleted: true},
-      include: { currency: true },
-    });
-  }
+  async create(userId: string, dto: CreateFinanceSetupDto) {
+  const financeSetup = await this.prisma.financeSetup.create({
+    data: {
+      ...dto,
+      userId,
+    },
+    include: { currency: true },
+  });
+
+  // Now update the user to set financeCompleted to true
+  await this.prisma.user.update({
+    where: { id: userId },
+    data: { financeCompleted: true },
+  });
+
+  return financeSetup;
+}
+
 
   findAll(userId: string) {
     return this.prisma.financeSetup.findMany({
