@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFinanceSetupDto } from './dto/create-finance-setup.dto';
 import { UpdateFinanceSetupDto } from './dto/update-finance-setup.dto';
@@ -8,6 +8,17 @@ export class FinanceSetupService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateFinanceSetupDto) {
+  // 1. Check if the user has already completed the finance setup
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+    select: { financeCompleted: true },
+  });
+
+  if (user?.financeCompleted) {
+    throw new BadRequestException('You have already completed your finance setup.');
+  }
+
+  // 2. Create the finance setup
   const financeSetup = await this.prisma.financeSetup.create({
     data: {
       ...dto,
@@ -16,7 +27,7 @@ export class FinanceSetupService {
     include: { currency: true },
   });
 
-  // Now update the user to set financeCompleted to true
+  // 3. Update the user to set financeCompleted to true
   await this.prisma.user.update({
     where: { id: userId },
     data: { financeCompleted: true },
