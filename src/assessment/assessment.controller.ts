@@ -16,6 +16,8 @@ import { SubmitAssessmentResponseDto } from './dto/submit-response.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AdminGuard } from 'src/common/decorators/guards/admin.guard';
+import { RequestWithUser } from '../types/request-with-user';
+import { Request as ReqDecorator } from '@nestjs/common';
 
 
 @ApiTags('Assessment')
@@ -52,20 +54,20 @@ export class AssessmentController {
     return this.service.addQuestion(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('submit')
-  @ApiOperation({ summary: 'User submits assessment responses' })
-  submitResponse(@Body() dto: SubmitAssessmentResponseDto) {
-    const userId = 'mock-user-id'; // Replace with real token extraction
-    return this.service.submitResponse(userId, dto);
-  }
+submitResponse(@Body() dto: SubmitAssessmentResponseDto, @ReqDecorator() req: RequestWithUser) {
+  const userId = req.user.id;
+  return this.service.submitResponse(userId, dto);
+}
 
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  @ApiOperation({ summary: 'Admin views all assessments with stats' })
-  getAll() {
-    return this.service.getAssessmentsWithStats();
-  }
+@UseGuards(JwtAuthGuard)
+@Get()
+@ApiOperation({ summary: 'Admin views all assessments with stats' })
+getAll(@ReqDecorator() req: RequestWithUser) {
+  const userId = req.user.id;
+  return this.service.getAssessmentsWithStats(userId);
+}
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Put(':id/lock')

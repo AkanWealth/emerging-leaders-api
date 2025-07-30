@@ -40,80 +40,80 @@ export class AuthService {
   /**
    * Login or create Google user.
    */
-  async login(email: string, name: string) {
-    let user = await this.usersService.findByEmail(email);
-    if (!user) {
-      user = await this.usersService.createUserDetail(email, name);
-    }
+ async login(email: string, name: string) {
+  let user = await this.usersService.findByEmail(email);
+  if (!user) {
+    user = await this.usersService.createUserDetail(email, name);
+  }
 
-    const tokens = await this.getTokens(user.id, email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+  const tokens = await this.getTokens(user); // ✅ pass full user object
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin, // optional: include in response
+    },
+    tokens,
+  };
+}
+
+
+  async getTokens(user: { id: string; email: string; isAdmin: boolean }) {
+  const [accessToken, refreshToken] = await Promise.all([
+    this.jwtService.signAsync(
+      {
+        sub: user.id,
         email: user.email,
+        isAdmin: user.isAdmin, // ✅ Include this
       },
-      tokens,
-    };
-  }
+      {
+        secret: process.env.JWT_ACCESS_SECRET,
+        expiresIn: '15m',
+      },
+    ),
+    this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin, // ✅ Include this too
+      },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      },
+    ),
+  ]);
 
-  // async getTokens(userId: string, email: string) {
-  //   const payload = { sub: userId, email };
-  //   const accessToken = await this.jwtService.signAsync(payload, {
-  //     expiresIn: '1h',
-  //   });
-  //   const refreshToken = await this.jwtService.signAsync(payload, {
-  //     expiresIn: '7d',
-  //   });
+  return { accessToken, refreshToken };
+}
 
-  //   return {
-  //     accessToken,
-  //     refreshToken,
-  //   };
-  // }
-
-  /**
-   * Issues access and refresh tokens.
-   */
-  async getTokens(userId: string, email: string) {
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        {
-          secret: process.env.JWT_ACCESS_SECRET,
-          expiresIn: '15m',
-        },
-      ),
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        {
-          secret: process.env.JWT_REFRESH_SECRET,
-          expiresIn: '7d',
-        },
-      ),
-    ]);
-    return { accessToken, refreshToken };
-  }
 
   /**
    * Handles refresh token validation and rotation.
    */
-  async refresh(userId: string, refreshToken: string) {
-    const isValid = await this.usersService.validateRefreshToken(
-      userId,
-      refreshToken,
-    );
-    if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+async refresh(userId: string, refreshToken: string) {
+  const isValid = await this.usersService.validateRefreshToken(
+    userId,
+    refreshToken,
+  );
+  if (!isValid) throw new UnauthorizedException('Invalid refresh token');
 
-    const user = await this.usersService.findById(userId);
-    if (!user) throw new UnauthorizedException('User not found');
+  const user = await this.usersService.findById(userId);
+  if (!user) throw new UnauthorizedException('User not found');
 
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
-  }
+  const tokens = await this.getTokens({
+    id: user.id,
+    email: user.email,
+    isAdmin: user.isAdmin, // ✅ Pass isAdmin
+  });
+
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+  return tokens;
+}
+
 
   /**
    * Standard email/password registration with OTP verification.
@@ -135,33 +135,40 @@ export class AuthService {
   /**
    * OTP verification for email/password flow.
    */
-  async verifyOtp(email: string, otp: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('User not found');
+async verifyOtp(email: string, otp: string) {
+  const user = await this.usersService.findByEmail(email);
+  if (!user) throw new UnauthorizedException('User not found');
 
-    const otpRecord = await this.usersService.findLatestOtpByUserId(user.id);
-    if (!otpRecord || otpRecord.otp !== otp) {
-      throw new UnauthorizedException('Invalid or expired OTP');
-    }
-
-    if (otpRecord.expiresAt < new Date()) {
-      throw new UnauthorizedException('OTP expired');
-    }
-
-    await this.usersService.clearOtp(user.id);
-    if (!user.profileComplete) {
-      await this.usersService.markProfileComplete(user.id);
-    }
-
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
-
-    return {
-      message: 'OTP verified successfully',
-      user,
-      tokens,
-    };
+  const otpRecord = await this.usersService.findLatestOtpByUserId(user.id);
+  if (!otpRecord || otpRecord.otp !== otp) {
+    throw new UnauthorizedException('Invalid or expired OTP');
   }
+
+  if (otpRecord.expiresAt < new Date()) {
+    throw new UnauthorizedException('OTP expired');
+  }
+
+  await this.usersService.clearOtp(user.id);
+
+  if (!user.profileComplete) {
+    await this.usersService.markProfileComplete(user.id);
+  }
+
+  const tokens = await this.getTokens({
+    id: user.id,
+    email: user.email,
+    isAdmin: user.isAdmin, // ✅ Include this
+  });
+
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+  return {
+    message: 'OTP verified successfully',
+    user,
+    tokens,
+  };
+}
+
 
  async completeProfile(userId: string, dto: UpdateProfileDto) {
   const user = await this.usersService.findById(userId);
@@ -195,48 +202,90 @@ export class AuthService {
     return this.usersService.updatePassword(user.id, hashedPassword);
   }
 
-  async loginWithCredentials(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.password) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
+ async loginWithCredentials(email: string, password: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      password: true,
+      isAdmin: true, // ✅ include this
+    },
+  });
 
-    const passwordValid = await bcrypt.compare(password, user.password);
-    if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  if (!user || !user.password) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
 
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+  const passwordValid = await bcrypt.compare(password, user.password);
+  if (!passwordValid) {
+    throw new UnauthorizedException('Invalid credentials');
+  }
 
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
+  const tokens = await this.getTokens({
+    id: user.id,
+    email: user.email,
+    isAdmin: user.isAdmin, // ✅ pass this to getTokens
+  });
+
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin, // optional: include in response
+    },
+    tokens,
+  };
+}
+
+
+async loginWithGoogle(email: string, name: string) {
+  let user = await this.prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      isAdmin: true, // ✅ include this for token payload
+    },
+  });
+
+  // Create user if not found
+  if (!user) {
+    const newUser = await this.prisma.user.create({
+      data: {
+        email,
+        name,
+        password: 'google_oauth_placeholder_password',
+        profileComplete: true,
       },
-      tokens,
+    });
+
+    user = {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      isAdmin: false, // ✅ default new users to false
     };
   }
 
-  async loginWithGoogle(email: string, name: string) {
-    let user = await this.prisma.user.findUnique({ where: { email } });
+  const tokens = await this.getTokens({
+    id: user.id,
+    email: user.email,
+    isAdmin: user.isAdmin,
+  });
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name,
-          password: 'google_oauth_placeholder_password',
-          profileComplete: true,
-        },
-      });
-    }
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
-    const tokens = await this.getTokens(user.id, email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
-  }
+  return {
+    user,
+    tokens,
+  };
+}
 
   private generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();

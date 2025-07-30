@@ -10,6 +10,7 @@ export interface RequestWithUser extends Request {
     maritalStatus?: string;
     dateOfBirth?: Date;
     age?: number;
+    isAdmin?: boolean;
     // other user properties as needed
   };
 }
