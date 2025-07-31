@@ -70,6 +70,14 @@ getAll(@ReqDecorator() req: RequestWithUser) {
   return this.service.getAssessmentsWithStats(userId);
 }
 
+@UseGuards(JwtAuthGuard)
+@Get('user')
+@ApiOperation({ summary: 'User views available assessments' })
+getUserAssessments(@ReqDecorator() req: RequestWithUser) {
+  const userId = req.user.id;
+  return this.service.getUserAssessments(userId);
+}
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Put(':id/lock')

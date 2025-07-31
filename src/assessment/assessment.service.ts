@@ -78,7 +78,33 @@ async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
   });
 }
 
+async getUserAssessments(userId: string) {
+  const now = new Date();
 
+  const assessments = await this.prisma.assessment.findMany({
+    where: {
+      status: 'OPEN',
+      scheduledFor: { lte: now },
+    },
+    include: {
+      category: true,
+      questions: {
+        include: { options: true },
+      },
+      userResponses: {
+        where: { userId },
+        select: { id: true },
+      },
+    },
+    orderBy: { scheduledFor: 'asc' }, // optional
+  });
+
+  return assessments.map(a => ({
+    ...a,
+    submitted: a.userResponses.length > 0,
+  }));
+}
+ 
 async getAssessmentsWithStats(userId: string) {
   const assessments = await this.prisma.assessment.findMany({
     include: {
