@@ -60,15 +60,24 @@ export class AssessmentService {
     });
   }
 
-  async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
-    return this.prisma.userAssessment.create({
-      data: {
-        userId,
-        assessmentId: dto.assessmentId,
-        answers: dto.answers,
-      },
-    });
+async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
+  // Optional: check if already submitted to prevent duplicates
+  const existing = await this.prisma.userAssessment.findFirst({
+    where: { userId, assessmentId: dto.assessmentId },
+  });
+  if (existing) {
+    throw new Error('You have already submitted this assessment');
   }
+
+  return this.prisma.userAssessment.create({
+    data: {
+      userId,
+      assessmentId: dto.assessmentId,
+      answers: dto.answers, // assume JSON object keyed by questionId
+    },
+  });
+}
+
 
 async getAssessmentsWithStats(userId: string) {
   const assessments = await this.prisma.assessment.findMany({

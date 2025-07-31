@@ -54,11 +54,13 @@ export class AssessmentController {
     return this.service.addQuestion(dto);
   }
 
-  @Post('submit')
+@Post('submit')
+@UseGuards(JwtAuthGuard)
 submitResponse(@Body() dto: SubmitAssessmentResponseDto, @ReqDecorator() req: RequestWithUser) {
   const userId = req.user.id;
   return this.service.submitResponse(userId, dto);
 }
+
 
 @UseGuards(JwtAuthGuard)
 @Get()
