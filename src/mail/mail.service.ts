@@ -93,6 +93,21 @@ async sendAdminInvite(email: string, token: string) {
   }
 }
 
+async sendTicketStatusUpdateEmail(to: string, fullName: string, subject: string, status: string) {
+  try {
+    await this.sendEmailWithTemplate(to, 41132332, {
+      title: 'Ticket Status Update',
+      fullName: fullName || '',
+      body: `Your ticket "<strong>${subject}</strong>" is now marked as <strong>${status}</strong>.`,
+      alertMessage: `Status: ${status}`,
+    });
+
+    this.logger.log(`Ticket status update template email sent to ${to}`);
+  } catch (error) {
+    this.logger.error(`Failed to send ticket status email to ${to}:`, error);
+    throw new Error(`Could not send ticket status update email to ${to}: ${error.message}`);
+  }
+}
 
 
 }

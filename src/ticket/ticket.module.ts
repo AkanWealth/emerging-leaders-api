@@ -8,10 +8,12 @@ import { JwtStrategy } from '../auth/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { MailModule } from 'src/mail/mail.module'; 
 
 @Module({
   imports: [
     PrismaModule,
+    MailModule, 
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -19,6 +21,12 @@ import { NotificationsService } from 'src/notifications/notifications.service';
     }), 
   ],
   controllers: [TicketController],
-  providers: [TicketService, JwtStrategy, AdminGuard, ActivityLogService, NotificationsService],
+  providers: [
+    TicketService,
+    JwtStrategy,
+    AdminGuard,
+    ActivityLogService,
+    NotificationsService,
+  ],
 })
 export class TicketModule {}
