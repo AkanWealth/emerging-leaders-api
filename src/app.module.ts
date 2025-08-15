@@ -55,6 +55,8 @@ import { Module2Service } from './module2/module2.service';
 import { Module2Module } from './module2/module2.module';
 import { Module3Module } from './module3/module3.module';
 import { FinanceSetupModule } from './finance-setup/finance-setup.module';
+import { AssessmentCronService } from './assessment-cron/assessment-cron.service';
+import { AssessmentCronModule } from './assessment-cron/assessment-cron.module';
 
 
 @Module({
@@ -92,8 +94,9 @@ import { FinanceSetupModule } from './finance-setup/finance-setup.module';
     Module2Module,
     Module3Module,
     FinanceSetupModule,
+    AssessmentCronModule,
   ],
   controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController, Module2Controller], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService, Module2Service],      // Same with providers
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService, Module2Service, AssessmentCronService],      // Same with providers
 })
 export class AppModule {}

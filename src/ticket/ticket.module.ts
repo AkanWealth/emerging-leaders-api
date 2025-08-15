@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Module({
   imports: [
@@ -18,6 +19,6 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
     }), 
   ],
   controllers: [TicketController],
-  providers: [TicketService, JwtStrategy, AdminGuard, ActivityLogService],
+  providers: [TicketService, JwtStrategy, AdminGuard, ActivityLogService, NotificationsService],
 })
 export class TicketModule {}

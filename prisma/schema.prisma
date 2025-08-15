@@ -41,7 +41,7 @@ model User {
   senseOfPurpose         String?
   sourceOfIncome         String?
   underageParent         Boolean?
-  financeCompleted Boolean @default(false)
+  financeCompleted       Boolean           @default(false)
   password               String
   ageGroup               String?
   isAdmin                Boolean           @default(false)
@@ -65,10 +65,27 @@ model User {
   tickets                Ticket[]
   currency               Currency?         @relation(fields: [currencyId], references: [id])
   UserAssessment         UserAssessment[]
-   financeSetups FinanceSetup[]
+  financeSetups          FinanceSetup[]
   wallet                 Wallet?
   Category               Category[]
+  Notification           Notification[]
 }
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  type      String?  // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
+  data      Json?    // Store additional payload for frontend
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
 
 model FcmToken {
   id        String   @id @default(uuid())
@@ -223,7 +240,8 @@ model Income {
 }
 
 model Ticket {
-  id          String       @id @default(uuid())
+  id          String       @id @default(uuid())   // DB primary key
+  ticketNumber String      @unique                // Public ticket ID, e.g., TCK-2025-0001
   userId      String
   subject     String
   name        String
@@ -231,6 +249,7 @@ model Ticket {
   status      TicketStatus @default(PENDING)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
   user        User         @relation(fields: [userId], references: [id])
 }
 
@@ -246,14 +265,14 @@ model ActivityLog {
 }
 
 model Currency {
-  id        String            @id @default(uuid())
-  symbol    String
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  code      String            @unique
-  incomes   RecurringIncome[]
+  id            String            @id @default(uuid())
+  symbol        String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  code          String            @unique
+  incomes       RecurringIncome[]
   financeSetups FinanceSetup[]
-  users     User[]
+  users         User[]
 }
 
 model RecurringIncome {
@@ -343,7 +362,7 @@ model Note {
 }
 
 model SavingsTopUp {
-  id            String      @id @default(uuid()) // ✅ generate automatically
+  id            String      @id @default(uuid())
   savingsGoalId String
   userId        String
   amount        Float
@@ -390,36 +409,35 @@ enum AssessmentStatus {
 }
 
 model Module1 {
-  id                            String   @id @default(uuid())
-  userId                        String   @unique
-  user                          User     @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  mindset                       String
-  areasGivenAwayPen             String
-  whatWentWell                  String
-  whatCouldBeBetter             String
-  whatCouldYouDoForFree         String
+  mindset                      String
+  areasGivenAwayPen            String
+  whatWentWell                 String
+  whatCouldBeBetter            String
+  whatCouldYouDoForFree        String
   goodCharacteristicsToDevelop String
-  dreams                        String
-  characterGoals                String
-  legacy                        String
-  relationshipStoryChange       String
-  howToGetThere                 String
-  threeFocusPoints1             String
-  whoDoYouKnow                  String
-  whoDoYouNeedToKnow            String
-  threeFocusPoints2             String
-  leadershipStepToTake          String
+  dreams                       String
+  characterGoals               String
+  legacy                       String
+  relationshipStoryChange      String
+  howToGetThere                String
+  threeFocusPoints1            String
+  whoDoYouKnow                 String
+  whoDoYouNeedToKnow           String
+  threeFocusPoints2            String
+  leadershipStepToTake         String
 
-  createdAt                     DateTime @default(now())
-  updatedAt                     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
 model Module2 {
-  id         String @id @default(uuid())
-  userId     String @unique
-  user       User   @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
   goodFinancialManagement  String
   badFinancialManagement   String
@@ -457,9 +475,9 @@ model Module2 {
 }
 
 model Module3 {
-  id                  String   @id @default(uuid())
-  userId              String   @unique
-  user                User     @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
   projectPurpose      String
   skills              String
@@ -478,44 +496,43 @@ model Module3 {
   leadYourProjectNote String
   additionalNotes     String
 
-  oneYearFromNow      String
+  oneYearFromNow String
 
-  week1Income         String
-  week1Total          String
-  week1Expenses       String
-  week1ProfitLoss     String
-  week1Cashflow       String
+  week1Income     String
+  week1Total      String
+  week1Expenses   String
+  week1ProfitLoss String
+  week1Cashflow   String
 
-  week2Income         String
-  week2Total          String
-  week2Expenses       String
-  week2ProfitLoss     String
-  week2Cashflow       String
+  week2Income     String
+  week2Total      String
+  week2Expenses   String
+  week2ProfitLoss String
+  week2Cashflow   String
 
-  week3Income         String
-  week3Total          String
-  week3Expenses       String
-  week3ProfitLoss     String
-  week3Cashflow       String
+  week3Income     String
+  week3Total      String
+  week3Expenses   String
+  week3ProfitLoss String
+  week3Cashflow   String
 
-  week4Income         String
-  week4Total          String
-  week4Expenses       String
-  week4ProfitLoss     String
-  week4Cashflow       String
+  week4Income     String
+  week4Total      String
+  week4Expenses   String
+  week4ProfitLoss String
+  week4Cashflow   String
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
 model FinanceSetup {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  currencyId   String
-  currency     Currency @relation(fields: [currencyId], references: [id])
+  currencyId String
+  currency   Currency @relation(fields: [currencyId], references: [id])
 
   salaryAmount Float
   icon         String?
@@ -523,6 +540,6 @@ model FinanceSetup {
   targetAmount Float
   targetDate   DateTime
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

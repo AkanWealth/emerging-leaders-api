@@ -22,12 +22,13 @@ async completeUserAccount(userId: string) {
   });
 
   for (const { token } of tokens) {
-    await this.notificationsService.sendPushNotification(
-      token,
-      '🎉 Account Created!',
-      'Your account has been successfully set up. Welcome!',
-      { screen: 'Dashboard' }
-    );
+   await this.notificationsService.sendToUser(
+  userId, // pass the userId, not the token
+  '🎉 Account Created!',
+  'Your account has been successfully set up. Welcome!',
+  { screen: 'Dashboard' }
+);
+
   }
 }
 
