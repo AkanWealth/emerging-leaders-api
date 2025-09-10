@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AdminGuard } from 'src/common/decorators/guards/admin.guard';
 import { RequestWithUser } from '../types/request-with-user';
 import { Request as ReqDecorator } from '@nestjs/common';
+import { BulkCreateQuestionDto } from './dto/create-many-questions.dto';
 
 
 @ApiTags('Assessment')
@@ -53,6 +54,13 @@ export class AssessmentController {
   addQuestion(@Body() dto: CreateQuestionDto) {
     return this.service.addQuestion(dto);
   }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post('question/bulk')
+async addQuestionsBulk(@Body() bulkDto: BulkCreateQuestionDto) {
+  return this.service.addQuestionsBulk(bulkDto.questions);
+}
+
 
 @Post('submit')
 @UseGuards(JwtAuthGuard)

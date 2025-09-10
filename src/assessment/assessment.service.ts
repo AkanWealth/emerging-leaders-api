@@ -41,6 +41,7 @@ export class AssessmentService {
   }
 }
 
+
   async updateAssessment(id: string, dto: UpdateAssessmentDto) {
     return this.prisma.assessment.update({
       where: { id },
@@ -79,6 +80,47 @@ export class AssessmentService {
       include: { options: true },
     });
   }
+
+  async addQuestionsBulk(questionsDto: CreateQuestionDto[]) {
+  // 1. Create all questions first
+  const createdQuestions = await this.prisma.$transaction(
+    questionsDto.map((dto) =>
+      this.prisma.assessmentQuestion.create({
+        data: {
+          assessmentId: dto.assessmentId,
+          question: dto.question,
+          type: dto.type,
+          required: dto.required ?? false,
+          order: dto.order ?? null,
+        },
+      })
+    )
+  );
+
+  // 2. Collect all options and attach them to their questions
+  const optionsData = questionsDto.flatMap((dto, index) =>
+    dto.options?.map((val) => ({
+      value: val,
+      questionId: createdQuestions[index].id,
+    })) ?? []
+  );
+
+  if (optionsData.length) {
+    await this.prisma.assessmentOption.createMany({
+      data: optionsData,
+    });
+  }
+
+  // 3. Return questions with options included
+  return this.prisma.assessmentQuestion.findMany({
+    where: {
+      id: { in: createdQuestions.map((q) => q.id) },
+    },
+    include: { options: true },
+    orderBy: { order: 'asc' }, // optional: keep questions ordered
+  });
+}
+
 
   async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
     const existing = await this.prisma.userAssessment.findFirst({

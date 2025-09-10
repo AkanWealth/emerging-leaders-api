@@ -41,7 +41,7 @@ export class AdminService {
       data: {
         userId: user.id,
         otp,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       },
     });
 

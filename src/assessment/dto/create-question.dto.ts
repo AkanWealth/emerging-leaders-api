@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsUUID, IsBoolean, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsEnum, IsUUID, IsBoolean, IsOptional, IsArray, IsInt } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum QuestionType {
@@ -39,6 +39,10 @@ export class CreateQuestionDto {
   @IsBoolean()
   @IsOptional()
   required?: boolean = false;
+
+  @IsInt()
+  @IsOptional()
+  order?: number;
 
   @ApiPropertyOptional({
     description: 'Options for RADIO or CHECKBOX types (not required for text types)',
