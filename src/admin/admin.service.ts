@@ -36,6 +36,7 @@ export class AdminService {
         password: hashedPassword,
         name: dto.name,
         isAdmin: true,
+        // isSuperAdmin: true,
       },
     });
 

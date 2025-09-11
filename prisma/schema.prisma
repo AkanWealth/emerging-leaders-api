@@ -45,6 +45,7 @@ model User {
   password               String
   ageGroup               String?
   isAdmin                Boolean           @default(false)
+  isSuperAdmin           Boolean           @default(false)
   currencyId             String?
   profilePicture         String?
   activityLogs           ActivityLog[]
