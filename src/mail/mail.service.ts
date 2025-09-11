@@ -48,7 +48,7 @@ export class MailService {
   )}&code=${code}`;
 
   try {
-    await this.sendEmailWithTemplate(email, 41234567, { // <-- replace with your Postmark template ID
+    await this.sendEmailWithTemplate(email, 41443194, { 
       title: "You're invited as an Admin",
       fullName: fullName || '',
       body: "You’ve been invited to join as an admin. Use the link or code below to verify your account.",
