@@ -43,7 +43,7 @@ export class MailService {
   }
 
   async sendAdminInviteWithCode(email: string, fullName: string, code: string) {
-  const link = `${this.configService.get<string>('APP_URL')}/verify?email=${encodeURIComponent(
+  const link = `${this.configService.get<string>('APP_URL')}/invite?email=${encodeURIComponent(
     email,
   )}&code=${code}`;
 
