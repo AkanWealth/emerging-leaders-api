@@ -10,6 +10,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -23,12 +24,34 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  // Already existing
-  @Get()
-  @ApiOperation({ summary: 'Get notifications for the logged-in user' })
-  getUserNotifications(@Req() req: RequestWithUser) {
-    return this.notificationsService.getUserNotifications(req.user.id);
-  }
+ @Get()
+@ApiOperation({ summary: 'Get notifications for the logged-in user' })
+getUserNotifications(
+  @Req() req: RequestWithUser,
+  @Query('page') page = '1',
+  @Query('limit') limit = '10',
+) {
+  return this.notificationsService.getUserNotifications(
+    req.user.id,
+    Number(page),
+    Number(limit),
+  );
+}
+
+@Get('unread')
+@ApiOperation({ summary: 'Get unread notifications for the logged-in user' })
+getUnreadNotifications(
+  @Req() req: RequestWithUser,
+  @Query('page') page = '1',
+  @Query('limit') limit = '10',
+) {
+  return this.notificationsService.getUnreadNotifications(
+    req.user.id,
+    Number(page),
+    Number(limit),
+  );
+}
+
 
   // Missing: Get unread count
   @Get('unread-count')
@@ -45,12 +68,7 @@ export class NotificationsController {
     return this.notificationsService.markAllAsRead(req.user.id);
   }
 
-  // In NotificationsController
-@Get('unread')
-@ApiOperation({ summary: 'Get unread notifications for the logged-in user' })
-getUnreadNotifications(@Req() req: RequestWithUser) {
-  return this.notificationsService.getUnreadNotifications(req.user.id);
-}
+ 
 
   //Already existing
   @Patch(':id/read')

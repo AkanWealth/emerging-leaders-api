@@ -91,29 +91,65 @@ export class NotificationsService {
   /**
    * Get notifications for a user
    */
-  async getUserNotifications(userId: string) {
-    return this.prisma.notification.findMany({
+
+async getUserNotifications(userId: string, page = 1, limit = 10) {
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await this.prisma.$transaction([
+    this.prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-    });
-  }
+      skip,
+      take: limit,
+    }),
+    this.prisma.notification.count({ where: { userId } }),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+async getUnreadNotifications(userId: string, page = 1, limit = 10) {
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await this.prisma.$transaction([
+    this.prisma.notification.findMany({
+      where: { userId, read: false },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    this.prisma.notification.count({ where: { userId, read: false } }),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
 
   // In NotificationsService
-async getUnreadNotifications(userId: string) {
-  return this.prisma.notification.findMany({
-    where: { userId, read: false },
-    orderBy: { createdAt: 'desc' },
-  });
-}
+
 
   /**
    * Get unread count for frontend bell icon
    */
-  async getUnreadCount(userId: string) {
-    return this.prisma.notification.count({
-      where: { userId, read: false },
-    });
-  }
+async getUnreadCount(userId: string) {
+  const count = await this.prisma.notification.count({
+    where: { userId, read: false },
+  });
+
+  return { unreadCount: count };
+}
+
 
   /**
    * Mark a single notification as read

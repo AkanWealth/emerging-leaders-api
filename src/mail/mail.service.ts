@@ -42,6 +42,29 @@ export class MailService {
     }
   }
 
+  async sendAdminInviteWithCode(email: string, fullName: string, code: string) {
+  const link = `${this.configService.get<string>('APP_URL')}/verify?email=${encodeURIComponent(
+    email,
+  )}&code=${code}`;
+
+  try {
+    await this.sendEmailWithTemplate(email, 41234567, { // <-- replace with your Postmark template ID
+      title: "You're invited as an Admin",
+      fullName: fullName || '',
+      body: "You’ve been invited to join as an admin. Use the link or code below to verify your account.",
+      verificationLink: link,
+      code,
+      alertMessage: "This code and link will expire in 7 days and can only be used once.",
+    });
+
+    this.logger.log(`Admin invite with code sent to ${email}`);
+  } catch (error) {
+    this.logger.error(`Failed to send admin invite with code to ${email}:`, error);
+    throw new Error(`Could not send admin invite to ${email}: ${error.message}`);
+  }
+}
+
+
   /**
    * Send OTP Email (for verification or login)
    */
