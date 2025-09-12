@@ -31,7 +31,7 @@ import { Request, Response } from 'express';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // 📩 Register with email/password
+  //  Register with email/password
   @Post('register')
   @ApiOperation({ summary: 'Register user (email/password)' })
   @ApiResponse({ status: 201, description: 'OTP sent to email' })
@@ -39,7 +39,7 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  // ✅ Verify OTP after registration
+  //  Verify OTP after registration
   @Post('verify-otp')
   @ApiOperation({ summary: 'Verify OTP sent to email' })
   @ApiResponse({ status: 200, description: 'OTP verified, user logged in' })
@@ -47,7 +47,7 @@ export class AuthController {
     return this.authService.verifyOtp(dto.email, dto.otp);
   }
 
-  // 🔐 Login using email/password
+  //  Login using email/password
   @Post('login')
   @ApiOperation({ summary: 'Login with email/password' })
   @ApiResponse({ status: 200, description: 'Returns tokens and user' })
@@ -55,7 +55,7 @@ export class AuthController {
     return this.authService.loginWithCredentials(dto.email, dto.password);
   }
 
-  // 🔓 Google login using mobile ID token
+  //  Google login using mobile ID token
   @Post('google')
   @ApiOperation({ summary: 'Login or Register using Google ID token' })
   @ApiResponse({ status: 200, description: 'Returns tokens and user' })
@@ -63,7 +63,7 @@ export class AuthController {
     return this.authService.verifyGoogleIdToken(dto.idToken);
   }
 
-  // 🌐 Redirect user to Google for web login
+  //  Redirect user to Google for web login
   @Get('google')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Redirect to Google OAuth login page' })
@@ -72,7 +72,7 @@ export class AuthController {
     // Handled by passport
   }
 
-  // 🌐 Google callback endpoint for web OAuth
+  //  Google callback endpoint for web OAuth
    @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Google OAuth callback redirect URL' })

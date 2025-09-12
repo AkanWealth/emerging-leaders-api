@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from '../admin/dto/create-admin.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { VerifyOtpDto } from '../auth/dto/verify-otp.dto';
 import { LoginDto } from '../auth/dto/login.dto';
 import { ForgotPasswordDto } from '../auth/dto/forgot-password.dto';
@@ -10,13 +10,16 @@ import { InviteAdminsDto } from './dto/invite-admin.dto';
 import { VerifyInviteDto } from './dto/verify-invite.dto';
 import { ResendInviteDto } from './dto/resend-invite.dto';
 import { User } from '@prisma/client';
-
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../common/decorators/guards/admin.guard';
 
 @ApiTags('Admin Auth')
 @Controller('admin/auth')
 export class AdminController {
   constructor(private readonly adminAuthService: AdminService) {}
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @Get()
   @ApiOperation({ summary: 'Get all admins' })
   @ApiResponse({
@@ -28,6 +31,8 @@ export class AdminController {
     return this.adminAuthService.getAllAdmins();
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @Post('invite-admin')
   @ApiOperation({ summary: 'Invite a new admin (send OTP + link)' })
   @ApiResponse({ status: 201, description: 'Invitation sent successfully' })
@@ -44,14 +49,15 @@ export class AdminController {
     return this.adminAuthService.verifyInviteCode(dto);
   }
 
-@Post('resend-invite')
-@ApiOperation({ summary: 'Resend admin invite (new code + link)' })
-@ApiResponse({ status: 200, description: 'New invite sent successfully' })
-@ApiResponse({ status: 404, description: 'User not found' })
-resendInvite(@Body() dto: ResendInviteDto) {
-  return this.adminAuthService.resendInvite(dto);
-}
-
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @Post('resend-invite')
+  @ApiOperation({ summary: 'Resend admin invite (new code + link)' })
+  @ApiResponse({ status: 200, description: 'New invite sent successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  resendInvite(@Body() dto: ResendInviteDto) {
+    return this.adminAuthService.resendInvite(dto);
+  }
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new admin account' })

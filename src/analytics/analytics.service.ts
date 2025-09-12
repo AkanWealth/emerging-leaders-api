@@ -162,34 +162,38 @@ getTimeBuckets(period: 'weekly' | 'monthly' | 'yearly'): { label: string; from: 
     });
   }
 
-  async getLeaderboard() {
-    const users = await this.prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        savingsGoals: true,
-        projects: {
-          include: {
-            goals: true,
-          },
+async getLeaderboard(page = 1, limit = 20) {
+  const skip = (page - 1) * limit;
+
+  const users = await this.prisma.user.findMany({
+    skip,
+    take: limit,
+    select: {
+      id: true,
+      name: true,
+      savingsGoals: true,
+      projects: {
+        include: {
+          goals: true,
         },
       },
-    });
+    },
+  });
 
-    const leaderboard = users.map((user) => {
-      const totalProjects = user.projects.length;
-      const totalGoals = user.projects.flatMap(p => p.goals).filter(g => g.isCompleted).length;
-      const consistency = totalGoals; // optionally enhanced with streak tracking logic
+  const leaderboard = users.map((user) => {
+    const totalProjects = user.projects.length;
+    const totalGoals = user.projects.flatMap(p => p.goals).filter(g => g.isCompleted).length;
+    const consistency = totalGoals;
 
-      return {
-        name: user.name,
-        projectsCompleted: totalProjects,
-        goalsCompleted: totalGoals,
-        consistencyStreak: consistency,
-      };
-    });
+    return {
+      name: user.name,
+      projectsCompleted: totalProjects,
+      goalsCompleted: totalGoals,
+      consistencyStreak: consistency,
+    };
+  });
 
-    return leaderboard.sort((a, b) => b.consistencyStreak - a.consistencyStreak);
-  }
+  return leaderboard.sort((a, b) => b.consistencyStreak - a.consistencyStreak);
+}
 
 }

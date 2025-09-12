@@ -26,7 +26,7 @@ export class UsersController {
   /**
    * Update the authenticated user's profile after OTP verification.
    */
-  @Patch('profile')
+@Patch('profile')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @ApiOperation({ summary: 'Update user profile and optionally set currency/salary' })

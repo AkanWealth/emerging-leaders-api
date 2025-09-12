@@ -13,20 +13,23 @@ import { CreateUserByAdminDto } from './dto/create-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
 import { AdminGuard } from '../common/decorators/guards/admin.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 @ApiTags('Admin Users')
-@UseGuards(AdminGuard)
+@ApiBearerAuth()
 @Controller('admin/users')
 export class AdminUserController {
   constructor(private readonly adminUserService: AdminUserService) {}
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
@@ -34,6 +37,7 @@ export class AdminUserController {
     return this.adminUserService.getAllUsers();
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post()
   @ApiOperation({ summary: 'Create a new user and send temporary password via email' })
   @ApiResponse({ status: 201, description: 'User created successfully, password sent via email.' })
@@ -42,6 +46,7 @@ export class AdminUserController {
     return this.adminUserService.createUser(dto);
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Patch(':id')
   @ApiOperation({ summary: 'Edit user details' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -51,6 +56,7 @@ export class AdminUserController {
     return this.adminUserService.editUser(id, dto);
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -59,6 +65,7 @@ export class AdminUserController {
     return this.adminUserService.deleteUser(id);
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post(':id/activate-admin')
   @ApiOperation({ summary: 'Activate user as admin' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -67,6 +74,7 @@ export class AdminUserController {
     return this.adminUserService.activateAdmin(id);
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post(':id/deactivate-admin')
   @ApiOperation({ summary: 'Deactivate admin privileges' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -75,6 +83,7 @@ export class AdminUserController {
     return this.adminUserService.deactivateAdmin(id);
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('invite-admin')
   @ApiOperation({ summary: 'Invite a user to become admin via email' })
   @ApiBody({ type: InviteAdminDto })
@@ -83,6 +92,7 @@ export class AdminUserController {
     return this.adminUserService.inviteUserToBeAdmin(dto.email);
   }
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('resend-invite')
   @ApiOperation({ summary: 'Resend admin invitation email' })
   @ApiBody({ type: InviteAdminDto })
