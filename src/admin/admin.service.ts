@@ -14,6 +14,7 @@ import { CreateAdminDto } from '../admin/dto/create-admin.dto';
 import { randomBytes } from 'crypto';
 import { InviteAdminsDto } from './dto/invite-admin.dto';
 import { VerifyInviteDto } from './dto/verify-invite.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AdminService {
@@ -21,6 +22,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly usersService: UsersService,
   ) {}
 
   async register(dto: CreateAdminDto) {
@@ -75,27 +77,39 @@ export class AdminService {
 
     return {
       message: 'OTP verified',
-      tokens: await this.getTokens(user.id, user.email),
+      tokens: await this.getTokens(user),
     };
   }
 
-  async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.isAdmin) throw new UnauthorizedException('Not authorized');
-
-    const passwordValid = await bcrypt.compare(password, user.password);
-    if (!passwordValid) throw new UnauthorizedException('Invalid password');
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        profilePicture: user.profilePicture,
-      },
-      tokens: await this.getTokens(user.id, user.email),
-    };
+async login(email: string, password: string) {
+  const user = await this.prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isAdmin) {
+    throw new UnauthorizedException('Not authorized');
   }
+
+  const passwordValid = await bcrypt.compare(password, user.password);
+  if (!passwordValid) {
+    throw new UnauthorizedException('Invalid password');
+  }
+
+  // Pass the whole user object so isAdmin gets embedded in JWT
+ const tokens = await this.getTokens(user);
+
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+      profilePicture: user.profilePicture,
+    },
+    tokens,
+  };
+}
+
+
 
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -135,19 +149,27 @@ export class AdminService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  private async getTokens(userId: string, email: string) {
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
-      ),
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
-      ),
-    ]);
-    return { accessToken, refreshToken };
-  }
+private async getTokens(user: { id: string; email: string; isAdmin: boolean }) {
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    isAdmin: user.isAdmin,  // <-- ADD THIS
+  };
+
+  const [accessToken, refreshToken] = await Promise.all([
+    this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
+      expiresIn: '15m',
+    }),
+    this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    }),
+  ]);
+
+  return { accessToken, refreshToken };
+}
+
 
 
 async inviteAdmin(dto: InviteAdminsDto) {
