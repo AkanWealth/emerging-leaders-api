@@ -150,28 +150,37 @@ export class AdminService {
   }
 
 
-async inviteAdmin(dto: InviteAdminsDto ) {
-  // 1. Generate a temporary password (random string, 16 chars)
+async inviteAdmin(dto: InviteAdminsDto) {
+  // 1. Check if email already exists
+  const existingUser = await this.prisma.user.findUnique({
+    where: { email: dto.email },
+  });
+
+  if (existingUser) {
+    throw new BadRequestException('This email is already registered as a user.');
+  }
+
+  // 2. Generate a temporary password (random string, 16 chars)
   const tempPassword = randomBytes(8).toString('hex');
   const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-  // 2. Create minimal admin user
+  // 3. Create minimal admin user
   const user = await this.prisma.user.create({
     data: {
       firstname: dto.firstname,
       lastname: dto.lastname,
       email: dto.email,
-      password: hashedPassword, //  required by schema
+      password: hashedPassword, // required by schema
       isAdmin: true,
       profileComplete: false,
     },
   });
 
-  // 3. Generate OTP code
+  // 4. Generate OTP code
   const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-  // 4. Save OTP
+  // 5. Save OTP
   await this.prisma.otp.create({
     data: {
       otp,
@@ -180,7 +189,7 @@ async inviteAdmin(dto: InviteAdminsDto ) {
     },
   });
 
-  // 5. Send invite email with OTP + link
+  // 6. Send invite email with OTP + link
   await this.mailService.sendAdminInviteWithCode(
     user.email,
     `${user.firstname} ${user.lastname}`,
@@ -189,6 +198,7 @@ async inviteAdmin(dto: InviteAdminsDto ) {
 
   return { message: 'Admin invited successfully', email: user.email };
 }
+
 
 async verifyInviteCode(dto: VerifyInviteDto) {
   const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
