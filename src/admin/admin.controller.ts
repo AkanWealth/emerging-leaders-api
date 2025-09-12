@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from '../admin/dto/create-admin.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -8,13 +8,25 @@ import { ForgotPasswordDto } from '../auth/dto/forgot-password.dto';
 import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
 import { InviteAdminsDto } from './dto/invite-admin.dto';
 import { VerifyInviteDto } from './dto/verify-invite.dto';
-import { ResendInviteDto } from './dto/resend-invite.dto'
+import { ResendInviteDto } from './dto/resend-invite.dto';
+import { User } from '@prisma/client';
 
 
 @ApiTags('Admin Auth')
 @Controller('admin/auth')
 export class AdminController {
   constructor(private readonly adminAuthService: AdminService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all admins' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all admin users',
+    type: [Object],
+  })
+  async getAllAdmins(): Promise<User[]> {
+    return this.adminAuthService.getAllAdmins();
+  }
 
   @Post('invite-admin')
   @ApiOperation({ summary: 'Invite a new admin (send OTP + link)' })

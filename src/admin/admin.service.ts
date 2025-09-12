@@ -91,6 +91,7 @@ export class AdminService {
         id: user.id,
         email: user.email,
         name: user.name,
+        profilePicture: user.profilePicture,
       },
       tokens: await this.getTokens(user.id, user.email),
     };
@@ -246,5 +247,12 @@ async resendInvite(dto: { email: string }) {
 
   return { message: 'New invite code sent', email: user.email };
 }
+
+async getAllAdmins() {
+  return this.prisma.user.findMany({
+    where: { isAdmin: true },
+  });
+}
+
 
 }
