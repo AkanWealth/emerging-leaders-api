@@ -15,6 +15,7 @@ import { randomBytes } from 'crypto';
 import { InviteAdminsDto } from './dto/invite-admin.dto';
 import { VerifyInviteDto } from './dto/verify-invite.dto';
 import { UsersService } from 'src/users/users.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminService {
@@ -23,6 +24,7 @@ export class AdminService {
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: CreateAdminDto) {
@@ -101,7 +103,8 @@ async login(email: string, password: string) {
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      firstname: user.firstname,
+      lastname: user.lastname,
       isAdmin: user.isAdmin,
       profilePicture: user.profilePicture,
     },
@@ -111,22 +114,56 @@ async login(email: string, password: string) {
 
 
 
+  // async forgotPassword(email: string) {
+  //   const user = await this.prisma.user.findUnique({ where: { email } });
+  //   if (!user || !user.isAdmin) throw new NotFoundException('Admin not found');
+
+  //   const otp = this.generateOtp();
+  //   await this.prisma.otp.create({
+  //     data: {
+  //       userId: user.id,
+  //       otp,
+  //       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+  //     },
+  //   });
+
+  //   await this.mailService.sendOtpEmail(email, otp);
+  //   return { message: 'OTP sent to your email' };
+  // }
+
   async forgotPassword(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.isAdmin) throw new NotFoundException('Admin not found');
+  const user = await this.prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isAdmin) throw new NotFoundException('Admin not found');
 
-    const otp = this.generateOtp();
-    await this.prisma.otp.create({
-      data: {
-        userId: user.id,
-        otp,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      },
-    });
+  // Generate reset code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    await this.mailService.sendOtpEmail(email, otp);
-    return { message: 'OTP sent to your email' };
-  }
+  // Save code
+  await this.prisma.otp.create({
+    data: {
+      userId: user.id,
+      otp: code,
+      expiresAt,
+    },
+  });
+
+  // Create reset link
+  const resetLink = `${this.configService.get<string>(
+    'APP_URL',
+  )}/admin/reset-password?email=${encodeURIComponent(email)}&code=${code}`;
+
+  // Send reset link via email
+  await this.mailService.sendAdminPasswordResetLink(
+    user.email,
+    `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
+    resetLink,
+    code,
+  );
+
+  return { message: 'Password reset link sent to your email' };
+}
+
 
   async resetPassword(email: string, newPassword: string, confirmPassword: string) {
     if (newPassword !== confirmPassword) {
@@ -282,6 +319,13 @@ async resendInvite(dto: { email: string }) {
 
 async getAllAdmins() {
   return this.prisma.user.findMany({
+    where: { isAdmin: true },
+  });
+}
+
+
+async getAllAdminsCount() {
+  return this.prisma.user.count({
     where: { isAdmin: true },
   });
 }

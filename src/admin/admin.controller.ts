@@ -102,4 +102,10 @@ export class AdminController {
       dto.confirmPassword,
     );
   }
+
+  @Get('count')
+  async getAdminsCount() {
+    const count = await this.adminAuthService.getAllAdminsCount();
+    return { totalAdmins: count };
+  }
 }

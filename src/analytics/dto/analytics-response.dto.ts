@@ -1,4 +1,4 @@
-// src/analytics/dto/analytics-response.dto.ts
+
 import { ApiProperty } from '@nestjs/swagger';
 
 class SummaryDto {

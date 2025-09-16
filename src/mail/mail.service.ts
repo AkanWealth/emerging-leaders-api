@@ -64,6 +64,24 @@ export class MailService {
   }
 }
 
+async sendAdminPasswordResetLink(email: string, fullName: string, link: string, code: string) {
+  try {
+    await this.sendEmailWithTemplate(email, 41501059, { 
+      title: "Password Reset Request",
+      fullName: fullName || '',
+      body: "We received a request to reset your admin account password. Use the link or code below to reset.",
+      verificationLink: link,
+      code,
+      alertMessage: "This link and code will expire in 15 minutes.",
+    });
+
+    this.logger.log(`Password reset email sent to admin: ${email}`);
+  } catch (error) {
+    this.logger.error(`Failed to send admin password reset email:`, error);
+    throw new Error(`Could not send reset email to ${email}: ${error.message}`);
+  }
+}
+
 
   /**
    * Send OTP Email (for verification or login)

@@ -47,13 +47,24 @@ export class AnalyticsController {
     return this.analyticsService.getUserStats();
   }
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get('admin/user-growth-chart')
-  @ApiOperation({ summary: 'Admin - Monthly user registration trend' })
-  @ApiResponse({ status: 200, description: 'Returns user growth data for line chart' })
-  getUserGrowthChart() {
-    return this.analyticsService.getMonthlyUserGrowthChart();
-  }
+  // @UseGuards(JwtAuthGuard, AdminGuard)
+  // @Get('admin/user-growth-chart')
+  // @ApiOperation({ summary: 'Admin - Monthly user registration trend' })
+  // @ApiResponse({ status: 200, description: 'Returns user growth data for line chart' })
+  // getUserGrowthChart() {
+  //   return this.analyticsService.getMonthlyUserGrowthChart();
+  // }
+
+@Get('user-growth-chart')
+@ApiOperation({ summary: 'Admin - User registration growth trend' })
+@ApiResponse({ status: 200, description: 'Returns user growth data for line chart' })
+getUserGrowthChart(@Query('period') period?: string) {
+  console.log(`Received period: ${period}`);
+  const allowed: Array<'7d' | '30d' | '12m'> = ['7d', '30d', '12m'];
+  const validPeriod = allowed.includes(period as any) ? (period as '7d' | '30d' | '12m') : '12m';
+  return this.analyticsService.getUserGrowthChart(validPeriod);
+}
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('admin/recent-activities')
@@ -65,14 +76,17 @@ export class AnalyticsController {
   }
 
   @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get('admin/leaderboard')
-  @ApiOperation({ summary: 'Admin - User leaderboard' })
-  @ApiResponse({ status: 200, description: 'Leaderboard of top users' })
-  getLeaderboard(
-    @Query('page') page = 1,
-    @Query('limit') limit = 20,
-  ) {
-    return this.analyticsService.getLeaderboard(Number(page), Number(limit));
-  }
+@Get('admin/leaderboard')
+@ApiOperation({ summary: 'Admin - User leaderboard' })
+@ApiResponse({ status: 200, description: 'Leaderboard of top users' })
+getLeaderboard(
+  @Query('page') page = 1,
+  @Query('limit') limit = 20,
+  @Query('search') search?: string,
+  @Query('filterBy') filterBy?: 'projects' | 'goals' | 'savings' | 'budget' | 'streak',
+) {
+  return this.analyticsService.getLeaderboard(Number(page), Number(limit), search, filterBy);
+}
+
 
 }
