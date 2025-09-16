@@ -151,7 +151,7 @@ async login(email: string, password: string) {
   // Create reset link
   const resetLink = `${this.configService.get<string>(
     'APP_URL',
-  )}/admin/reset-password?email=${encodeURIComponent(email)}&code=${code}`;
+  )}/reset-password?email=${encodeURIComponent(email)}&code=${code}`;
 
   // Send reset link via email
   await this.mailService.sendAdminPasswordResetLink(
