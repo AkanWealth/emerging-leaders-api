@@ -10,6 +10,8 @@
   },
   "scripts": {
     "build": "nest build",
+     "start": "node dist/main.js",
+     "start:prod": "node dist/main.js",
     "deploy": "prisma generate && yarn build && node dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "yarn prisma generate && node dist/src/main.js",
