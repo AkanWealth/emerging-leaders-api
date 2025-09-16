@@ -1,1 +1,1 @@
-web: bin/start-pgbouncer-stunnel node dist/main.js
+web: node dist/main.js
