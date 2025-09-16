@@ -75,18 +75,47 @@ getUserGrowthChart(@Query('period') period?: string) {
     return this.analyticsService.getRecentActivities(limit);
   }
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
+//   @UseGuards(JwtAuthGuard, AdminGuard)
+// @Get('admin/leaderboard')
+// @ApiOperation({ summary: 'Admin - User leaderboard' })
+// @ApiResponse({ status: 200, description: 'Leaderboard of top users' })
+// getLeaderboard(
+//   @Query('page') page = 1,
+//   @Query('limit') limit = 20,
+//   @Query('search') search?: string,
+//   @Query('filterBy') filterBy?: 'projects' | 'goals' | 'savings' | 'budget' | 'streak',
+// ) {
+//   return this.analyticsService.getLeaderboard(Number(page), Number(limit), search, filterBy);
+// }
+
 @Get('admin/leaderboard')
-@ApiOperation({ summary: 'Admin - User leaderboard' })
-@ApiResponse({ status: 200, description: 'Leaderboard of top users' })
-getLeaderboard(
+@UseGuards(JwtAuthGuard, AdminGuard)
+async getLeaderboard(
   @Query('page') page = 1,
   @Query('limit') limit = 20,
   @Query('search') search?: string,
-  @Query('filterBy') filterBy?: 'projects' | 'goals' | 'savings' | 'budget' | 'streak',
+  @Query('ranking') ranking?: 'lowest' | 'highest',
+  @Query('completed') completed?: string,
+  @Query('goals') goals?: string,
+  @Query('streak') streak?: string,
 ) {
-  return this.analyticsService.getLeaderboard(Number(page), Number(limit), search, filterBy);
+  return this.analyticsService.getLeaderboard({
+    page: Number(page),
+    limit: Number(limit),
+    search,
+    ranking,
+    completed,
+    goals,
+    streak,
+  });
 }
 
+
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get('growth')
+  async getGrowth() {
+    return this.analyticsService.getMonthlyGrowthChart();
+  }
 
 }

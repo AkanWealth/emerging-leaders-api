@@ -3,6 +3,16 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { subDays, subMonths, subYears, format } from 'date-fns';
 
+ interface LeaderboardQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  ranking?: 'lowest' | 'highest';
+  completed?: string;
+  goals?: string;
+  streak?: string;
+}
+
 
 @Injectable()
 export class AnalyticsService {
@@ -290,6 +300,192 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
 }
 
 
+// async getMonthlyGrowthChart() {
+//     const now = new Date();
+//     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+//     const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+//     const previousMonthEnd = currentMonthStart;
+
+//     // 1. Fetch new registrations grouped by month
+//     const registrations = await this.prisma.user.groupBy({
+//       by: ['createdAt'],
+//       _count: { id: true },
+//       where: {
+//         createdAt: { gte: previousMonthStart, lt: now },
+//       },
+//     });
+
+//     // 2. Fetch active users grouped by month from activity logs
+//     const activeUsersRaw = await this.prisma.activityLog.groupBy({
+//       by: ['userId', 'createdAt'],
+//       _count: { userId: true },
+//       where: { createdAt: { gte: previousMonthStart, lt: now } },
+//     });
+
+//     // 3. Compute totals for charts
+//     let newRegistrationsCurrent = 0;
+//     let newRegistrationsPrevious = 0;
+//     let activeUsersCurrent = 0;
+//     let activeUsersPrevious = 0;
+
+//     registrations.forEach((r) => {
+//       const date = new Date(r.createdAt);
+//       if (date >= currentMonthStart) newRegistrationsCurrent += r._count.id;
+//       else newRegistrationsPrevious += r._count.id;
+//     });
+
+//     // Active users: count unique userIds
+//     const currentMonthIds = new Set<string>();
+//     const previousMonthIds = new Set<string>();
+//     activeUsersRaw.forEach((a) => {
+//       const date = new Date(a.createdAt);
+//       if (date >= currentMonthStart) currentMonthIds.add(a.userId);
+//       else previousMonthIds.add(a.userId);
+//     });
+//     activeUsersCurrent = currentMonthIds.size;
+//     activeUsersPrevious = previousMonthIds.size;
+
+//     // Total users
+//     const totalUsersCurrent = await this.prisma.user.count({ where: { createdAt: { lt: now } } });
+//     const totalUsersPrevious = await this.prisma.user.count({ where: { createdAt: { lt: previousMonthEnd } } });
+
+//     // Helper to compute growth, percentage, and trend
+//     const computeGrowth = (current: number, previous: number) => {
+//       const growth = current - previous;
+//       const growthPercentage =
+//         previous > 0 ? (growth / previous) * 100 : current > 0 ? 100 : 0;
+//       const trend = growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral';
+//       return {
+//         current,
+//         previous,
+//         growth,
+//         growthPercentage: Number(growthPercentage.toFixed(2)),
+//         trend,
+//       };
+//     };
+
+//     // Build chart data per day for last 30 days
+//     const days = Array.from({ length: 30 }, (_, i) => {
+//       const day = new Date();
+//       day.setDate(now.getDate() - (29 - i));
+//       const label = day.toLocaleDateString('default', { day: 'numeric', month: 'short' });
+
+//       const registrationCount = registrations
+//         .filter((r) => new Date(r.createdAt).toDateString() === day.toDateString())
+//         .reduce((sum, r) => sum + r._count.id, 0);
+
+//       const activeCount = activeUsersRaw
+//         .filter((a) => new Date(a.createdAt).toDateString() === day.toDateString())
+//         .reduce((sum, a) => sum + 1, 0); // each activity log counts as 1 (unique users already counted above)
+
+//       return { label, newRegistrations: registrationCount, activeUsers: activeCount };
+//     });
+
+//     return {
+//       totalUsers: computeGrowth(totalUsersCurrent, totalUsersPrevious),
+//       activeUsers: computeGrowth(activeUsersCurrent, activeUsersPrevious),
+//       newRegistrations: computeGrowth(newRegistrationsCurrent, newRegistrationsPrevious),
+//       chartData: days,
+//     };
+//   }
+
+async getMonthlyGrowthChart() {
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthEnd = currentMonthStart;
+
+  // 1️⃣ Fetch all users created since previous month
+  const users = await this.prisma.user.findMany({
+    select: { createdAt: true },
+    where: { createdAt: { gte: previousMonthStart, lt: now } },
+  });
+
+  // 2️⃣ Fetch activity logs since previous month
+  const activityLogs = await this.prisma.activityLog.findMany({
+    select: { userId: true, createdAt: true },
+    where: { createdAt: { gte: previousMonthStart, lt: now } },
+  });
+
+  // 3️⃣ Compute summary numbers
+  let newRegistrationsCurrent = 0;
+  let newRegistrationsPrevious = 0;
+
+  users.forEach((u) => {
+    const date = new Date(u.createdAt);
+    if (date >= currentMonthStart) newRegistrationsCurrent += 1;
+    else newRegistrationsPrevious += 1;
+  });
+
+  // Active users: unique per month
+  const currentMonthActiveSet = new Set<string>();
+  const previousMonthActiveSet = new Set<string>();
+  activityLogs.forEach((a) => {
+    const date = new Date(a.createdAt);
+    if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
+    else previousMonthActiveSet.add(a.userId);
+  });
+
+  const activeUsersCurrent = currentMonthActiveSet.size;
+  const activeUsersPrevious = previousMonthActiveSet.size;
+
+  // Total users cumulative
+  const totalUsersCurrent = await this.prisma.user.count({ where: { createdAt: { lt: now } } });
+  const totalUsersPrevious = await this.prisma.user.count({ where: { createdAt: { lt: previousMonthEnd } } });
+
+  // Helper to compute growth and trend
+  const computeGrowth = (current: number, previous: number) => {
+    const growth = current - previous;
+    const growthPercentage = previous > 0 ? (growth / previous) * 100 : current > 0 ? 100 : 0;
+    const trend = growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral';
+    return {
+      current,
+      previous,
+      growth,
+      growthPercentage: Number(growthPercentage.toFixed(2)),
+      trend,
+    };
+  };
+
+  // 4️⃣ Build daily chart data for last 30 days
+  const chartData = Array.from({ length: 30 }, (_, i) => {
+    const day = new Date();
+    day.setDate(now.getDate() - (29 - i));
+    const label = day.toLocaleDateString('default', { day: 'numeric', month: 'short' });
+
+    const dayString = day.toDateString();
+
+    // New registrations for this day
+    const newRegCount = users.filter((u) => new Date(u.createdAt).toDateString() === dayString).length;
+
+    // Active users (unique) for this day
+    const dailyActiveSet = new Set(
+      activityLogs
+        .filter((a) => new Date(a.createdAt).toDateString() === dayString)
+        .map((a) => a.userId)
+    );
+    const activeCount = dailyActiveSet.size;
+
+    // Total users cumulative for this day
+    const totalCount = users.filter((u) => new Date(u.createdAt) <= day).length;
+
+    return {
+      label,
+      newRegistrations: newRegCount,
+      activeUsers: activeCount,
+      totalUsers: totalCount,
+    };
+  });
+
+  // 5️⃣ Return final structured data
+  return {
+    totalUsers: computeGrowth(totalUsersCurrent, totalUsersPrevious),
+    activeUsers: computeGrowth(activeUsersCurrent, activeUsersPrevious),
+    newRegistrations: computeGrowth(newRegistrationsCurrent, newRegistrationsPrevious),
+    chartData,
+  };
+}
+
   async getRecentActivities(limit = 10) {
     return this.prisma.activityLog.findMany({
       take: limit,
@@ -300,11 +496,12 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
     });
   }
 
+
 // async getLeaderboard(
 //   page = 1,
 //   limit = 20,
 //   search?: string,
-//   filter?: { completedGoals?: boolean; minSavings?: number },
+//   filterBy?: "projects" | "goals" | "savings" | "budget" | "streak",
 // ) {
 //   const skip = (page - 1) * limit;
 
@@ -315,49 +512,39 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
 //       ...(search
 //         ? {
 //             OR: [
-//               { name: { contains: search, mode: 'insensitive' } },
-//               { email: { contains: search, mode: 'insensitive' } },
+//               { name: { contains: search, mode: "insensitive" } },
+//               { email: { contains: search, mode: "insensitive" } },
 //             ],
 //           }
 //         : {}),
-//       ...(filter?.completedGoals !== undefined
-//         ? { savingsGoals: { some: { isCompleted: filter.completedGoals } } }
-//         : {}),
-//       ...(filter?.minSavings !== undefined
-//         ? { savingsGoals: { some: { savedAmount: { gte: filter.minSavings } } } }
-//         : {}),
 //     },
 //     include: {
-//       projects: {
-//         include: {
-//           goals: true,
-//         },
-//       },
+//       projects: { include: { goals: true } },
 //       savingsGoals: true,
 //       budgets: true,
 //     },
 //   });
 
-//  const leaderboard = users.map((user) => {
-//   const totalProjects = user.projects.length;
-//   const totalGoals = user.projects.flatMap((p) => p.goals).filter((g) => g.isCompleted).length;
-//   const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
-//   const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0); // ✅ fixed
-//   const consistencyStreak = totalGoals; // placeholder until you define real streak logic
+//   const leaderboard = users.map((user) => {
+//     const totalProjects = user.projects.length;
+//     const totalGoals = user.projects.flatMap((p) => p.goals).filter((g) => g.isCompleted).length;
+//     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
+//     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
+//     const consistencyStreak = totalGoals; // placeholder streak logic
 
-//   return {
-//     name: user.name,
-//     projects: totalProjects,
-//     goals: totalGoals,
-//     savings: totalSavings,
-//     budget: totalBudget,
-//     streak: consistencyStreak,
-//   };
-// });
+//     return {
+//       name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
+//       projects: totalProjects,
+//       goals: totalGoals,
+//       savings: totalSavings,
+//       budget: totalBudget,
+//       streak: consistencyStreak,
+//     };
+//   });
 
-
-//   // Sort from highest → lowest streak
-//   leaderboard.sort((a, b) => b.streak - a.streak);
+//   // Default sort by streak if no filterBy provided
+//   const sortField = filterBy ?? "streak";
+//   leaderboard.sort((a, b) => (b[sortField] as number) - (a[sortField] as number));
 
 //   return {
 //     data: leaderboard,
@@ -365,19 +552,19 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
 //       page,
 //       limit,
 //       total: leaderboard.length,
+//       sortedBy: sortField,
 //     },
 //   };
 // }
+// analytics.service.ts
 
 
-async getLeaderboard(
-  page = 1,
-  limit = 20,
-  search?: string,
-  filterBy?: "projects" | "goals" | "savings" | "budget" | "streak",
-) {
+
+async getLeaderboard(query: LeaderboardQuery) {
+  const { page = 1, limit = 20, search, ranking = 'highest', completed, goals, streak } = query;
   const skip = (page - 1) * limit;
 
+  // Fetch users with related data
   const users = await this.prisma.user.findMany({
     skip,
     take: limit,
@@ -385,8 +572,8 @@ async getLeaderboard(
       ...(search
         ? {
             OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { email: { contains: search, mode: "insensitive" } },
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
             ],
           }
         : {}),
@@ -398,14 +585,16 @@ async getLeaderboard(
     },
   });
 
+  // Map leaderboard data
   const leaderboard = users.map((user) => {
     const totalProjects = user.projects.length;
     const totalGoals = user.projects.flatMap((p) => p.goals).filter((g) => g.isCompleted).length;
     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
-    const consistencyStreak = totalGoals; // placeholder streak logic
+    const consistencyStreak = totalGoals; // placeholder
 
     return {
+      id: user.id,
       name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
       projects: totalProjects,
       goals: totalGoals,
@@ -415,19 +604,41 @@ async getLeaderboard(
     };
   });
 
-  // Default sort by streak if no filterBy provided
-  const sortField = filterBy ?? "streak";
-  leaderboard.sort((a, b) => (b[sortField] as number) - (a[sortField] as number));
+  // Apply chained filters
+  const filtered = leaderboard.filter((user) => {
+    let ok = true;
+
+    if (completed) {
+      const value = parseInt(completed.match(/\d+/)?.[0] || '0', 10);
+      if (completed.startsWith('lessThan')) ok = ok && user.projects < value;
+      if (completed.startsWith('moreThan')) ok = ok && user.projects > value;
+    }
+
+    if (goals) {
+      const value = parseInt(goals.match(/\d+/)?.[0] || '0', 10);
+      if (goals.startsWith('lessThan')) ok = ok && user.goals < value;
+      if (goals.startsWith('moreThan')) ok = ok && user.goals > value;
+    }
+
+    if (streak) {
+      const value = parseInt(streak.match(/\d+/)?.[0] || '0', 10);
+      if (streak.startsWith('lessThan')) ok = ok && user.streak < value;
+      if (streak.startsWith('moreThan')) ok = ok && user.streak > value;
+    }
+
+    return ok;
+  });
+
+  // Sort by ranking (default: highest streak)
+  const sortField = 'streak';
+  filtered.sort((a, b) => (ranking === 'lowest' ? a[sortField] - b[sortField] : b[sortField] - a[sortField]));
+
+  // Total count for pagination
+  const total = filtered.length;
 
   return {
-    data: leaderboard,
-    meta: {
-      page,
-      limit,
-      total: leaderboard.length,
-      sortedBy: sortField,
-    },
+    data: filtered,
+    meta: { page, limit, total, sortedBy: sortField, ranking },
   };
 }
-
 }
