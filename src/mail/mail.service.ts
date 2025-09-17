@@ -64,13 +64,13 @@ export class MailService {
   }
 }
 
-async sendAdminPasswordResetLink(email: string, fullName: string, link: string, code: string) {
+async sendAdminPasswordResetLink(email: string, fullName: string, resetLink: string, code: string) {
   try {
     await this.sendEmailWithTemplate(email, 41501059, { 
       title: "Password Reset Request",
       fullName: fullName || '',
-      body: "We received a request to reset your admin account password. Use the link or code below to reset.",
-      verificationLink: link,
+      body: "We received a request to reset your admin account password. Use the link below to reset it.",
+      resetLink, //  MUST match {{resetLink}} in the Postmark template
       code,
       alertMessage: "This link and code will expire in 15 minutes.",
     });
@@ -81,6 +81,7 @@ async sendAdminPasswordResetLink(email: string, fullName: string, link: string, 
     throw new Error(`Could not send reset email to ${email}: ${error.message}`);
   }
 }
+
 
 
   /**

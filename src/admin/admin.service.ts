@@ -131,7 +131,7 @@ async login(email: string, password: string) {
   //   return { message: 'OTP sent to your email' };
   // }
 
-  async forgotPassword(email: string) {
+async forgotPassword(email: string) {
   const user = await this.prisma.user.findUnique({ where: { email } });
   if (!user || !user.isAdmin) throw new NotFoundException('Admin not found');
 
@@ -149,15 +149,13 @@ async login(email: string, password: string) {
   });
 
   // Create reset link
-  const resetLink = `${this.configService.get<string>(
-    'APP_URL',
-  )}/reset-password?email=${encodeURIComponent(email)}&code=${code}`;
+  const resetLink = `${this.configService.get<string>('APP_URL')}/reset-password?email=${encodeURIComponent(email)}&code=${code}`;
 
   // Send reset link via email
   await this.mailService.sendAdminPasswordResetLink(
     user.email,
     `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
-    resetLink,
+    resetLink, //  passed as resetLink
     code,
   );
 
