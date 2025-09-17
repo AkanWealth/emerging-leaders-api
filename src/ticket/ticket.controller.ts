@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TicketService } from './ticket.service';
@@ -36,12 +37,25 @@ export class TicketController {
   }
 
   // ADMIN ROUTES
-  @Get()
-  @UseGuards(AdminGuard)
-  @ApiOperation({ summary: 'Admin views all tickets' })
-  findAll() {
-    return this.ticketService.findAll();
-  }
+ @Get()
+@UseGuards(AdminGuard)
+@ApiOperation({ summary: 'Admin views all tickets' })
+async findAll(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('ticketNumber') ticketNumber?: string,
+  @Query('status') status?: string,
+  @Query('userId') userId?: string,
+) {
+  return this.ticketService.findAll({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 10,
+    ticketNumber,
+    status,
+    userId,
+  });
+}
+
 
   @Get(':id')
   @UseGuards(AdminGuard)

@@ -69,11 +69,41 @@ async create(dto: CreateTicketDto, userId: string) {
   }
 
   // Get all tickets
-  findAll() {
-    return this.prisma.ticket.findMany({
+  async findAll(params: {
+  page?: number;
+  limit?: number;
+  ticketNumber?: string;
+  status?: string;
+  userId?: string;
+}) {
+  const { page = 1, limit = 10, ticketNumber, status, userId } = params;
+
+  const where: any = {};
+  if (ticketNumber) where.ticketNumber = ticketNumber;
+  if (status) where.status = status;
+  if (userId) where.userId = userId;
+
+  const [tickets, total] = await this.prisma.$transaction([
+    this.prisma.ticket.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: { createdAt: 'desc' },
-    });
-  }
+    }),
+    this.prisma.ticket.count({ where }),
+  ]);
+
+  return {
+    data: tickets,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
 
   // Get single ticket
   findOne(id: string) {
