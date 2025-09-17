@@ -34,7 +34,7 @@ export class AnalyticsController {
     @ReqDecorator() req: RequestWithUser,
     @Query('period') period: 'weekly' | 'monthly' | 'yearly' = 'monthly',
   ) {
-    const userId = req.user.id; // ✅ Extract from JWT
+    const userId = req.user.id; //  Extract from JWT
     return this.analyticsService.getOverview(userId, period);
   }
 
@@ -46,14 +46,6 @@ export class AnalyticsController {
   getUserStats() {
     return this.analyticsService.getUserStats();
   }
-
-  // @UseGuards(JwtAuthGuard, AdminGuard)
-  // @Get('admin/user-growth-chart')
-  // @ApiOperation({ summary: 'Admin - Monthly user registration trend' })
-  // @ApiResponse({ status: 200, description: 'Returns user growth data for line chart' })
-  // getUserGrowthChart() {
-  //   return this.analyticsService.getMonthlyUserGrowthChart();
-  // }
 
 @Get('user-growth-chart')
 @ApiOperation({ summary: 'Admin - User registration growth trend' })
@@ -75,21 +67,17 @@ getUserGrowthChart(@Query('period') period?: string) {
     return this.analyticsService.getRecentActivities(limit);
   }
 
-//   @UseGuards(JwtAuthGuard, AdminGuard)
-// @Get('admin/leaderboard')
-// @ApiOperation({ summary: 'Admin - User leaderboard' })
-// @ApiResponse({ status: 200, description: 'Leaderboard of top users' })
-// getLeaderboard(
-//   @Query('page') page = 1,
-//   @Query('limit') limit = 20,
-//   @Query('search') search?: string,
-//   @Query('filterBy') filterBy?: 'projects' | 'goals' | 'savings' | 'budget' | 'streak',
-// ) {
-//   return this.analyticsService.getLeaderboard(Number(page), Number(limit), search, filterBy);
-// }
-
 @Get('admin/leaderboard')
 @UseGuards(JwtAuthGuard, AdminGuard)
+@ApiOperation({ summary: 'Get leaderboard data' })
+@ApiResponse({ status: 200, description: 'Leaderboard data returned successfully' })
+@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 20)' })
+@ApiQuery({ name: 'search', required: false, type: String, description: 'Search keyword' })
+@ApiQuery({ name: 'ranking', required: false, enum: ['lowest', 'highest'], description: 'Ranking order' })
+@ApiQuery({ name: 'completed', required: false, type: String, description: 'Filter by completed tasks' })
+@ApiQuery({ name: 'goals', required: false, type: String, description: 'Filter by goals' })
+@ApiQuery({ name: 'streak', required: false, type: String, description: 'Filter by streak' })
 async getLeaderboard(
   @Query('page') page = 1,
   @Query('limit') limit = 20,

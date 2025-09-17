@@ -10,7 +10,7 @@ import {
   Req,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { TicketService } from './ticket.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
@@ -40,6 +40,11 @@ export class TicketController {
  @Get()
 @UseGuards(AdminGuard)
 @ApiOperation({ summary: 'Admin views all tickets' })
+@ApiQuery({ name: 'page', required: false, type: String })
+@ApiQuery({ name: 'limit', required: false, type: String })
+@ApiQuery({ name: 'ticketNumber', required: false, type: String })
+@ApiQuery({ name: 'status', required: false, type: String })
+@ApiQuery({ name: 'userId', required: false, type: String })
 async findAll(
   @Query('page') page?: string,
   @Query('limit') limit?: string,
