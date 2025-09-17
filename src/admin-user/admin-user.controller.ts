@@ -7,6 +7,8 @@ import {
   Body,
   Param,
   UseGuards,
+  Query,
+  Req,
 } from '@nestjs/common';
 import { AdminUserService } from './admin-user.service';
 import { CreateUserByAdminDto } from './dto/create-user.dto';
@@ -29,12 +31,37 @@ import {
 export class AdminUserController {
   constructor(private readonly adminUserService: AdminUserService) {}
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get()
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
-  getAllUsers() {
-    return this.adminUserService.getAllUsers();
+ @UseGuards(JwtAuthGuard, AdminGuard)
+@Get()
+@ApiOperation({ summary: 'Get all users' })
+@ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
+async getAllUsers(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('email') email?: string,
+  @Query('name') name?: string,
+  @Query('role') role?: string,
+  @Query('status') status?: string,
+) {
+  return this.adminUserService.getAllUsers({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 10,
+    email,
+    name,
+    role,
+    status,
+  });
+}
+
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('me')
+  @ApiOperation({ summary: 'Get logged-in user details' })
+  @ApiResponse({ status: 200, description: 'Returns the logged-in user details.' })
+  async getMe(@Req() req) {
+    const userId = req.user.id; // comes from JWT payload
+    return this.adminUserService.getUserById(userId);
   }
 
   @UseGuards(JwtAuthGuard, AdminGuard)

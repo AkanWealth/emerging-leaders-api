@@ -85,6 +85,7 @@ export class AdminService {
 
 async login(email: string, password: string) {
   const user = await this.prisma.user.findUnique({ where: { email } });
+
   if (!user || !user.isAdmin) {
     throw new UnauthorizedException('Not authorized');
   }
@@ -94,9 +95,54 @@ async login(email: string, password: string) {
     throw new UnauthorizedException('Invalid password');
   }
 
-  // Pass the whole user object so isAdmin gets embedded in JWT
- const tokens = await this.getTokens(user);
+  // Generate tokens
+  const tokens = await this.getTokens(user);
 
+  // Save hashed refresh token
+  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      isAdmin: user.isAdmin,
+      profilePicture: user.profilePicture,
+    },
+    tokens,
+  };
+}
+
+
+async refreshTokens(refreshToken: string) {
+  let payload: any;
+  try {
+    payload = this.jwtService.verify(refreshToken, {
+      secret: process.env.JWT_REFRESH_SECRET,  
+    });
+  } catch (e) {
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+  if (!user || !user.isAdmin) {
+    throw new UnauthorizedException('User not found or not admin');
+  }
+
+  if (!user.refreshToken) {
+    throw new UnauthorizedException('No refresh token found for user');
+  }
+
+  const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
+  if (!isValid) {
+    throw new UnauthorizedException('Refresh token mismatch');
+  }
+
+  // Issue new tokens
+  const tokens = await this.getTokens(user);
+
+  // Update stored refresh token
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
   return {
@@ -188,22 +234,23 @@ private async getTokens(user: { id: string; email: string; isAdmin: boolean }) {
   const payload = {
     sub: user.id,
     email: user.email,
-    isAdmin: user.isAdmin,  // <-- ADD THIS
+    isAdmin: user.isAdmin,
   };
 
   const [accessToken, refreshToken] = await Promise.all([
     this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_ACCESS_SECRET,
+      secret: process.env.JWT_ACCESS_SECRET,  // ✅ short-lived
       expiresIn: '15m',
     }),
     this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
+      secret: process.env.JWT_REFRESH_SECRET, // ✅ long-lived
       expiresIn: '7d',
     }),
   ]);
 
   return { accessToken, refreshToken };
 }
+
 
 
 
@@ -315,11 +362,46 @@ async resendInvite(dto: { email: string }) {
   return { message: 'New invite code sent', email: user.email };
 }
 
-async getAllAdmins() {
-  return this.prisma.user.findMany({
-    where: { isAdmin: true },
-  });
+async getAllAdmins(params: {
+  page?: number;
+  limit?: number;
+  email?: string;
+  name?: string;
+  status?: string;
+}) {
+  const { page = 1, limit = 10, email, name, status } = params;
+
+  const where: any = { isAdmin: true };
+  if (email) where.email = { contains: email, mode: 'insensitive' };
+  if (name) {
+    where.OR = [
+      { firstname: { contains: name, mode: 'insensitive' } },
+      { lastname: { contains: name, mode: 'insensitive' } },
+    ];
+  }
+  if (status) where.status = status;
+
+  const [admins, total] = await this.prisma.$transaction([
+    this.prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    this.prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: admins,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
+
 
 
 async getAllAdminsCount() {

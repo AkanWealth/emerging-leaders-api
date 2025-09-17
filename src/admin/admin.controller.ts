@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Query, HttpCode, Res, Req, HttpStatus, UnauthorizedException,} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from '../admin/dto/create-admin.dto';
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -12,6 +12,8 @@ import { ResendInviteDto } from './dto/resend-invite.dto';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../common/decorators/guards/admin.guard';
+import { Response } from 'express';
+import { RequestWithCookies } from '../types/request-with-cookies.interface';
 
 @ApiTags('Admin Auth')
 @Controller('admin/auth')
@@ -19,17 +21,53 @@ export class AdminController {
   constructor(private readonly adminAuthService: AdminService) {}
 
   @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiBearerAuth()
-  @Get()
-  @ApiOperation({ summary: 'Get all admins' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of all admin users',
-    type: [Object],
-  })
-  async getAllAdmins(): Promise<User[]> {
-    return this.adminAuthService.getAllAdmins();
+@ApiBearerAuth()
+@Get()
+@ApiOperation({ summary: 'Get all admins' })
+@ApiResponse({
+  status: 200,
+  description: 'List of all admin users with pagination and filters',
+})
+async getAllAdmins(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('email') email?: string,
+  @Query('name') name?: string,
+  @Query('status') status?: string,
+) {
+  return this.adminAuthService.getAllAdmins({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 10,
+    email,
+    name,
+    status,
+  });
+}
+
+@Post('refresh')
+async refresh(
+  @Req() req: RequestWithCookies,
+  @Res({ passthrough: true }) res: Response,
+  @Body('refreshToken') bodyToken?: string,
+) {
+  const cookieToken = req.cookies['refresh_token'];  //  no TS error
+  const refreshToken = bodyToken || cookieToken;
+
+  if (!refreshToken) {
+    throw new UnauthorizedException('Refresh token missing');
   }
+
+  const result = await this.adminAuthService.refreshTokens(refreshToken);
+
+  res.cookie('refresh_token', result.tokens.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return result;
+}
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
@@ -75,12 +113,27 @@ export class AdminController {
     return this.adminAuthService.verifyOtp(dto.email, dto.otp);
   }
 
-  @Post('login')
+ @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login as admin' })
   @ApiResponse({ status: 200, description: 'Logged in successfully (returns JWT)' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  login(@Body() dto: LoginDto) {
-    return this.adminAuthService.login(dto.email, dto.password);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.adminAuthService.login(dto.email, dto.password);
+
+    // ✅ Drop refresh token as HttpOnly cookie
+    res.cookie('refresh_token', result.tokens.refreshToken, {
+      httpOnly: true, // cannot be accessed by JS
+      secure: process.env.NODE_ENV === 'production', // only HTTPS in production
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // ✅ Also return it in response body for frontend use
+    return result;
   }
 
   @Post('forgot-password')

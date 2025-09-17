@@ -15,9 +15,65 @@ import { EditUserDto } from './dto/edit-user.dto';
 export class AdminUserService {
   constructor(private prisma: PrismaService, private mailService: MailService) {}
 
-  async getAllUsers() {
-    return this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+async getAllUsers(params: {
+  page?: number;
+  limit?: number;
+  email?: string;
+  name?: string;
+  role?: string;
+  status?: string;
+}) {
+  const { page = 1, limit = 10, email, name, role, status } = params;
+
+  const where: any = {};
+  if (email) where.email = { contains: email, mode: 'insensitive' };
+  if (name) {
+    where.OR = [
+      { firstname: { contains: name, mode: 'insensitive' } },
+      { lastname: { contains: name, mode: 'insensitive' } },
+    ];
   }
+  if (role) where.role = role;
+  if (status) where.status = status;
+
+  const [users, total] = await this.prisma.$transaction([
+    this.prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    this.prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: users,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+
+async getUserById(id: string) {
+  return this.prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      firstname: true,
+      lastname: true,
+      email: true,
+      isAdmin: true,
+      profilePicture: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+}
+
 
   async createUser(dto: CreateUserByAdminDto) {
     const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });

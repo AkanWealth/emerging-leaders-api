@@ -4,7 +4,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 // import helmet from 'helmet';
-// import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 
 
@@ -12,12 +12,14 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  
+  app.use(cookieParser()); 
   app.useLogger(new Logger());
 
   // Security middleware
   // app.use(helmet());
   // app.use(cookieParser());
+    // app.use(cookieParser()); 
 
   // Enable CORS
   app.enableCors({
