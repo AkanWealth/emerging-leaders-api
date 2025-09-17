@@ -51,7 +51,7 @@ app.useGlobalPipes(
 );
 
 
-  const port = process.env.PORT || 8000;
+  const port = process.env.PORT || 8080;
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}/api/v1`);
   console.log(`📘 Swagger docs available at: http://localhost:${port}/api/doc`);

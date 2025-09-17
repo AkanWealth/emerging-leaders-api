@@ -110,8 +110,6 @@ async getLeaderboard(
   });
 }
 
-
-
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('growth')
   async getGrowth() {
