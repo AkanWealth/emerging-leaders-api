@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, UseGuards, Query, HttpCode, Res, Req, HttpStatus, UnauthorizedException,} from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto } from '../admin/dto/create-admin.dto';
+import { CreateAdminDto, ChangePasswordDto } from '../admin/dto/create-admin.dto';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { VerifyOtpDto } from '../auth/dto/verify-otp.dto';
 import { LoginDto } from '../auth/dto/login.dto';
@@ -171,6 +171,22 @@ async refresh(
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.adminAuthService.forgotPassword(dto.email);
   }
+
+  @Post('request-password-change')
+@ApiOperation({ summary: 'Request OTP for password change (logged-in users)' })
+@UseGuards(JwtAuthGuard)
+async requestPasswordChange(@Req() req) {
+  const userId = req.user.id;
+  return this.adminAuthService.requestPasswordChange(userId);
+}
+
+@Post('change-password')
+@ApiOperation({ summary: 'Change password using OTP (logged-in users)' })
+async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
+  const userId = req.user.id;
+  return this.adminAuthService.changePassword(userId, dto.otp, dto.newPassword, dto.confirmPassword);
+}
+
 
   @Post('reset-password')
   @ApiOperation({ summary: 'Reset password using OTP or token' })

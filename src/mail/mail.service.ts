@@ -79,6 +79,29 @@ export class MailService {
   }
 }
 
+async sendChangePasswordOtp(email: string, fullName: string, code: string) {
+  const link = `${this.configService.get<string>('APP_URL')}/change-password?email=${encodeURIComponent(
+    email,
+  )}&code=${code}`;
+
+  try {
+    await this.sendEmailWithTemplate(email, 41525962, { // <-- create/use a template in Postmark
+      title: "Confirm Password Change",
+      fullName: fullName || '',
+      body: "You requested to change your password. Use the link or code below to verify this action.",
+      verificationLink: link,
+      code,
+      alertMessage: "This code and link will expire in 10 minutes and can only be used once.",
+    });
+
+    this.logger.log(`Password change OTP sent to ${email}`);
+  } catch (error) {
+    this.logger.error(`Failed to send password change OTP to ${email}:`, error);
+    throw new Error(`Could not send password change OTP to ${email}: ${error.message}`);
+  }
+}
+
+
 async sendAdminPasswordResetLink(email: string, fullName: string, resetLink: string, code: string) {
   try {
     await this.sendEmailWithTemplate(email, 41501059, { 

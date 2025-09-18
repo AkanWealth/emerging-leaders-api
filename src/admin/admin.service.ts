@@ -158,6 +158,56 @@ async refreshTokens(refreshToken: string) {
   };
 }
 
+async requestPasswordChange(userId: string) {
+  const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new NotFoundException('User not found');
+
+  // Generate OTP
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  // Save OTP
+  await this.prisma.otp.create({
+    data: { userId, otp: code, expiresAt },
+  });
+
+  // Send via email
+    await this.mailService.sendChangePasswordOtp(
+    user.email,
+    `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
+    code,
+  );
+
+
+  return { message: 'OTP sent to your email' };
+}
+
+async changePassword(userId: string, otp: string, newPassword: string, confirmPassword: string) {
+  if (newPassword !== confirmPassword) {
+    throw new BadRequestException('Passwords do not match');
+  }
+
+  const record = await this.prisma.otp.findFirst({
+    where: { userId, otp },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!record || record.expiresAt < new Date()) {
+    throw new BadRequestException('Invalid or expired OTP');
+  }
+
+  // Update password (hash before saving)
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await this.prisma.user.update({
+    where: { id: userId },
+    data: { password: hashed },
+  });
+
+  // Invalidate OTP
+  await this.prisma.otp.delete({ where: { id: record.id } });
+
+  return { message: 'Password changed successfully' };
+}
 
 
   // async forgotPassword(email: string) {

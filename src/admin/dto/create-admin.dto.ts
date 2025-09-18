@@ -22,3 +22,10 @@ export class CreateAdminDto {
   @MinLength(6)
   confirmPassword: string;
 }
+
+
+export class ChangePasswordDto {
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
+}
