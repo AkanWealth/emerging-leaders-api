@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger,  UnprocessableEntityException,
+  InternalServerErrorException,  BadRequestException, } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as postmark from 'postmark';
 import * as fs from 'fs';
@@ -26,7 +27,7 @@ export class MailService {
   }
 
 
-  async sendEmailWithTemplate(to: string, templateId: number, templateModel: any) {
+ async sendEmailWithTemplate(to: string, templateId: number, templateModel: any) {
     try {
       await this.client.sendEmailWithTemplate({
         From: this.senderEmail,
@@ -36,9 +37,23 @@ export class MailService {
       });
 
       this.logger.log(`Template email sent to: ${to}`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Postmark failed to send email to ${to}:`, error);
-      throw new Error(`Could not send email to ${to}: ${error.message}`);
+
+      if (error.code === 406) {
+        // InactiveRecipientsError
+        throw new UnprocessableEntityException({
+          statusCode: 406,
+          message: `Email not sent. Recipient ${to} is inactive (hard bounce, spam complaint, or suppressed).`,
+          recipients: error.recipients ?? [to],
+        });
+      }
+
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: `Could not send email to ${to}`,
+        error: error.message,
+      });
     }
   }
 
