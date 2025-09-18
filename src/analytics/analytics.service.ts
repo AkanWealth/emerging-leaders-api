@@ -18,56 +18,115 @@ import { subDays, subMonths, subYears, format } from 'date-fns';
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
+  // async getOverview(userId: string, period: 'weekly' | 'monthly' | 'yearly') {
+  //   const now = new Date();
+  //   const rangeMap = {
+  //     weekly: subDays(now, 7),
+  //     monthly: subMonths(now, 1),
+  //     yearly: subYears(now, 1),
+  //   };
+  //   const fromDate = rangeMap[period];
+
+  //   const [incomes, expenses, budgets] = await Promise.all([
+  //     this.prisma.income.findMany({
+  //       where: { userId, createdAt: { gte: fromDate } },
+  //       include: { category: true },
+  //     }),
+  //     this.prisma.expense.findMany({
+  //       where: { userId, createdAt: { gte: fromDate } },
+  //       include: { category: true, budget: true },
+  //     }),
+  //     this.prisma.budget.findMany({
+  //       where: { userId },
+  //       include: { category: true, expenses: true },
+  //     }),
+  //   ]);
+
+  //   const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+  //   const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+  //   const trend = this.generateTrendData(incomes, expenses, period);
+  //   const budgetOverview = budgets.map((budget) => {
+  //     const spent = budget.expenses.reduce((sum, e) => sum + e.amount, 0);
+  //     const percentage = Math.round((spent / budget.limit) * 100);
+  //     return {
+  //       category: budget.category.title,
+  //       icon: budget.category.icon ?? '',
+  //       budget: budget.limit,
+  //       spent,
+  //       percentage: Math.min(percentage, 100),
+  //     };
+  //   });
+
+  //   return {
+  //     summary: {
+  //       totalIncome,
+  //       totalExpense,
+  //       net: totalIncome - totalExpense,
+  //     },
+  //     trend,
+  //     budgetOverview,
+  //   };
+  // }
+
   async getOverview(userId: string, period: 'weekly' | 'monthly' | 'yearly') {
-    const now = new Date();
-    const rangeMap = {
-      weekly: subDays(now, 7),
-      monthly: subMonths(now, 1),
-      yearly: subYears(now, 1),
-    };
-    const fromDate = rangeMap[period];
+  const now = new Date();
+  const rangeMap = {
+    weekly: subDays(now, 7),
+    monthly: subMonths(now, 1),
+    yearly: subYears(now, 1),
+  };
+  const fromDate = rangeMap[period];
 
-    const [incomes, expenses, budgets] = await Promise.all([
-      this.prisma.income.findMany({
-        where: { userId, createdAt: { gte: fromDate } },
-        include: { category: true },
-      }),
-      this.prisma.expense.findMany({
-        where: { userId, createdAt: { gte: fromDate } },
-        include: { category: true, budget: true },
-      }),
-      this.prisma.budget.findMany({
-        where: { userId },
-        include: { category: true, expenses: true },
-      }),
-    ]);
+  const [incomes, expenses, budgets] = await Promise.all([
+    this.prisma.income.findMany({
+      where: { userId, createdAt: { gte: fromDate } },
+      include: { category: true },
+    }),
+    this.prisma.expense.findMany({
+      where: { userId, createdAt: { gte: fromDate } },
+      include: { category: true, budget: true },
+    }),
+    this.prisma.budget.findMany({
+      where: { userId },
+      include: { category: true, expenses: true },
+    }),
+  ]);
 
-    const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
-    const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+  const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-    const trend = this.generateTrendData(incomes, expenses, period);
-    const budgetOverview = budgets.map((budget) => {
-      const spent = budget.expenses.reduce((sum, e) => sum + e.amount, 0);
-      const percentage = Math.round((spent / budget.limit) * 100);
-      return {
-        category: budget.category.title,
-        icon: budget.category.icon ?? '',
-        budget: budget.limit,
-        spent,
-        percentage: Math.min(percentage, 100),
-      };
-    });
+  // Calculate percentages safely
+  const incomePercentage = totalIncome > 0 ? 100 : 0;
+  const expensePercentage = totalIncome > 0 ? Math.round((totalExpense / totalIncome) * 100) : 0;
 
+  const trend = this.generateTrendData(incomes, expenses, period);
+
+  const budgetOverview = budgets.map((budget) => {
+    const spent = budget.expenses.reduce((sum, e) => sum + e.amount, 0);
+    const percentage = Math.round((spent / budget.limit) * 100);
     return {
-      summary: {
-        totalIncome,
-        totalExpense,
-        net: totalIncome - totalExpense,
-      },
-      trend,
-      budgetOverview,
+      category: budget.category.title,
+      icon: budget.category.icon ?? '',
+      budget: budget.limit,
+      spent,
+      percentage: Math.min(percentage, 100),
     };
-  }
+  });
+
+  return {
+    summary: {
+      totalIncome,
+      totalExpense,
+      net: totalIncome - totalExpense,
+      incomePercentage,
+      expensePercentage,
+    },
+    trend,
+    budgetOverview,
+  };
+}
+
 
   generateTrendData(
     incomes: any[],
@@ -503,23 +562,29 @@ async getMonthlyGrowthChart() {
   }
 
 
-// async getLeaderboard(
-//   page = 1,
-//   limit = 20,
-//   search?: string,
-//   filterBy?: "projects" | "goals" | "savings" | "budget" | "streak",
-// ) {
-//   const skip = (page - 1) * limit;
 
+
+
+// async getLeaderboard(query: LeaderboardQuery) {
+//   const { 
+//     page = 1, 
+//     limit = 20, 
+//     search, 
+//     ranking = 'highest', 
+//     completed, 
+//     goals, 
+//     streak 
+//   } = query;
+
+//   // Fetch users (search filter at DB level only)
 //   const users = await this.prisma.user.findMany({
-//     skip,
-//     take: limit,
 //     where: {
 //       ...(search
 //         ? {
 //             OR: [
-//               { name: { contains: search, mode: "insensitive" } },
-//               { email: { contains: search, mode: "insensitive" } },
+//               { firstname: { contains: search, mode: 'insensitive' } },
+//               { lastname: { contains: search, mode: 'insensitive' } },
+//               { email: { contains: search, mode: 'insensitive' } },
 //             ],
 //           }
 //         : {}),
@@ -531,53 +596,84 @@ async getMonthlyGrowthChart() {
 //     },
 //   });
 
+//   // Build leaderboard dataset
 //   const leaderboard = users.map((user) => {
 //     const totalProjects = user.projects.length;
-//     const totalGoals = user.projects.flatMap((p) => p.goals).filter((g) => g.isCompleted).length;
+//     const totalCompletedGoals = user.projects
+//       .flatMap((p) => p.goals)
+//       .filter((g) => g.isCompleted).length;
 //     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
 //     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
-//     const consistencyStreak = totalGoals; // placeholder streak logic
+//     const consistencyStreak = totalCompletedGoals; // Replace later with real streak logic
 
 //     return {
+//       id: user.id,
 //       name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
 //       projects: totalProjects,
-//       goals: totalGoals,
+//       completed: totalCompletedGoals,
+//       goals: totalCompletedGoals, // alias for clarity
 //       savings: totalSavings,
 //       budget: totalBudget,
 //       streak: consistencyStreak,
 //     };
 //   });
 
-//   // Default sort by streak if no filterBy provided
-//   const sortField = filterBy ?? "streak";
-//   leaderboard.sort((a, b) => (b[sortField] as number) - (a[sortField] as number));
+//   // Apply optional filters
+//   const applyNumericFilter = (val: string | undefined, actual: number): boolean => {
+//     if (!val) return true;
+//     const value = parseInt(val.match(/\d+/)?.[0] || '0', 10);
+//     if (val.startsWith('lessThan')) return actual < value;
+//     if (val.startsWith('moreThan')) return actual > value;
+//     if (val.startsWith('equal')) return actual === value;
+//     return true;
+//   };
+
+//   const filtered = leaderboard.filter((user) =>
+//     applyNumericFilter(completed, user.completed) &&
+//     applyNumericFilter(goals, user.goals) &&
+//     applyNumericFilter(streak, user.streak)
+//   );
+
+//   // Sorting (default by streak, but can extend easily)
+//   const sortField: keyof typeof filtered[number] = 'streak';
+//   filtered.sort((a, b) =>
+//     ranking === 'lowest'
+//       ? (a[sortField] as number) - (b[sortField] as number)
+//       : (b[sortField] as number) - (a[sortField] as number)
+//   );
+
+//   // Paginate AFTER filtering
+//   const total = filtered.length;
+//   const startIndex = (page - 1) * limit;
+//   const paginated = filtered.slice(startIndex, startIndex + limit);
 
 //   return {
-//     data: leaderboard,
+//     data: paginated,
 //     meta: {
 //       page,
 //       limit,
-//       total: leaderboard.length,
+//       total,
+//       totalPages: Math.ceil(total / limit),
 //       sortedBy: sortField,
+//       ranking,
 //     },
 //   };
 // }
-// analytics.service.ts
 
-
-
-async getLeaderboard(query: LeaderboardQuery) {
-  const { 
-    page = 1, 
-    limit = 20, 
-    search, 
-    ranking = 'highest', 
-    completed, 
-    goals, 
-    streak 
+async getLeaderboard(query: Record<string, string | undefined>) {
+  const {
+    page = '1',
+    limit = '20',
+    search,
+    ranking = 'highest',
+    sortBy = 'streak', // dynamic sort field
+    ...filters // all other query params are treated as numeric filters
   } = query;
 
-  // Fetch users (search filter at DB level only)
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+
+  // Fetch users with search at DB level
   const users = await this.prisma.user.findMany({
     where: {
       ...(search
@@ -605,61 +701,74 @@ async getLeaderboard(query: LeaderboardQuery) {
       .filter((g) => g.isCompleted).length;
     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
-    const consistencyStreak = totalCompletedGoals; // Replace later with real streak logic
+    const consistencyStreak = totalCompletedGoals; // Placeholder for real streak logic
 
     return {
       id: user.id,
-      name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
+      name: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.email,
       projects: totalProjects,
       completed: totalCompletedGoals,
-      goals: totalCompletedGoals, // alias for clarity
+      goals: totalCompletedGoals,
       savings: totalSavings,
       budget: totalBudget,
       streak: consistencyStreak,
     };
   });
 
-  // Apply optional filters
-  const applyNumericFilter = (val: string | undefined, actual: number): boolean => {
-    if (!val) return true;
-    const value = parseInt(val.match(/\d+/)?.[0] || '0', 10);
-    if (val.startsWith('lessThan')) return actual < value;
-    if (val.startsWith('moreThan')) return actual > value;
-    if (val.startsWith('equal')) return actual === value;
-    return true;
-  };
+  // Apply optional numeric filters dynamically
+const applyFilter = (field: keyof typeof leaderboard[0], filter?: string) => (user: typeof leaderboard[0]) => {
+  if (!filter) return true;
+  const value = parseInt(filter.match(/\d+/)?.[0] || '0', 10);
+
+  const fieldValue = user[field];
+  if (typeof fieldValue !== 'number') return true; // skip non-numeric fields
+
+  if (filter.startsWith('lessThan')) return fieldValue < value;
+  if (filter.startsWith('moreThan')) return fieldValue > value;
+  if (filter.startsWith('equal')) return fieldValue === value;
+
+  return true;
+};
 
   const filtered = leaderboard.filter((user) =>
-    applyNumericFilter(completed, user.completed) &&
-    applyNumericFilter(goals, user.goals) &&
-    applyNumericFilter(streak, user.streak)
+    Object.entries(filters).every(([key, val]) =>
+      applyFilter(key as keyof typeof leaderboard[0], val)(user)
+    )
   );
 
-  // Sorting (default by streak, but can extend easily)
-  const sortField: keyof typeof filtered[number] = 'streak';
-  filtered.sort((a, b) =>
-    ranking === 'lowest'
-      ? (a[sortField] as number) - (b[sortField] as number)
-      : (b[sortField] as number) - (a[sortField] as number)
-  );
+  // Sorting dynamically
+  const sortField = sortBy as keyof typeof filtered[number];
+  filtered.sort((a, b) => {
+    const aVal = a[sortField];
+    const bVal = b[sortField];
 
-  // Paginate AFTER filtering
+    // If sorting by name, sort alphabetically
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return ranking === 'lowest' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    }
+
+    // Otherwise, numeric sort
+    return ranking === 'lowest'
+      ? (aVal as number) - (bVal as number)
+      : (bVal as number) - (aVal as number);
+  });
+
+  // Pagination
   const total = filtered.length;
-  const startIndex = (page - 1) * limit;
-  const paginated = filtered.slice(startIndex, startIndex + limit);
+  const startIndex = (pageNum - 1) * limitNum;
+  const paginated = filtered.slice(startIndex, startIndex + limitNum);
 
   return {
     data: paginated,
     meta: {
-      page,
-      limit,
+      page: pageNum,
+      limit: limitNum,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limitNum),
       sortedBy: sortField,
       ranking,
     },
   };
 }
-
 
 }

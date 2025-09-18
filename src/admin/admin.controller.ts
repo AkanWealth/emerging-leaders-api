@@ -19,34 +19,58 @@ import { RequestWithCookies } from '../types/request-with-cookies.interface';
 export class AdminController {
   constructor(private readonly adminAuthService: AdminService) {}
 
+  // @UseGuards(JwtAuthGuard, AdminGuard)
+  // @ApiBearerAuth()
+  // @Get()
+  // @ApiOperation({ summary: 'Get all admins' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'List of all admin users with pagination and filters',
+  // })
+  // @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+  // @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit per page (default 10)' })
+  // @ApiQuery({ name: 'email', required: false, type: String, description: 'Filter by email' })
+  // @ApiQuery({ name: 'name', required: false, type: String, description: 'Filter by name' })
+  // @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by status' })
+  // async getAllAdmins(
+  //   @Query('page') page?: string,
+  //   @Query('limit') limit?: string,
+  //   @Query('email') email?: string,
+  //   @Query('name') name?: string,
+  //   @Query('status') status?: string,
+  // ) {
+  //   return this.adminAuthService.getAllAdmins({
+  //     page: page ? parseInt(page, 10) : 1,
+  //     limit: limit ? parseInt(limit, 10) : 10,
+  //     email,
+  //     name,
+  //     status,
+  //   });
+  // }
+
   @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiBearerAuth()
-  @Get()
-  @ApiOperation({ summary: 'Get all admins' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of all admin users with pagination and filters',
-  })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit per page (default 10)' })
-  @ApiQuery({ name: 'email', required: false, type: String, description: 'Filter by email' })
-  @ApiQuery({ name: 'name', required: false, type: String, description: 'Filter by name' })
-  @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by status' })
-  async getAllAdmins(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('email') email?: string,
-    @Query('name') name?: string,
-    @Query('status') status?: string,
-  ) {
-    return this.adminAuthService.getAllAdmins({
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 10,
-      email,
-      name,
-      status,
-    });
-  }
+@ApiBearerAuth()
+@Get()
+@ApiOperation({ summary: 'Get all admins' })
+@ApiResponse({
+  status: 200,
+  description: 'List of all admin users with pagination and search',
+})
+@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit per page (default 10)' })
+@ApiQuery({ name: 'search', required: false, type: String, description: 'Search across name, email, last joined, last active' })
+async getAllAdmins(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('search') search?: string,
+) {
+  return this.adminAuthService.getAllAdmins({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 10,
+    search,
+  });
+}
+
 
 @Post('refresh')
 async refresh(

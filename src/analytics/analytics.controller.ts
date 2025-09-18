@@ -67,36 +67,57 @@ getUserGrowthChart(@Query('period') period?: string) {
     return this.analyticsService.getRecentActivities(limit);
   }
 
-@Get('admin/leaderboard')
-@UseGuards(JwtAuthGuard, AdminGuard)
-@ApiOperation({ summary: 'Get leaderboard data' })
-@ApiResponse({ status: 200, description: 'Leaderboard data returned successfully' })
-@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
-@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 20)' })
-@ApiQuery({ name: 'search', required: false, type: String, description: 'Search keyword' })
-@ApiQuery({ name: 'ranking', required: false, enum: ['lowest', 'highest'], description: 'Ranking order' })
-@ApiQuery({ name: 'completed', required: false, type: String, description: 'Filter by completed tasks' })
-@ApiQuery({ name: 'goals', required: false, type: String, description: 'Filter by goals' })
-@ApiQuery({ name: 'streak', required: false, type: String, description: 'Filter by streak' })
-async getLeaderboard(
-  @Query('page') page = 1,
-  @Query('limit') limit = 20,
-  @Query('search') search?: string,
-  @Query('ranking') ranking?: 'lowest' | 'highest',
-  @Query('completed') completed?: string,
-  @Query('goals') goals?: string,
-  @Query('streak') streak?: string,
-) {
-  return this.analyticsService.getLeaderboard({
-    page: Number(page),
-    limit: Number(limit),
-    search,
-    ranking,
-    completed,
-    goals,
-    streak,
-  });
-}
+// @Get('admin/leaderboard')
+// @UseGuards(JwtAuthGuard, AdminGuard)
+// @ApiOperation({ summary: 'Get leaderboard data' })
+// @ApiResponse({ status: 200, description: 'Leaderboard data returned successfully' })
+// @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+// @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 20)' })
+// @ApiQuery({ name: 'search', required: false, type: String, description: 'Search keyword' })
+// @ApiQuery({ name: 'ranking', required: false, enum: ['lowest', 'highest'], description: 'Ranking order' })
+// @ApiQuery({ name: 'completed', required: false, type: String, description: 'Filter by completed tasks' })
+// @ApiQuery({ name: 'goals', required: false, type: String, description: 'Filter by goals' })
+// @ApiQuery({ name: 'streak', required: false, type: String, description: 'Filter by streak' })
+// async getLeaderboard(
+//   @Query('page') page = 1,
+//   @Query('limit') limit = 20,
+//   @Query('search') search?: string,
+//   @Query('ranking') ranking?: 'lowest' | 'highest',
+//   @Query('completed') completed?: string,
+//   @Query('goals') goals?: string,
+//   @Query('streak') streak?: string,
+// ) {
+//   return this.analyticsService.getLeaderboard({
+//     page: Number(page),
+//     limit: Number(limit),
+//     search,
+//     ranking,
+//     completed,
+//     goals,
+//     streak,
+//   });
+// }
+
+  @Get('admin/leaderboard')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiOperation({ summary: 'Get leaderboard data' })
+  @ApiResponse({ status: 200, description: 'Leaderboard data returned successfully' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 20)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search keyword' })
+  @ApiQuery({ name: 'ranking', required: false, enum: ['lowest', 'highest'], description: 'Ranking order' })
+  @ApiQuery({ name: 'sortBy', required: false, type: String, description: 'Column to sort by (e.g., completed, goals, streak, projects, savings, budget, name)' })
+  @ApiQuery({ name: 'completed', required: false, type: String, description: 'Filter by completed tasks (e.g., lessThan5, moreThan10)' })
+  @ApiQuery({ name: 'goals', required: false, type: String, description: 'Filter by goals' })
+  @ApiQuery({ name: 'streak', required: false, type: String, description: 'Filter by streak' })
+  @ApiQuery({ name: 'projects', required: false, type: String, description: 'Filter by total projects' })
+  @ApiQuery({ name: 'savings', required: false, type: String, description: 'Filter by savings amount' })
+  @ApiQuery({ name: 'budget', required: false, type: String, description: 'Filter by budget amount' })
+  async getLeaderboard(
+    @Query() query: Record<string, string | undefined>,
+  ) {
+    return this.analyticsService.getLeaderboard(query);
+  }
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('growth')

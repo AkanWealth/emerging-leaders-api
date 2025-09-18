@@ -32,33 +32,55 @@ import {
 export class AdminUserController {
   constructor(private readonly adminUserService: AdminUserService) {}
 
+// @UseGuards(JwtAuthGuard, AdminGuard)
+//   @Get()
+//   @ApiOperation({ summary: 'Get all users' })
+//   @ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
+//   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+//   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
+//   @ApiQuery({ name: 'email', required: false, type: String, description: 'Filter by email' })
+//   @ApiQuery({ name: 'name', required: false, type: String, description: 'Filter by name' })
+//   @ApiQuery({ name: 'role', required: false, type: String, description: 'Filter by role' })
+//   @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by status' })
+//   async getAllUsers(
+//     @Query('page') page?: string,
+//     @Query('limit') limit?: string,
+//     @Query('email') email?: string,
+//     @Query('name') name?: string,
+//     @Query('role') role?: string,
+//     @Query('status') status?: string,
+//   ) {
+//     return this.adminUserService.getAllUsers({
+//       page: page ? parseInt(page, 10) : 1,
+//       limit: limit ? parseInt(limit, 10) : 10,
+//       email,
+//       name,
+//       role,
+//       status,
+//     });
+//   }
+
 @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get()
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
-  @ApiQuery({ name: 'email', required: false, type: String, description: 'Filter by email' })
-  @ApiQuery({ name: 'name', required: false, type: String, description: 'Filter by name' })
-  @ApiQuery({ name: 'role', required: false, type: String, description: 'Filter by role' })
-  @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by status' })
-  async getAllUsers(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('email') email?: string,
-    @Query('name') name?: string,
-    @Query('role') role?: string,
-    @Query('status') status?: string,
-  ) {
-    return this.adminUserService.getAllUsers({
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 10,
-      email,
-      name,
-      role,
-      status,
-    });
-  }
+@Get()
+@ApiOperation({ summary: 'Get all users' })
+@ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
+@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
+@ApiQuery({ name: 'search', required: false, type: String, description: 'Search by name, email, or date (last joined / last active)' })
+@ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by user status' })
+async getAllUsers(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('search') search?: string,
+  @Query('status') status?: string,
+) {
+  return this.adminUserService.getAllUsers({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 10,
+    search,
+  });
+}
+
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

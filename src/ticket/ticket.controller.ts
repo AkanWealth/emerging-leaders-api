@@ -42,22 +42,19 @@ export class TicketController {
 @ApiOperation({ summary: 'Admin views all tickets' })
 @ApiQuery({ name: 'page', required: false, type: String })
 @ApiQuery({ name: 'limit', required: false, type: String })
-@ApiQuery({ name: 'ticketNumber', required: false, type: String })
+@ApiQuery({ name: 'search', required: false, type: String, description: 'Search by ticket number, user name, or ticket subject' })
 @ApiQuery({ name: 'status', required: false, type: String })
-@ApiQuery({ name: 'userId', required: false, type: String })
 async findAll(
   @Query('page') page?: string,
   @Query('limit') limit?: string,
-  @Query('ticketNumber') ticketNumber?: string,
+  @Query('search') search?: string,
   @Query('status') status?: string,
-  @Query('userId') userId?: string,
 ) {
   return this.ticketService.findAll({
     page: page ? parseInt(page, 10) : 1,
     limit: limit ? parseInt(limit, 10) : 10,
-    ticketNumber,
+    search,
     status,
-    userId,
   });
 }
 

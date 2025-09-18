@@ -365,21 +365,28 @@ async resendInvite(dto: { email: string }) {
 async getAllAdmins(params: {
   page?: number;
   limit?: number;
-  email?: string;
-  name?: string;
-  status?: string;
+  search?: string;
 }) {
-  const { page = 1, limit = 10, email, name, status } = params;
+  const { page = 1, limit = 10, search } = params;
 
   const where: any = { isAdmin: true };
-  if (email) where.email = { contains: email, mode: 'insensitive' };
-  if (name) {
+
+  if (search) {
+    const searchDate = new Date(search);
+    const isValidDate = !isNaN(searchDate.getTime());
+
     where.OR = [
-      { firstname: { contains: name, mode: 'insensitive' } },
-      { lastname: { contains: name, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { firstname: { contains: search, mode: 'insensitive' } },
+      { lastname: { contains: search, mode: 'insensitive' } },
+      ...(isValidDate
+        ? [
+            { createdAt: { gte: searchDate } }, // last joined
+            { updatedAt: { gte: searchDate } }, // last active
+          ]
+        : []),
     ];
   }
-  if (status) where.status = status;
 
   const [admins, total] = await this.prisma.$transaction([
     this.prisma.user.findMany({
@@ -387,6 +394,14 @@ async getAllAdmins(params: {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        firstname: true,
+        lastname: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     this.prisma.user.count({ where }),
   ]);
