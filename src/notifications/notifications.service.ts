@@ -172,6 +172,15 @@ async getUnreadCount(userId: string) {
   }
 
   /**
+ * Delete all notifications for a user
+ */
+async deleteAllNotifications(userId: string) {
+  return this.prisma.notification.deleteMany({
+    where: { userId },
+  });
+}
+
+  /**
    * Delete a single notification
    */
   async deleteNotification(notificationId: string) {

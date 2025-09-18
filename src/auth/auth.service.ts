@@ -46,7 +46,7 @@ export class AuthService {
     user = await this.usersService.createUserDetail(email, name);
   }
 
-  const tokens = await this.getTokens(user); // ✅ pass full user object
+  const tokens = await this.getTokens(user); //  pass full user object
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
   return {
@@ -67,7 +67,7 @@ export class AuthService {
       {
         sub: user.id,
         email: user.email,
-        isAdmin: user.isAdmin, // ✅ Include this
+        isAdmin: user.isAdmin, //  Include this
       },
       {
         secret: process.env.JWT_ACCESS_SECRET,
@@ -78,7 +78,7 @@ export class AuthService {
       {
         sub: user.id,
         email: user.email,
-        isAdmin: user.isAdmin, // ✅ Include this too
+        isAdmin: user.isAdmin, //  Include this too
       },
       {
         secret: process.env.JWT_REFRESH_SECRET,
@@ -164,7 +164,11 @@ async verifyOtp(email: string, otp: string) {
 
   return {
     message: 'OTP verified successfully',
-    user,
+    id: user.id,
+    email: user.email,
+    firstname: user.firstname,
+    lastname: user.lastname,
+    profilePicture: user.profilePicture,
     tokens,
   };
 }
@@ -210,7 +214,7 @@ async verifyOtp(email: string, otp: string) {
       email: true,
       name: true,
       password: true,
-      isAdmin: true, // ✅ include this
+      isAdmin: true,
     },
   });
 
@@ -226,7 +230,7 @@ async verifyOtp(email: string, otp: string) {
   const tokens = await this.getTokens({
     id: user.id,
     email: user.email,
-    isAdmin: user.isAdmin, // ✅ pass this to getTokens
+    isAdmin: user.isAdmin, 
   });
 
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
@@ -282,7 +286,8 @@ async loginWithGoogle(email: string, name: string) {
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
   return {
-    user,
+    id: user.id,
+    email: user.email,
     tokens,
   };
 }

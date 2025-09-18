@@ -150,4 +150,12 @@ getUnreadNotifications(
   ) {
     return this.notificationsService.broadcastNotification(body.title, body.body, body.data, body.type);
   }
+
+
+    @Delete('delete-all')
+  async deleteAll(@Req() req) {
+    const userId = req.user.id; // Assuming your JWT sets req.user
+    await this.notificationsService.deleteAllNotifications(userId);
+    return { success: true, message: 'All notifications deleted' };
+  }
 }
