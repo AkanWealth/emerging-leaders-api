@@ -40,13 +40,28 @@ export class AuthService {
   /**
    * Login or create Google user.
    */
- async login(email: string, name: string) {
+async login(email: string, name: string) {
   let user = await this.usersService.findByEmail(email);
   if (!user) {
     user = await this.usersService.createUserDetail(email, name);
   }
 
-  const tokens = await this.getTokens(user); //  pass full user object
+  // Log login activity
+  await this.prisma.activityLog.create({
+    data: {
+      userId: user.id,
+      action: 'LOGIN',
+      metadata: `User ${user.email} logged in at ${new Date().toISOString()}`,
+    },
+  });
+
+  await this.prisma.user.update({
+  where: { id: user.id },
+  data: { lastLogin: new Date() },
+});
+
+
+  const tokens = await this.getTokens(user); 
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
   return {
@@ -54,7 +69,8 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
-      isAdmin: user.isAdmin, // optional: include in response
+      isAdmin: user.isAdmin,
+      status: user.status,
     },
     tokens,
   };

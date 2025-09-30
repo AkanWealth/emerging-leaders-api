@@ -24,8 +24,4 @@ export class CreateAdminDto {
 }
 
 
-export class ChangePasswordDto {
-  otp: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+

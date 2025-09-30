@@ -79,27 +79,52 @@ export class MailService {
   }
 }
 
-async sendChangePasswordOtp(email: string, fullName: string, code: string) {
-  const link = `${this.configService.get<string>('APP_URL')}/change-password?email=${encodeURIComponent(
-    email,
-  )}&code=${code}`;
-
-  try {
-    await this.sendEmailWithTemplate(email, 41525962, { // <-- create/use a template in Postmark
-      title: "Confirm Password Change",
-      fullName: fullName || '',
-      body: "You requested to change your password. Use the link or code below to verify this action.",
-      verificationLink: link,
-      code,
-      alertMessage: "This code and link will expire in 10 minutes and can only be used once.",
-    });
-
-    this.logger.log(`Password change OTP sent to ${email}`);
-  } catch (error) {
-    this.logger.error(`Failed to send password change OTP to ${email}:`, error);
-    throw new Error(`Could not send password change OTP to ${email}: ${error.message}`);
+ private getAppUrl() {
+    return this.configService.get<string>('APP_URL') || 'https://your-app.com';
   }
-}
+// async sendChangePasswordOtp(email: string, fullName: string, code: string) {
+//   const link = `${this.configService.get<string>('APP_URL')}/change-password?email=${encodeURIComponent(
+//     email,
+//   )}&code=${code}`;
+
+//   try {
+//     await this.sendEmailWithTemplate(email, 41525962, { // <-- create/use a template in Postmark
+//       title: "Confirm Password Change",
+//       fullName: fullName || '',
+//       body: "You requested to change your password. Use the link or code below to verify this action.",
+//       verificationLink: link,
+//       code,
+//       alertMessage: "This code and link will expire in 10 minutes and can only be used once.",
+//     });
+
+//     this.logger.log(`Password change OTP sent to ${email}`);
+//   } catch (error) {
+//     this.logger.error(`Failed to send password change OTP to ${email}:`, error);
+//     throw new Error(`Could not send password change OTP to ${email}: ${error.message}`);
+//   }
+// }
+async sendInactivityWarning(email: string, message: string) {
+    const appUrl = this.getAppUrl();
+
+    await this.sendEmailWithTemplate(email, 41527693, {
+      title: 'Inactivity Warning',
+      body: message,
+      loginLink: `${appUrl}/login`,
+      alertMessage: 'Please log in to keep your account active.',
+    });
+  }
+
+  async sendInactivityNotice(email: string, message: string) {
+    const appUrl = this.getAppUrl();
+
+    await this.sendEmailWithTemplate(email, 41527744, {
+      title: 'Account Inactivated',
+      body: message,
+      loginLink: `${appUrl}/login`,
+      alertMessage: 'You can reactivate your account anytime by logging in.',
+    });
+  }
+
 
 
 async sendAdminPasswordResetLink(email: string, fullName: string, resetLink: string, code: string) {

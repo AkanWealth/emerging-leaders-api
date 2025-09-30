@@ -41,6 +41,7 @@ model User {
   senseOfPurpose         String?
   sourceOfIncome         String?
   underageParent         Boolean?
+  lastLogin   DateTime? 
   financeCompleted       Boolean           @default(false)
   password               String
   ageGroup               String?
@@ -48,6 +49,7 @@ model User {
   isSuperAdmin           Boolean           @default(false)
   currencyId             String?
   profilePicture         String?
+  status                 UserStatus        @default(PENDING)
   activityLogs           ActivityLog[]
   budgets                Budget[]
   contents               Content[]
@@ -70,6 +72,13 @@ model User {
   wallet                 Wallet?
   Category               Category[]
   Notification           Notification[]
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  DEACTIVATED
 }
 
 model Notification {

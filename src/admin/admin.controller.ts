@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, UseGuards, Query, HttpCode, Res, Req, HttpStatus, UnauthorizedException,} from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, ChangePasswordDto } from '../admin/dto/create-admin.dto';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateAdminDto } from '../admin/dto/create-admin.dto';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { VerifyOtpDto } from '../auth/dto/verify-otp.dto';
 import { LoginDto } from '../auth/dto/login.dto';
 import { ForgotPasswordDto } from '../auth/dto/forgot-password.dto';
@@ -13,7 +13,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../common/decorators/guards/admin.guard';
 import { Response } from 'express';
 import { RequestWithCookies } from '../types/request-with-cookies.interface';
-
+import {  ChangePasswordDto } from './dto/change-password.dto'
+ 
 @ApiTags('Admin Auth')
 @Controller('admin/auth')
 export class AdminController {
@@ -72,30 +73,64 @@ async getAllAdmins(
 }
 
 
-@Post('refresh')
-async refresh(
-  @Req() req: RequestWithCookies,
-  @Res({ passthrough: true }) res: Response,
-  @Body('refreshToken') bodyToken?: string,
-) {
-  const cookieToken = req.cookies['refresh_token'];  //  no TS error
-  const refreshToken = bodyToken || cookieToken;
-
-  if (!refreshToken) {
-    throw new UnauthorizedException('Refresh token missing');
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @Get()
+  @ApiOperation({ summary: 'Change password' })
+  @Post('change-password')
+  async changePassword(@Body() dto: ChangePasswordDto) {
+    return this.adminAuthService.changePassword(
+      dto.email,
+      dto.otp,
+      dto.newPassword,
+      dto.confirmPassword,
+    );
   }
 
-  const result = await this.adminAuthService.refreshTokens(refreshToken);
 
-  res.cookie('refresh_token', result.tokens.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
 
-  return result;
-}
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refreshToken: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          description:
+            'Optional refresh token. If not provided, cookie will be used.',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'New tokens issued successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or missing refresh token' })
+  async refresh(
+    @Req() req: RequestWithCookies,
+    @Res({ passthrough: true }) res: Response,
+    @Body('refreshToken') bodyToken?: string,
+  ) {
+    const cookieToken = req.cookies['refresh_token'];
+    const refreshToken = bodyToken || cookieToken;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    const result = await this.adminAuthService.refreshTokens(refreshToken);
+
+    // Always set new cookie for refresh token (regardless of body or cookie input)
+    res.cookie('refresh_token', result.tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return result;
+  }
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
@@ -141,7 +176,7 @@ async refresh(
     return this.adminAuthService.verifyOtp(dto.email, dto.otp);
   }
 
- @Post('login')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login as admin' })
   @ApiResponse({ status: 200, description: 'Logged in successfully (returns JWT)' })
@@ -172,20 +207,22 @@ async refresh(
     return this.adminAuthService.forgotPassword(dto.email);
   }
 
-  @Post('request-password-change')
-@ApiOperation({ summary: 'Request OTP for password change (logged-in users)' })
-@UseGuards(JwtAuthGuard)
-async requestPasswordChange(@Req() req) {
-  const userId = req.user.id;
-  return this.adminAuthService.requestPasswordChange(userId);
-}
+  
 
-@Post('change-password')
-@ApiOperation({ summary: 'Change password using OTP (logged-in users)' })
-async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
-  const userId = req.user.id;
-  return this.adminAuthService.changePassword(userId, dto.otp, dto.newPassword, dto.confirmPassword);
-}
+//   @Post('request-password-change')
+// @ApiOperation({ summary: 'Request OTP for password change (logged-in users)' })
+// @UseGuards(JwtAuthGuard)
+// async requestPasswordChange(@Req() req) {
+//   const userId = req.user.id;
+//   return this.adminAuthService.requestPasswordChange(userId);
+// }
+
+// @Post('change-password')
+// @ApiOperation({ summary: 'Change password using OTP (logged-in users)' })
+// async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
+//   const userId = req.user.id;
+//   return this.adminAuthService.changePassword(userId, dto.otp, dto.newPassword, dto.confirmPassword);
+// }
 
 
   @Post('reset-password')

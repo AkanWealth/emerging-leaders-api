@@ -63,7 +63,9 @@ async getAllUsers(params: {
 }) {
   const { page = 1, limit = 10, search } = params;
 
-  const where: any = {};
+  const where: any = {
+    isAdmin: false, // 👈 ensure only non-admin users
+  };
 
   if (search) {
     where.OR = [
@@ -71,9 +73,13 @@ async getAllUsers(params: {
       { firstname: { contains: search, mode: 'insensitive' } },
       { lastname: { contains: search, mode: 'insensitive' } },
       { name: { contains: search, mode: 'insensitive' } },
-      { isAdmin: { contains: search, mode: 'insensitive' } },
-      { createdAt: { equals: new Date(search) } }, // last joined (if search is a date)
     ];
+
+    // optional: allow date search (if string parses to valid date)
+    const maybeDate = new Date(search);
+    if (!isNaN(maybeDate.getTime())) {
+      where.OR.push({ createdAt: { equals: maybeDate } });
+    }
   }
 
   const [users, total] = await this.prisma.$transaction([
@@ -87,7 +93,7 @@ async getAllUsers(params: {
   ]);
 
   return {
-    data: users.map(u => ({
+    data: users.map((u) => ({
       id: u.id,
       firstname: u.firstname,
       lastname: u.lastname,
@@ -104,6 +110,23 @@ async getAllUsers(params: {
   };
 }
 
+
+async updateStatus(userId: string, status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'DEACTIVATED') {
+  const user = await this.prisma.user.update({
+    where: { id: userId },
+    data: { status },
+  });
+
+  await this.prisma.activityLog.create({
+    data: {
+      userId: user.id,
+      action: `STATUS_UPDATE`,
+      metadata: `User status changed to ${status}`,
+    },
+  });
+
+  return { message: `User status updated to ${status}`, user };
+}
 
 
 async getUserById(id: string) {

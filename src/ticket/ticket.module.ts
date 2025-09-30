@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { TicketController } from './ticket.controller';
-import { PrismaModule } from '../prisma/prisma.module';
 import { AdminGuard } from '../common/decorators/guards/admin.guard'; 
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from '../auth/jwt.strategy';
@@ -12,7 +11,6 @@ import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
-    PrismaModule,
     MailModule, 
     PassportModule,
     JwtModule.register({

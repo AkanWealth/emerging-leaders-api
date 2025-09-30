@@ -1,10 +1,10 @@
-// src/activity-log/activity-log.module.ts
+
 import { Module } from '@nestjs/common';
 import { ActivityLogService } from './activity-log.service';
-import { PrismaModule } from '../prisma/prisma.module';
+
 
 @Module({
-  imports: [PrismaModule],
+  imports: [],
   providers: [ActivityLogService],
   exports: [ActivityLogService],
 })

@@ -98,8 +98,26 @@ async login(email: string, password: string) {
   // Generate tokens
   const tokens = await this.getTokens(user);
 
-  // Save hashed refresh token
-  await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+  // Save hashed refresh token + update last login + log activity
+  await this.prisma.$transaction(async (tx) => {
+    const hash = await bcrypt.hash(tokens.refreshToken, 10);
+
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        refreshToken: hash,
+        lastLogin: new Date(),
+      },
+    });
+
+    await tx.activityLog.create({
+      data: {
+        userId: user.id,
+        action: 'LOGIN',
+        metadata: `User ${user.email} logged in at ${new Date().toISOString()}`,
+      },
+    });
+  });
 
   return {
     user: {
@@ -109,10 +127,12 @@ async login(email: string, password: string) {
       lastname: user.lastname,
       isAdmin: user.isAdmin,
       profilePicture: user.profilePicture,
+      status: user.status,
     },
     tokens,
   };
 }
+
 
 
 async refreshTokens(refreshToken: string) {
@@ -158,56 +178,56 @@ async refreshTokens(refreshToken: string) {
   };
 }
 
-async requestPasswordChange(userId: string) {
-  const user = await this.prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new NotFoundException('User not found');
+// async requestPasswordChange(userId: string) {
+//   const user = await this.prisma.user.findUnique({ where: { id: userId } });
+//   if (!user) throw new NotFoundException('User not found');
 
-  // Generate OTP
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+//   // Generate OTP
+//   const code = Math.floor(100000 + Math.random() * 900000).toString();
+//   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  // Save OTP
-  await this.prisma.otp.create({
-    data: { userId, otp: code, expiresAt },
-  });
+//   // Save OTP
+//   await this.prisma.otp.create({
+//     data: { userId, otp: code, expiresAt },
+//   });
 
-  // Send via email
-    await this.mailService.sendChangePasswordOtp(
-    user.email,
-    `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
-    code,
-  );
+//   // Send via email
+//     await this.mailService.sendChangePasswordOtp(
+//     user.email,
+//     `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
+//     code,
+//   );
 
 
-  return { message: 'OTP sent to your email' };
-}
+//   return { message: 'OTP sent to your email' };
+// }
 
-async changePassword(userId: string, otp: string, newPassword: string, confirmPassword: string) {
-  if (newPassword !== confirmPassword) {
-    throw new BadRequestException('Passwords do not match');
-  }
+// async changePassword(userId: string, otp: string, newPassword: string, confirmPassword: string) {
+//   if (newPassword !== confirmPassword) {
+//     throw new BadRequestException('Passwords do not match');
+//   }
 
-  const record = await this.prisma.otp.findFirst({
-    where: { userId, otp },
-    orderBy: { createdAt: 'desc' },
-  });
+//   const record = await this.prisma.otp.findFirst({
+//     where: { userId, otp },
+//     orderBy: { createdAt: 'desc' },
+//   });
 
-  if (!record || record.expiresAt < new Date()) {
-    throw new BadRequestException('Invalid or expired OTP');
-  }
+//   if (!record || record.expiresAt < new Date()) {
+//     throw new BadRequestException('Invalid or expired OTP');
+//   }
 
-  // Update password (hash before saving)
-  const hashed = await bcrypt.hash(newPassword, 10);
-  await this.prisma.user.update({
-    where: { id: userId },
-    data: { password: hashed },
-  });
+//   // Update password (hash before saving)
+//   const hashed = await bcrypt.hash(newPassword, 10);
+//   await this.prisma.user.update({
+//     where: { id: userId },
+//     data: { password: hashed },
+//   });
 
-  // Invalidate OTP
-  await this.prisma.otp.delete({ where: { id: record.id } });
+//   // Invalidate OTP
+//   await this.prisma.otp.delete({ where: { id: record.id } });
 
-  return { message: 'Password changed successfully' };
-}
+//   return { message: 'Password changed successfully' };
+// }
 
 
   // async forgotPassword(email: string) {
@@ -258,6 +278,44 @@ async forgotPassword(email: string) {
   return { message: 'Password reset link sent to your email' };
 }
 
+async changePassword(email: string, otp: string, newPassword: string, confirmPassword: string) {
+  const user = await this.prisma.user.findUnique({ where: { email } });
+  if (!user) throw new NotFoundException('User not found');
+
+  // ✅ Check password match
+  if (newPassword !== confirmPassword) {
+    throw new BadRequestException('Passwords do not match');
+  }
+
+  // Find OTP record
+  const otpRecord = await this.prisma.otp.findFirst({
+    where: {
+      userId: user.id,
+      otp,
+      used: false,
+      expiresAt: { gte: new Date() },
+    },
+  });
+
+  if (!otpRecord) throw new BadRequestException('Invalid or expired OTP');
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Update password
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashedPassword },
+  });
+
+  // Mark OTP as used
+  await this.prisma.otp.update({
+    where: { id: otpRecord.id },
+    data: { used: true },
+  });
+
+  return { message: 'Password changed successfully' };
+}
 
   async resetPassword(email: string, newPassword: string, confirmPassword: string) {
     if (newPassword !== confirmPassword) {
@@ -369,14 +427,19 @@ async verifyInviteCode(dto: VerifyInviteDto) {
 
   if (!otp) throw new BadRequestException('Invalid or expired code');
 
-  // Mark OTP as used (only once)
+  // Mark OTP as used
   await this.prisma.otp.update({
     where: { id: otp.id },
     data: { used: true },
   });
 
-  // Return success (frontend will now redirect to password page)
-  return { message: 'Code verified successfully' };
+  // Update user status to ACTIVE
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { status: 'ACTIVE' },
+  });
+
+  return { message: 'Code verified successfully, account is now active' };
 }
 
 async resendInvite(dto: { email: string }) {

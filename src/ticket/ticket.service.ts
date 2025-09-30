@@ -122,7 +122,63 @@ async create(dto: CreateTicketDto, userId: string) {
   }
 
   // Get all tickets
- async findAll(params: {
+//  async findAll(params: {
+//   page?: number;
+//   limit?: number;
+//   search?: string;
+//   status?: string;
+// }) {
+//   const { page = 1, limit = 10, search, status } = params;
+
+//   const where: any = {};
+
+//   // Status filter
+//   if (status) where.status = status;
+
+//   // Search filter (matches ticketNumber, user first/last name, or subject)
+//   if (search) {
+//     where.OR = [
+//       { ticketNumber: { contains: search, mode: 'insensitive' } },
+//       { subject: { contains: search, mode: 'insensitive' } },
+//       { user: { OR: [
+//           { firstname: { contains: search, mode: 'insensitive' } },
+//           { lastname: { contains: search, mode: 'insensitive' } },
+//         ] } 
+//       },
+//     ];
+//   }
+
+//   const [tickets, total] = await this.prisma.$transaction([
+//     this.prisma.ticket.findMany({
+//       where,
+//       skip: (page - 1) * limit,
+//       take: limit,
+//       orderBy: { createdAt: 'desc' },
+//       include: { user: true }, // Include user info for name search/display
+//     }),
+//     this.prisma.ticket.count({ where }),
+//   ]);
+
+//   return {
+//     data: tickets.map(t => ({
+//       id: t.id,
+//       ticketNumber: t.ticketNumber,
+//       subject: t.subject,
+//       status: t.status,
+//       userId: t.userId,
+//       userName: `${t.user.firstname ?? ''} ${t.user.lastname ?? ''}`.trim(),
+//       createdAt: t.createdAt,
+//     })),
+//     meta: {
+//       total,
+//       page,
+//       limit,
+//       totalPages: Math.ceil(total / limit),
+//     },
+//   };
+// }
+
+async findAll(params: {
   page?: number;
   limit?: number;
   search?: string;
@@ -140,27 +196,34 @@ async create(dto: CreateTicketDto, userId: string) {
     where.OR = [
       { ticketNumber: { contains: search, mode: 'insensitive' } },
       { subject: { contains: search, mode: 'insensitive' } },
-      { user: { OR: [
-          { firstname: { contains: search, mode: 'insensitive' } },
-          { lastname: { contains: search, mode: 'insensitive' } },
-        ] } 
+      {
+        user: {
+          OR: [
+            { firstname: { contains: search, mode: 'insensitive' } },
+            { lastname: { contains: search, mode: 'insensitive' } },
+          ],
+        },
       },
     ];
   }
 
-  const [tickets, total] = await this.prisma.$transaction([
-    this.prisma.ticket.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: { user: true }, // Include user info for name search/display
-    }),
-    this.prisma.ticket.count({ where }),
-  ]);
+  const [tickets, total, resolved, inProgress, pending] =
+    await this.prisma.$transaction([
+      this.prisma.ticket.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { user: true },
+      }),
+      this.prisma.ticket.count({ where }),
+      this.prisma.ticket.count({ where: { status: 'RESOLVED' } }),
+      this.prisma.ticket.count({ where: { status: 'IN_PROGRESS' } }),
+      this.prisma.ticket.count({ where: { status: 'PENDING' } }),
+    ]);
 
   return {
-    data: tickets.map(t => ({
+    data: tickets.map((t) => ({
       id: t.id,
       ticketNumber: t.ticketNumber,
       subject: t.subject,
@@ -169,6 +232,11 @@ async create(dto: CreateTicketDto, userId: string) {
       userName: `${t.user.firstname ?? ''} ${t.user.lastname ?? ''}`.trim(),
       createdAt: t.createdAt,
     })),
+    stats: {
+      resolved,
+      inProgress,
+      pending,
+    },
     meta: {
       total,
       page,
@@ -177,7 +245,6 @@ async create(dto: CreateTicketDto, userId: string) {
     },
   };
 }
-
 
   // Get single ticket
   findOne(id: string) {

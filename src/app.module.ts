@@ -5,7 +5,6 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { ProjectModule } from './project/project.module';
 import { CategoryModule } from './category/category.module';
 import { GoalsModule } from './goals/goals.module';
@@ -68,7 +67,6 @@ import { AssessmentCronModule } from './assessment-cron/assessment-cron.module';
     AuthModule,
     UsersModule,
     MailModule,
-    PrismaModule,
     ProjectModule,
     CategoryModule,
     GoalsModule,

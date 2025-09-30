@@ -563,20 +563,20 @@ async getMonthlyGrowthChart() {
 
 
 
-
-
-// async getLeaderboard(query: LeaderboardQuery) {
-//   const { 
-//     page = 1, 
-//     limit = 20, 
-//     search, 
-//     ranking = 'highest', 
-//     completed, 
-//     goals, 
-//     streak 
+// async getLeaderboard(query: Record<string, string | undefined>) {
+//   const {
+//     page = '1',
+//     limit = '20',
+//     search,
+//     ranking = 'highest',
+//     sortBy = 'streak', // dynamic sort field
+//     ...filters // all other query params are treated as numeric filters
 //   } = query;
 
-//   // Fetch users (search filter at DB level only)
+//   const pageNum = Number(page);
+//   const limitNum = Number(limit);
+
+//   // Fetch users with search at DB level
 //   const users = await this.prisma.user.findMany({
 //     where: {
 //       ...(search
@@ -604,76 +604,88 @@ async getMonthlyGrowthChart() {
 //       .filter((g) => g.isCompleted).length;
 //     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
 //     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
-//     const consistencyStreak = totalCompletedGoals; // Replace later with real streak logic
+//     const consistencyStreak = totalCompletedGoals; // Placeholder for real streak logic
 
 //     return {
 //       id: user.id,
-//       name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
+//       name: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.email,
 //       projects: totalProjects,
 //       completed: totalCompletedGoals,
-//       goals: totalCompletedGoals, // alias for clarity
+//       goals: totalCompletedGoals,
 //       savings: totalSavings,
 //       budget: totalBudget,
 //       streak: consistencyStreak,
 //     };
 //   });
 
-//   // Apply optional filters
-//   const applyNumericFilter = (val: string | undefined, actual: number): boolean => {
-//     if (!val) return true;
-//     const value = parseInt(val.match(/\d+/)?.[0] || '0', 10);
-//     if (val.startsWith('lessThan')) return actual < value;
-//     if (val.startsWith('moreThan')) return actual > value;
-//     if (val.startsWith('equal')) return actual === value;
-//     return true;
-//   };
+//   // Apply optional numeric filters dynamically
+// const applyFilter = (field: keyof typeof leaderboard[0], filter?: string) => (user: typeof leaderboard[0]) => {
+//   if (!filter) return true;
+//   const value = parseInt(filter.match(/\d+/)?.[0] || '0', 10);
+
+//   const fieldValue = user[field];
+//   if (typeof fieldValue !== 'number') return true; // skip non-numeric fields
+
+//   if (filter.startsWith('lessThan')) return fieldValue < value;
+//   if (filter.startsWith('moreThan')) return fieldValue > value;
+//   if (filter.startsWith('equal')) return fieldValue === value;
+
+//   return true;
+// };
 
 //   const filtered = leaderboard.filter((user) =>
-//     applyNumericFilter(completed, user.completed) &&
-//     applyNumericFilter(goals, user.goals) &&
-//     applyNumericFilter(streak, user.streak)
+//     Object.entries(filters).every(([key, val]) =>
+//       applyFilter(key as keyof typeof leaderboard[0], val)(user)
+//     )
 //   );
 
-//   // Sorting (default by streak, but can extend easily)
-//   const sortField: keyof typeof filtered[number] = 'streak';
-//   filtered.sort((a, b) =>
-//     ranking === 'lowest'
-//       ? (a[sortField] as number) - (b[sortField] as number)
-//       : (b[sortField] as number) - (a[sortField] as number)
-//   );
+//   // Sorting dynamically
+//   const sortField = sortBy as keyof typeof filtered[number];
+//   filtered.sort((a, b) => {
+//     const aVal = a[sortField];
+//     const bVal = b[sortField];
 
-//   // Paginate AFTER filtering
+//     // If sorting by name, sort alphabetically
+//     if (typeof aVal === 'string' && typeof bVal === 'string') {
+//       return ranking === 'lowest' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+//     }
+
+//     // Otherwise, numeric sort
+//     return ranking === 'lowest'
+//       ? (aVal as number) - (bVal as number)
+//       : (bVal as number) - (aVal as number);
+//   });
+
+//   // Pagination
 //   const total = filtered.length;
-//   const startIndex = (page - 1) * limit;
-//   const paginated = filtered.slice(startIndex, startIndex + limit);
+//   const startIndex = (pageNum - 1) * limitNum;
+//   const paginated = filtered.slice(startIndex, startIndex + limitNum);
 
 //   return {
 //     data: paginated,
 //     meta: {
-//       page,
-//       limit,
+//       page: pageNum,
+//       limit: limitNum,
 //       total,
-//       totalPages: Math.ceil(total / limit),
+//       totalPages: Math.ceil(total / limitNum),
 //       sortedBy: sortField,
 //       ranking,
 //     },
 //   };
 // }
-
 async getLeaderboard(query: Record<string, string | undefined>) {
   const {
     page = '1',
     limit = '20',
     search,
-    ranking = 'highest',
-    sortBy = 'streak', // dynamic sort field
-    ...filters // all other query params are treated as numeric filters
+    ranking = 'highest', // lowest or highest
+    sortBy = 'streak',   // default sort field
   } = query;
 
   const pageNum = Number(page);
   const limitNum = Number(limit);
 
-  // Fetch users with search at DB level
+  // Fetch users
   const users = await this.prisma.user.findMany({
     where: {
       ...(search
@@ -693,7 +705,7 @@ async getLeaderboard(query: Record<string, string | undefined>) {
     },
   });
 
-  // Build leaderboard dataset
+  // Build leaderboard
   const leaderboard = users.map((user) => {
     const totalProjects = user.projects.length;
     const totalCompletedGoals = user.projects
@@ -701,7 +713,7 @@ async getLeaderboard(query: Record<string, string | undefined>) {
       .filter((g) => g.isCompleted).length;
     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
-    const consistencyStreak = totalCompletedGoals; // Placeholder for real streak logic
+    const consistencyStreak = totalCompletedGoals; // placeholder for streak logic
 
     return {
       id: user.id,
@@ -715,45 +727,73 @@ async getLeaderboard(query: Record<string, string | undefined>) {
     };
   });
 
-  // Apply optional numeric filters dynamically
-const applyFilter = (field: keyof typeof leaderboard[0], filter?: string) => (user: typeof leaderboard[0]) => {
-  if (!filter) return true;
-  const value = parseInt(filter.match(/\d+/)?.[0] || '0', 10);
+  // --- Filtering logic ---
+  const filterByRange = (value: number, ranges: [number, number | null][]) => {
+    return ranges.some(([min, max]) => {
+      if (max === null) return value >= min;
+      return value >= min && value <= max;
+    });
+  };
 
-  const fieldValue = user[field];
-  if (typeof fieldValue !== 'number') return true; // skip non-numeric fields
+  let filtered = leaderboard;
 
-  if (filter.startsWith('lessThan')) return fieldValue < value;
-  if (filter.startsWith('moreThan')) return fieldValue > value;
-  if (filter.startsWith('equal')) return fieldValue === value;
+  // 2) Projects Completed
+  if (query.projects) {
+    const projectsFilter: [number, number | null][] =
+      query.projects === '0-20'
+        ? [[0, 20]]
+        : query.projects === '21-50'
+        ? [[21, 50]]
+        : query.projects === '51+'
+        ? [[51, null]]
+        : [];
+    filtered = filtered.filter((u) => filterByRange(u.projects, projectsFilter));
+  }
 
-  return true;
-};
+  // 3) Goals Completed
+  if (query.goals) {
+    const goalsFilter: [number, number | null][] =
+      query.goals === '0-100'
+        ? [[0, 100]]
+        : query.goals === '101-300'
+        ? [[101, 300]]
+        : query.goals === '301+'
+        ? [[301, null]]
+        : [];
+    filtered = filtered.filter((u) => filterByRange(u.goals, goalsFilter));
+  }
 
-  const filtered = leaderboard.filter((user) =>
-    Object.entries(filters).every(([key, val]) =>
-      applyFilter(key as keyof typeof leaderboard[0], val)(user)
-    )
-  );
+  // 4) Consistency Streak
+  if (query.streak) {
+    const streakFilter: [number, number | null][] =
+      query.streak === '0-20'
+        ? [[0, 20]]
+        : query.streak === '21-50'
+        ? [[21, 50]]
+        : query.streak === '51+'
+        ? [[51, null]]
+        : [];
+    filtered = filtered.filter((u) => filterByRange(u.streak, streakFilter));
+  }
 
-  // Sorting dynamically
+  // --- Sorting (ranking) ---
   const sortField = sortBy as keyof typeof filtered[number];
   filtered.sort((a, b) => {
     const aVal = a[sortField];
     const bVal = b[sortField];
 
-    // If sorting by name, sort alphabetically
     if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return ranking === 'lowest' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      return ranking === 'lowest'
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
     }
 
-    // Otherwise, numeric sort
     return ranking === 'lowest'
       ? (aVal as number) - (bVal as number)
       : (bVal as number) - (aVal as number);
   });
 
-  // Pagination
+  // --- Pagination ---
   const total = filtered.length;
   const startIndex = (pageNum - 1) * limitNum;
   const paginated = filtered.slice(startIndex, startIndex + limitNum);

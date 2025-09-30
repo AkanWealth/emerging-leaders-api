@@ -59,6 +59,25 @@ export class AdminUserController {
 //       status,
 //     });
 //   }
+ @UseGuards(JwtAuthGuard, AdminGuard)
+  @Patch(':id/deactivate')
+  @ApiOperation({ summary: 'Deactivate a user account' })
+  @ApiParam({ name: 'id', description: 'User ID', type: String })
+  @ApiResponse({ status: 200, description: 'User has been deactivated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async deactivateUser(@Param('id') id: string) {
+    return this.adminUserService.updateStatus(id, 'DEACTIVATED');
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Patch(':id/activate')
+  @ApiOperation({ summary: 'Activate a user account' })
+  @ApiParam({ name: 'id', description: 'User ID', type: String })
+  @ApiResponse({ status: 200, description: 'User has been activated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async activateUser(@Param('id') id: string) {
+    return this.adminUserService.updateStatus(id, 'ACTIVE');
+  }
 
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Get()
