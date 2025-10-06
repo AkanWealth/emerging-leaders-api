@@ -101,6 +101,28 @@ async getAllUsers(
 }
 
 
+@UseGuards(JwtAuthGuard, AdminGuard)
+@Get('admins')
+@ApiOperation({ summary: 'Get all admins' })
+@ApiResponse({ status: 200, description: 'List of all admins returned successfully.' })
+@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
+@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
+@ApiQuery({ name: 'search', required: false, type: String, description: 'Search by name, email, or date (last joined / last active)' })
+@ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by admin status' })
+async getAllAdmins(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('search') search?: string,
+  @Query('status') status?: string,
+) {
+  return this.adminUserService.getAllAdmins({
+    page: page ? parseInt(page, 10) : 1,
+    limit: limit ? parseInt(limit, 10) : 10,
+    search,
+  });
+}
+
+
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('me')

@@ -15,26 +15,32 @@ import { EditUserDto } from './dto/edit-user.dto';
 export class AdminUserService {
   constructor(private prisma: PrismaService, private mailService: MailService) {}
 
+
 // async getAllUsers(params: {
 //   page?: number;
 //   limit?: number;
-//   email?: string;
-//   name?: string;
-//   role?: string;
-//   status?: string;
+//   search?: string;
 // }) {
-//   const { page = 1, limit = 10, email, name, role, status } = params;
+//   const { page = 1, limit = 10, search } = params;
 
-//   const where: any = {};
-//   if (email) where.email = { contains: email, mode: 'insensitive' };
-//   if (name) {
+//   const where: any = {
+//     isAdmin: false, 
+//   };
+
+//   if (search) {
 //     where.OR = [
-//       { firstname: { contains: name, mode: 'insensitive' } },
-//       { lastname: { contains: name, mode: 'insensitive' } },
+//       { email: { contains: search, mode: 'insensitive' } },
+//       { firstname: { contains: search, mode: 'insensitive' } },
+//       { lastname: { contains: search, mode: 'insensitive' } },
+//       { name: { contains: search, mode: 'insensitive' } },
 //     ];
+
+//     // optional: allow date search (if string parses to valid date)
+//     const maybeDate = new Date(search);
+//     if (!isNaN(maybeDate.getTime())) {
+//       where.OR.push({ createdAt: { equals: maybeDate } });
+//     }
 //   }
-//   if (role) where.role = role;
-//   if (status) where.status = status;
 
 //   const [users, total] = await this.prisma.$transaction([
 //     this.prisma.user.findMany({
@@ -47,7 +53,14 @@ export class AdminUserService {
 //   ]);
 
 //   return {
-//     data: users,
+//     data: users.map((u) => ({
+//       id: u.id,
+//       firstname: u.firstname,
+//       lastname: u.lastname,
+//       email: u.email,
+//       name: u.name,
+//       createdAt: u.createdAt,
+//     })),
 //     meta: {
 //       total,
 //       page,
@@ -64,7 +77,7 @@ async getAllUsers(params: {
   const { page = 1, limit = 10, search } = params;
 
   const where: any = {
-    isAdmin: false, // 👈 ensure only non-admin users
+    isAdmin: false, // only regular users
   };
 
   if (search) {
@@ -75,10 +88,13 @@ async getAllUsers(params: {
       { name: { contains: search, mode: 'insensitive' } },
     ];
 
-    // optional: allow date search (if string parses to valid date)
+    // if search is a valid date, check by createdAt or lastLogin
     const maybeDate = new Date(search);
     if (!isNaN(maybeDate.getTime())) {
-      where.OR.push({ createdAt: { equals: maybeDate } });
+      where.OR.push(
+        { createdAt: { gte: maybeDate } },
+        { lastLogin: { gte: maybeDate } },
+      );
     }
   }
 
@@ -88,19 +104,81 @@ async getAllUsers(params: {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        lastLogin: true,
+        status: true,
+      },
     }),
     this.prisma.user.count({ where }),
   ]);
 
   return {
-    data: users.map((u) => ({
-      id: u.id,
-      firstname: u.firstname,
-      lastname: u.lastname,
-      email: u.email,
-      name: u.name,
-      createdAt: u.createdAt,
-    })),
+    data: users,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+async getAllAdmins(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) {
+  const { page = 1, limit = 10, search } = params;
+
+  const where: any = {
+    isAdmin: true, // only admins
+  };
+
+  if (search) {
+    where.OR = [
+      { email: { contains: search, mode: 'insensitive' } },
+      { firstname: { contains: search, mode: 'insensitive' } },
+      { lastname: { contains: search, mode: 'insensitive' } },
+      { name: { contains: search, mode: 'insensitive' } },
+    ];
+
+    const maybeDate = new Date(search);
+    if (!isNaN(maybeDate.getTime())) {
+      where.OR.push(
+        { createdAt: { gte: maybeDate } },
+        { lastLogin: { gte: maybeDate } },
+      );
+    }
+  }
+
+  const [admins, total] = await this.prisma.$transaction([
+    this.prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        lastLogin: true,
+        status: true,
+      },
+    }),
+    this.prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: admins,
     meta: {
       total,
       page,
@@ -139,6 +217,11 @@ async getUserById(id: string) {
       email: true,
       isAdmin: true,
       profilePicture: true,
+      phone: true,
+      Address: true,
+      city: true,
+      country: true, 
+      postalcode: true,
       createdAt: true,
       updatedAt: true,
     },

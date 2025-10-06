@@ -65,7 +65,20 @@ async create(dto: CreateTicketDto, userId: string) {
 
   const ticket = await this.prisma.ticket.create({
     data: { ...dto, userId, ticketNumber },
-    include: { user: true }, // so we have user info for email
+    include: { user: {
+          select: { 
+            id: true,
+            firstname: true,
+            lastname: true,
+            email: true,
+            phone: true,
+            profilePicture: true,
+            status: true,
+            isAdmin: true,
+            createdAt: true,
+            updatedAt: true, 
+            },
+        } }, // so we have user info for email
   });
 
   await this.activityLogService.log(userId, `Opened support ticket: ${dto.subject}`);
@@ -81,7 +94,7 @@ async create(dto: CreateTicketDto, userId: string) {
     await this.notificationsService.sendToUser(
       admin.id,
       'New Support Ticket',
-      `A new ticket "${dto.subject}" has been created by ${ticket.user.name ?? 'a user'}.`,
+      `A new ticket "${dto.subject}" has been created by ${ticket.user.firstname ?? 'a user'}.`,
       { ticketId: ticket.id },
       'TICKET'
     );
@@ -94,7 +107,7 @@ async create(dto: CreateTicketDto, userId: string) {
         {
           title: 'New Support Ticket',
           fullName: admin.name ?? 'Admin',
-          body: `A new ticket "<strong>${dto.subject}</strong>" has been created by ${ticket.user.name ?? 'a user'}.`,
+          body: `A new ticket "<strong>${dto.subject}</strong>" has been created by ${ticket.user.firstname ?? 'a user'}.`,
           alertMessage: `Ticket Number: ${ticketNumber}`,
         }
       );
@@ -214,7 +227,20 @@ async findAll(params: {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { user: true },
+        include: { user: {
+          select: { 
+            id: true,
+            firstname: true,
+            lastname: true,
+            email: true,
+            phone: true,
+            profilePicture: true,
+            status: true,
+            isAdmin: true,
+            createdAt: true,
+            updatedAt: true, 
+            },
+        }},
       }),
       this.prisma.ticket.count({ where }),
       this.prisma.ticket.count({ where: { status: 'RESOLVED' } }),
@@ -229,6 +255,7 @@ async findAll(params: {
       subject: t.subject,
       status: t.status,
       userId: t.userId,
+      description: t.description,
       userName: `${t.user.firstname ?? ''} ${t.user.lastname ?? ''}`.trim(),
       createdAt: t.createdAt,
     })),
@@ -257,7 +284,20 @@ async findAll(params: {
  async updateStatus(id: string, dto: UpdateTicketStatusDto) {
   const ticket = await this.prisma.ticket.findUnique({
     where: { id },
-    include: { user: true }, // get user's email & name
+    include: { user: {
+          select: { 
+            id: true,
+            firstname: true,
+            lastname: true,
+            email: true,
+            phone: true,
+            profilePicture: true,
+            status: true,
+            isAdmin: true,
+            createdAt: true,
+            updatedAt: true, 
+            },
+        }}, // get user's email & name
   });
 
   if (!ticket) {
@@ -287,7 +327,7 @@ async findAll(params: {
   // Email notification using Postmark template
  await this.mailService.sendTicketStatusUpdateEmail(
   ticket.user.email,
-  ticket.user.name ?? 'Valued User',
+  ticket.user.firstname ?? 'Valued User',
   ticket.subject,
   formattedStatus
 );
