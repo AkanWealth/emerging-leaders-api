@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { MailService } from '../mail/mail.service';
 import { CreateUserByAdminDto } from './dto/create-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
+import { UserStatus } from '@prisma/client'; 
 
 @Injectable()
 export class AdminUserService {
@@ -259,20 +260,25 @@ async getUserById(id: string) {
     return this.prisma.user.delete({ where: { id: userId } });
   }
 
-  async activateAdmin(userId: string) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { isAdmin: true },
-    });
-  }
+ async activateAdmin(userId: string) {
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: {
+      isAdmin: true,
+      status: UserStatus.ACTIVE, 
+    },
+  });
+}
 
-  async deactivateAdmin(userId: string) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { isAdmin: false },
-    });
-  }
-
+async deactivateAdmin(userId: string) {
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: {
+      isAdmin: false,
+      status: UserStatus.DEACTIVATED, 
+    },
+  });
+}
   async inviteUserToBeAdmin(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new NotFoundException('User not found');

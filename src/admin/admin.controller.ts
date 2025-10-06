@@ -75,7 +75,7 @@ async getAllAdmins(
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
-  @Get()
+  @Post()
   @ApiOperation({ summary: 'Change password' })
   @Post('change-password')
   async changePassword(@Body() dto: ChangePasswordDto) {
@@ -86,8 +86,6 @@ async getAllAdmins(
       dto.confirmPassword,
     );
   }
-
-
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
