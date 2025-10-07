@@ -274,7 +274,7 @@ async deactivateAdmin(userId: string) {
   return this.prisma.user.update({
     where: { id: userId },
     data: {
-      isAdmin: false,
+      isAdmin: true,
       status: UserStatus.DEACTIVATED, 
     },
   });
