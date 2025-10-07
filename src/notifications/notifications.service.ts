@@ -101,6 +101,15 @@ async getUserNotifications(userId: string, page = 1, limit = 10) {
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
+      include: {
+        user: {
+          select: {
+            firstname: true,
+            lastname: true,
+            profilePicture: true, 
+          },
+        },
+      },
     }),
     this.prisma.notification.count({ where: { userId } }),
   ]);
@@ -113,6 +122,7 @@ async getUserNotifications(userId: string, page = 1, limit = 10) {
     totalPages: Math.ceil(total / limit),
   };
 }
+
 
 async getUnreadNotifications(userId: string, page = 1, limit = 10) {
   const skip = (page - 1) * limit;
