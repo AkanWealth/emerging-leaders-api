@@ -86,7 +86,13 @@ export class AdminUserController {
 @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
 @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
 @ApiQuery({ name: 'search', required: false, type: String, description: 'Search by name, email, or date (last joined / last active)' })
-@ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by user status' })
+@ApiQuery({
+  name: 'status',
+  required: false,
+  type: String,
+  enum: ['PENDING', 'ACTIVE', 'INACTIVE', 'DEACTIVATED'],
+  description: 'Filter by user status (optional)',
+})
 async getAllUsers(
   @Query('page') page?: string,
   @Query('limit') limit?: string,
@@ -97,8 +103,10 @@ async getAllUsers(
     page: page ? parseInt(page, 10) : 1,
     limit: limit ? parseInt(limit, 10) : 10,
     search,
+    status,
   });
 }
+
 
 
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -108,7 +116,13 @@ async getAllUsers(
 @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
 @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
 @ApiQuery({ name: 'search', required: false, type: String, description: 'Search by name, email, or date (last joined / last active)' })
-@ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by admin status' })
+@ApiQuery({
+  name: 'status',
+  required: false,
+  type: String,
+  enum: ['PENDING', 'ACTIVE', 'INACTIVE', 'DEACTIVATED'],
+  description: 'Filter by admin status (optional)',
+})
 async getAllAdmins(
   @Query('page') page?: string,
   @Query('limit') limit?: string,
@@ -119,8 +133,10 @@ async getAllAdmins(
     page: page ? parseInt(page, 10) : 1,
     limit: limit ? parseInt(limit, 10) : 10,
     search,
+    status,
   });
 }
+
 
 
   @UseGuards(JwtAuthGuard)

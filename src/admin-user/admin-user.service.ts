@@ -25,7 +25,7 @@ export class AdminUserService {
 //   const { page = 1, limit = 10, search } = params;
 
 //   const where: any = {
-//     isAdmin: false, 
+//     isAdmin: false, // only regular users
 //   };
 
 //   if (search) {
@@ -36,10 +36,13 @@ export class AdminUserService {
 //       { name: { contains: search, mode: 'insensitive' } },
 //     ];
 
-//     // optional: allow date search (if string parses to valid date)
+//     // if search is a valid date, check by createdAt or lastLogin
 //     const maybeDate = new Date(search);
 //     if (!isNaN(maybeDate.getTime())) {
-//       where.OR.push({ createdAt: { equals: maybeDate } });
+//       where.OR.push(
+//         { createdAt: { gte: maybeDate } },
+//         { lastLogin: { gte: maybeDate } },
+//       );
 //     }
 //   }
 
@@ -49,19 +52,22 @@ export class AdminUserService {
 //       skip: (page - 1) * limit,
 //       take: limit,
 //       orderBy: { createdAt: 'desc' },
+//       select: {
+//         id: true,
+//         firstname: true,
+//         lastname: true,
+//         email: true,
+//         name: true,
+//         createdAt: true,
+//         lastLogin: true,
+//         status: true,
+//       },
 //     }),
 //     this.prisma.user.count({ where }),
 //   ]);
 
 //   return {
-//     data: users.map((u) => ({
-//       id: u.id,
-//       firstname: u.firstname,
-//       lastname: u.lastname,
-//       email: u.email,
-//       name: u.name,
-//       createdAt: u.createdAt,
-//     })),
+//     data: users,
 //     meta: {
 //       total,
 //       page,
@@ -70,17 +76,79 @@ export class AdminUserService {
 //     },
 //   };
 // }
+
+// async getAllAdmins(params: {
+//   page?: number;
+//   limit?: number;
+//   search?: string;
+// }) {
+//   const { page = 1, limit = 10, search } = params;
+
+//   const where: any = {
+//     isAdmin: true, // only admins
+//   };
+
+//   if (search) {
+//     where.OR = [
+//       { email: { contains: search, mode: 'insensitive' } },
+//       { firstname: { contains: search, mode: 'insensitive' } },
+//       { lastname: { contains: search, mode: 'insensitive' } },
+//       { name: { contains: search, mode: 'insensitive' } },
+//     ];
+
+//     const maybeDate = new Date(search);
+//     if (!isNaN(maybeDate.getTime())) {
+//       where.OR.push(
+//         { createdAt: { gte: maybeDate } },
+//         { lastLogin: { gte: maybeDate } },
+//       );
+//     }
+//   }
+
+//   const [admins, total] = await this.prisma.$transaction([
+//     this.prisma.user.findMany({
+//       where,
+//       skip: (page - 1) * limit,
+//       take: limit,
+//       orderBy: { createdAt: 'desc' },
+//       select: {
+//         id: true,
+//         firstname: true,
+//         lastname: true,
+//         email: true,
+//         name: true,
+//         createdAt: true,
+//         lastLogin: true,
+//         status: true,
+//       },
+//     }),
+//     this.prisma.user.count({ where }),
+//   ]);
+
+//   return {
+//     data: admins,
+//     meta: {
+//       total,
+//       page,
+//       limit,
+//       totalPages: Math.ceil(total / limit),
+//     },
+//   };
+// }
+
 async getAllUsers(params: {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
 }) {
-  const { page = 1, limit = 10, search } = params;
+  const { page = 1, limit = 10, search, status } = params;
 
   const where: any = {
     isAdmin: false, // only regular users
   };
 
+  // --- Optional search ---
   if (search) {
     where.OR = [
       { email: { contains: search, mode: 'insensitive' } },
@@ -89,7 +157,7 @@ async getAllUsers(params: {
       { name: { contains: search, mode: 'insensitive' } },
     ];
 
-    // if search is a valid date, check by createdAt or lastLogin
+    // if search is a valid date, check createdAt or lastLogin
     const maybeDate = new Date(search);
     if (!isNaN(maybeDate.getTime())) {
       where.OR.push(
@@ -99,6 +167,12 @@ async getAllUsers(params: {
     }
   }
 
+  // --- Optional status filter ---
+  if (status) {
+    where.status = status.toUpperCase(); // e.g., "ACTIVE", "INACTIVE", etc.
+  }
+
+  // --- Query with pagination ---
   const [users, total] = await this.prisma.$transaction([
     this.prisma.user.findMany({
       where,
@@ -134,13 +208,15 @@ async getAllAdmins(params: {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
 }) {
-  const { page = 1, limit = 10, search } = params;
+  const { page = 1, limit = 10, search, status } = params;
 
   const where: any = {
     isAdmin: true, // only admins
   };
 
+  // --- Optional search ---
   if (search) {
     where.OR = [
       { email: { contains: search, mode: 'insensitive' } },
@@ -158,6 +234,12 @@ async getAllAdmins(params: {
     }
   }
 
+  // --- Optional status filter ---
+  if (status) {
+    where.status = status.toUpperCase(); // Prisma expects enum match (e.g., "ACTIVE")
+  }
+
+  // --- Query with pagination ---
   const [admins, total] = await this.prisma.$transaction([
     this.prisma.user.findMany({
       where,
