@@ -212,4 +212,34 @@ async getAllAdmins(
   resendInvite(@Body() dto: InviteAdminDto) {
     return this.adminUserService.resendAdminInvite(dto.email);
   }
+  
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get('assesment/summary')
+  @ApiOperation({ summary: 'Get summary of all assessments' })
+  async getSummary() {
+    return this.adminUserService.getAssessmentSummary();
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get(':assessmentId/details')
+  @ApiOperation({ summary: 'Get filled and not filled users for a specific assessment' })
+  async getDetails(@Param('assessmentId') assessmentId: string) {
+    return this.adminUserService.getAssessmentDetails(assessmentId);
+  }
+
+   @UseGuards(JwtAuthGuard, AdminGuard)
+   @Get('assessment/report')
+  @ApiOperation({ summary: 'Get user-by-month assessment completion report' })
+  @ApiQuery({ name: 'year', required: false, type: Number, description: 'Filter by year (default current year)' })
+  async getReport(@Query('year') year?: number) {
+    return this.adminUserService.getUserAssessmentReport(year ? +year : undefined);
+  }
+
+   @UseGuards(JwtAuthGuard, AdminGuard)
+   @Get('assessment/report/summary')
+  @ApiOperation({ summary: 'Get all assessments summary for admin' })
+  @ApiResponse({ status: 200, description: 'List of assessments summary returned successfully.' })
+  async getAssessmentsSummary() {
+    return this.adminUserService.getAssessmentsSummary();
+  }
 }

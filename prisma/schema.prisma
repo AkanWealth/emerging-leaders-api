@@ -332,6 +332,7 @@ model Assessment {
   updatedAt      DateTime             @updatedAt
   scheduledFor   DateTime
   scheduledMonth String?
+  scheduledYear  Int?     
   category       AssessmentCategory   @relation(fields: [categoryId], references: [id])
   questions      AssessmentQuestion[]
   userResponses  UserAssessment[]

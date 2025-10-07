@@ -11,6 +11,12 @@ import { MailService } from '../mail/mail.service';
 import { CreateUserByAdminDto } from './dto/create-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
 import { UserStatus } from '@prisma/client'; 
+import {
+  eachMonthOfInterval,
+  startOfYear,
+  endOfYear,
+  format,
+} from 'date-fns';
 
 @Injectable()
 export class AdminUserService {
@@ -381,4 +387,172 @@ async deactivateAdmin(userId: string) {
   private generateInviteToken(): string {
     return Math.random().toString(36).substring(2, 12);
   }
+
+  async getAssessmentSummary() {
+    // ✅ Count all non-admin users
+    const totalUsers = await this.prisma.user.count({
+      where: {
+        isAdmin: false,
+        isSuperAdmin: false,
+      },
+    });
+
+    // ✅ Fetch all assessments + responses
+    const assessments = await this.prisma.assessment.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        userResponses: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstname: true,
+                lastname: true,
+                profilePicture: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // ✅ Build summary for each assessment
+    return assessments.map((assessment) => {
+      const filledUsers = assessment.userResponses.length;
+      const notFilledUsers = totalUsers - filledUsers;
+
+      return {
+        id: assessment.id,
+        title: assessment.title,
+        scheduledMonth: assessment.scheduledMonth,
+        scheduledYear: assessment.scheduledYear,
+        totalUsers,
+        filledUsers,
+        notFilledUsers,
+        completionRate:
+          totalUsers > 0 ? ((filledUsers / totalUsers) * 100).toFixed(1) + '%' : '0%',
+        createdAt: assessment.createdAt,
+      };
+    });
+  }
+
+  // ✅ Optionally: View details of who filled / not filled
+  async getAssessmentDetails(assessmentId: string) {
+    const allUsers = await this.prisma.user.findMany({
+      where: { isAdmin: false, isSuperAdmin: false },
+      select: { id: true, firstname: true, lastname: true, profilePicture: true },
+    });
+
+    const filledResponses = await this.prisma.userAssessment.findMany({
+      where: { assessmentId },
+      select: {
+        user: { select: { id: true, firstname: true, lastname: true, profilePicture: true } },
+      },
+    });
+
+    const filledUserIds = new Set(filledResponses.map((r) => r.user.id));
+
+    const notFilledUsers = allUsers.filter((u) => !filledUserIds.has(u.id));
+
+    return {
+      filledUsers: filledResponses.map((r) => r.user),
+      notFilledUsers,
+    };
+  }
+
+
+  async getUserAssessmentReport(year: number = new Date().getFullYear()) {
+    // 1️⃣ Fetch all non-admin users
+    const users = await this.prisma.user.findMany({
+      where: {
+        isAdmin: false,
+        isSuperAdmin: false,
+      },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        profilePicture: true,
+      },
+    });
+
+    // 2️⃣ Fetch all assessments for the given year
+    const assessments = await this.prisma.assessment.findMany({
+      where: { scheduledYear: year },
+      select: { id: true, scheduledMonth: true, scheduledYear: true },
+    });
+
+    // 3️⃣ Fetch all user responses for that year
+    const userAssessments = await this.prisma.userAssessment.findMany({
+      where: {
+        assessment: { scheduledYear: year },
+      },
+      select: {
+        userId: true,
+        assessment: { select: { scheduledMonth: true } },
+      },
+    });
+
+    // 4️⃣ Define all 12 months in order
+    const months = eachMonthOfInterval({
+      start: startOfYear(new Date(year, 0, 1)),
+      end: endOfYear(new Date(year, 11, 31)),
+    }).map((m) => format(m, 'MMMM'));
+
+    // 5️⃣ Build the report
+    const report = users.map((user) => {
+      const monthStatus: Record<string, string> = {};
+
+      for (const month of months) {
+        const monthAssessment = assessments.find(
+          (a) => a.scheduledMonth === month && a.scheduledYear === year,
+        );
+
+        if (!monthAssessment) {
+          monthStatus[month] = 'NULL'; // no assessment for that month
+        } else {
+          const hasSubmitted = userAssessments.some(
+            (ua) => ua.userId === user.id && ua.assessment.scheduledMonth === month,
+          );
+
+          monthStatus[month] = hasSubmitted ? 'DONE' : 'NOT DONE';
+        }
+      }
+
+      return {
+        userId: user.id,
+        fullname: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+        profilePicture: user.profilePicture,
+        ...monthStatus,
+      };
+    });
+
+    return {
+      year,
+      totalUsers: users.length,
+      data: report,
+    };
+  }
+
+   async getAssessmentsSummary() {
+    const assessments = await this.prisma.assessment.findMany({
+      include: {
+        questions: true,
+        userResponses: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return assessments.map((a) => ({
+      id: a.id,
+      title: a.title,
+      date: a.scheduledFor,
+      totalQuestions: a.questions.length,
+      totalReplies: a.userResponses.length,
+      status: a.status,
+    }));
+  }
+  
 }
