@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from 'src/mail/mail.service';
-import { isToday } from 'date-fns';
 
 @Injectable()
 export class RecurringIncomeCronService {
@@ -32,28 +31,36 @@ export class RecurringIncomeCronService {
 
     for (const income of incomes) {
       const alreadyCredited = income.logs.some(
-        (log) => log.creditedAt.toISOString().startsWith(todayStr)
+        (log) => log.creditedAt.toISOString().startsWith(todayStr),
       );
 
-      if (alreadyCredited) {
-        continue; // Prevent double credit
+      if (alreadyCredited) continue;
+      if (!income.walletId) {
+        this.logger.warn(`Skipping income ${income.id}: missing walletId`);
+        continue;
+      }
+      if (!income.user || !income.user.email) {
+        this.logger.warn(`Skipping income ${income.id}: missing user or email`);
+        continue;
+      }
+      if (!income.currency) {
+        this.logger.warn(`Skipping income ${income.id}: missing currency`);
+        continue;
       }
 
       if (this.isDueToday(income.startDate, income.frequency, today)) {
-        // 1. Credit wallet
+        // 1️⃣ Credit wallet
         await this.prisma.wallet.update({
           where: { id: income.walletId },
           data: { balance: { increment: income.amount } },
         });
 
-        // 2. Create log
+        // 2️⃣ Log the transaction
         await this.prisma.recurringIncomeLog.create({
-          data: {
-            recurringIncomeId: income.id,
-          },
+          data: { recurringIncomeId: income.id },
         });
 
-        // 3. Send mail
+        // 3️⃣ Send user notification
         await this.sendIncomeNotification(income.user.email, {
           amount: income.amount.toLocaleString(),
           currency: income.currency.symbol,
@@ -62,7 +69,7 @@ export class RecurringIncomeCronService {
         });
 
         this.logger.log(
-          `Credited ${income.amount} (${income.frequency}) to user ${income.user.email}`
+          `Credited ${income.amount} (${income.frequency}) to user ${income.user.email}`,
         );
       }
     }

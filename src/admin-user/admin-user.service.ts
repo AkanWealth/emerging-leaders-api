@@ -414,9 +414,28 @@ async editAdmin(id: string, dto: EditAdminDto) {
 
 
 
-  async deleteUser(userId: string) {
-    return this.prisma.user.delete({ where: { id: userId } });
+async deleteUser(userId: string) {
+  try {
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return {
+      success: true,
+      message: 'User deleted successfully.',
+    };
+  } catch (error) {
+    if (error.code === 'P2025') {
+      // Prisma error: record not found
+      return {
+        success: false,
+        message: 'User not found.',
+      };
+    }
+    throw error; // Let NestJS handle unexpected errors
   }
+}
+
 
  async activateAdmin(userId: string) {
   return this.prisma.user.update({
@@ -520,7 +539,7 @@ async deactivateAdmin(userId: string) {
       },
     });
 
-    const filledUserIds = new Set(filledResponses.map((r) => r.user.id));
+    const filledUserIds = new Set(filledResponses.map((r) => r.user?.id));
 
     const notFilledUsers = allUsers.filter((u) => !filledUserIds.has(u.id));
 

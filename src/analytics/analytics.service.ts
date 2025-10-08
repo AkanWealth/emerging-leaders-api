@@ -106,8 +106,8 @@ export class AnalyticsService {
     const spent = budget.expenses.reduce((sum, e) => sum + e.amount, 0);
     const percentage = Math.round((spent / budget.limit) * 100);
     return {
-      category: budget.category.title,
-      icon: budget.category.icon ?? '',
+      category: budget?.category?.title,
+      icon: budget?.category?.icon ?? '',
       budget: budget.limit,
       spent,
       percentage: Math.min(percentage, 100),
@@ -482,11 +482,13 @@ async getMonthlyGrowthChart() {
   // Active users: unique per month
   const currentMonthActiveSet = new Set<string>();
   const previousMonthActiveSet = new Set<string>();
-  activityLogs.forEach((a) => {
-    const date = new Date(a.createdAt);
-    if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
-    else previousMonthActiveSet.add(a.userId);
-  });
+activityLogs.forEach((a) => {
+  if (!a.userId) return; // ✅ skip if null
+  const date = new Date(a.createdAt);
+  if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
+  else previousMonthActiveSet.add(a.userId);
+});
+
 
   const activeUsersCurrent = currentMonthActiveSet.size;
   const activeUsersPrevious = previousMonthActiveSet.size;

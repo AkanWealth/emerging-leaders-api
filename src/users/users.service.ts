@@ -250,8 +250,6 @@ async updateProfile(userId: string, dto: UpdateProfileDto) {
   };
 }
 
-
-
 async getAllVerifiedUsers() {
   return this.prisma.user.findMany({
     where: {

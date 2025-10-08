@@ -72,7 +72,10 @@ async create(userId: string, dto: CreateIncomeDto) {
     return this.prisma.income.delete({ where: { id } });
   }
 
-  async getIncomeAnalytics(userId: string, filter: 'weekly' | 'monthly' | 'yearly') {
+async getIncomeAnalytics(
+  userId: string,
+  filter: 'weekly' | 'monthly' | 'yearly',
+) {
   const { startDate, endDate } = getDateRange(filter);
 
   const incomes = await this.prisma.income.findMany({
@@ -91,31 +94,41 @@ async create(userId: string, dto: CreateIncomeDto) {
   const totalAmount = incomes.reduce((sum, income) => sum + income.amount, 0);
 
   const categorySummary = incomes.reduce((acc, income) => {
-    const key = income.categoryId;
+    // ✅ handle nullable categoryId
+    const key = income.categoryId ?? 'uncategorized';
+
+    // ✅ safely handle nullable category
+    const icon = income.category?.icon ?? 'default.png';
+    const title = income.category?.title ?? 'Uncategorized';
+
     if (!acc[key]) {
       acc[key] = {
-        icon: income.category.icon ?? "default.png", // Assuming icon exists in category
-        title: income.category.title,
+        icon,
+        title,
         amount: 0,
       };
     }
+
     acc[key].amount += income.amount;
     return acc;
   }, {} as Record<string, { icon: string; title: string; amount: number }>);
 
   const list = Object.values(categorySummary).map((item) => ({
     ...item,
-    percentage: parseFloat(((item.amount / totalAmount) * 100).toFixed(2)),
+    percentage: totalAmount
+      ? parseFloat(((item.amount / totalAmount) * 100).toFixed(2))
+      : 0,
   }));
 
   return {
     totalAmount,
-    list, // For UI
+    list, // For UI breakdown
     chart: incomes.map((i) => ({
       label: i.createdAt.toISOString().split('T')[0],
       amount: i.amount,
     })),
   };
 }
+
 
 }

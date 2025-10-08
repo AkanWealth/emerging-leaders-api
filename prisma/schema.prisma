@@ -87,17 +87,17 @@ enum UserStatus {
 
 model Notification {
   id         String   @id @default(uuid())
-  senderId   String? // who sent the notification
-  receiverId String? // who receives it
+  senderId   String?  // who sent the notification
+  receiverId String?  // who receives it
   title      String
   body       String
   read       Boolean  @default(false)
   createdAt  DateTime @default(now())
-  type       String? // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
-  data       Json? // Store additional payload for frontend
+  type       String?  // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
+  data       Json?    // Store additional payload for frontend
 
-  sender   User? @relation("SentNotifications", fields: [senderId], references: [id])
-  receiver User? @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+  sender   User? @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+  receiver User? @relation("ReceivedNotifications", fields: [receiverId], references: [id], onDelete: SetNull)
 
   @@index([senderId])
   @@index([receiverId])
@@ -109,7 +109,7 @@ model FcmToken {
   userId    String
   platform  String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Wallet {
@@ -119,7 +119,7 @@ model Wallet {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   RecurringIncome RecurringIncome[]
-  user            User              @relation(fields: [userId], references: [id])
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Otp {
@@ -129,7 +129,7 @@ model Otp {
   used      Boolean  @default(false)
   expiresAt DateTime
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -149,20 +149,22 @@ model Category {
   projects     Project[]
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
+
 
 model Content {
   id         String   @id @default(uuid())
   title      String
   fileLinks  String[]
   status     Status   @default(DRAFT)
-  categoryId String
-  authorId   String
+  categoryId String?
+  authorId   String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  author     User     @relation(fields: [authorId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
+
+  author     User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 }
 
 model Project {
@@ -172,21 +174,22 @@ model Project {
   completed    Boolean  @default(false)
   startDate    DateTime
   endDate      DateTime
-  categoryId   String
+  categoryId   String?
+  userId       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   projectColor String
-  userId       String
-  goals        Goal[]
-  category     Category @relation(fields: [categoryId], references: [id])
-  user         User     @relation(fields: [userId], references: [id])
+
+  goals      Goal[]
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Goal {
   id          String   @id @default(uuid())
   title       String
   repeat      String?
-  projectId   String
+  projectId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   endDate     DateTime
@@ -195,12 +198,13 @@ model Goal {
   startDate   DateTime
   startTime   String?
   icon        String?
-  project     Project  @relation(fields: [projectId], references: [id])
+
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model SavingsGoal {
   id           String         @id @default(uuid())
-  userId       String
+  userId       String?
   targetAmount Float
   targetDate   DateTime
   createdAt    DateTime       @default(now())
@@ -210,21 +214,23 @@ model SavingsGoal {
   savedAmount  Float          @default(0)
   title        String?
   budgetId     String?
-  Budget       Budget?        @relation(fields: [budgetId], references: [id])
-  user         User           @relation(fields: [userId], references: [id])
+
+  Budget       Budget?        @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   SavingsTopUp SavingsTopUp[]
 }
 
 model Budget {
   id           String         @id @default(uuid())
-  userId       String
+  userId       String?
   limit        Float
-  categoryId   String
+  categoryId   String?
   repeat       String
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  category     Category       @relation(fields: [categoryId], references: [id])
-  user         User           @relation(fields: [userId], references: [id])
+
+  category     Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   expenses     Expense[]
   SavingsGoal  SavingsGoal[]
   SavingsTopUp SavingsTopUp[]
@@ -232,34 +238,36 @@ model Budget {
 
 model Expense {
   id          String   @id @default(uuid())
-  userId      String
+  userId      String?
   amount      Float
   description String
-  categoryId  String
+  categoryId  String?
   createdAt   DateTime @default(now())
   budgetId    String?
   updatedAt   DateTime @updatedAt
-  budget      Budget?  @relation(fields: [budgetId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+
+  budget      Budget?   @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Income {
   id          String   @id @default(uuid())
-  userId      String
+  userId      String?
   amount      Float
   description String
-  categoryId  String
+  categoryId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  category    Category @relation(fields: [categoryId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Ticket {
   id           String       @id @default(uuid()) // DB primary key
   ticketNumber String       @unique // Public ticket ID, e.g., TCK-2025-0001
-  userId       String
+  userId       String?
   subject      String
   name         String
   description  String
@@ -267,16 +275,17 @@ model Ticket {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model ActivityLog {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String?
   action    String
   metadata  String?
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
 }
@@ -287,6 +296,7 @@ model Currency {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   code          String            @unique
+
   incomes       RecurringIncome[]
   financeSetups FinanceSetup[]
   users         User[]
@@ -294,22 +304,24 @@ model Currency {
 
 model RecurringIncome {
   id          String               @id @default(uuid())
-  userId      String
-  walletId    String
+  userId      String?
+  walletId    String?
   amount      Float
   frequency   Frequency
   description String?
   type        IncomeType
-  currencyId  String
+  currencyId  String?
   startDate   DateTime
   isActive    Boolean              @default(true)
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
-  currency    Currency             @relation(fields: [currencyId], references: [id])
-  user        User                 @relation(fields: [userId], references: [id])
-  wallet      Wallet               @relation(fields: [walletId], references: [id])
+
+  currency    Currency?            @relation(fields: [currencyId], references: [id], onDelete: SetNull)
+  user        User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  wallet      Wallet?              @relation(fields: [walletId], references: [id], onDelete: Cascade)
   logs        RecurringIncomeLog[]
 }
+
 
 model RecurringIncomeLog {
   id                String          @id @default(uuid())
@@ -360,36 +372,40 @@ model AssessmentOption {
 }
 
 model UserAssessment {
-  id           String     @id @default(uuid())
-  userId       String
+  id           String       @id @default(uuid())
+  userId       String?
   assessmentId String
-  submittedAt  DateTime   @default(now())
+  submittedAt  DateTime     @default(now())
   answers      Json
-  assessment   Assessment @relation(fields: [assessmentId], references: [id])
-  user         User       @relation(fields: [userId], references: [id])
+
+  assessment   Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Note {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String?
   title     String
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model SavingsTopUp {
-  id            String      @id @default(uuid())
-  savingsGoalId String
-  userId        String
+  id            String        @id @default(uuid())
+  savingsGoalId String?
+  userId        String?
   amount        Float
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime      @default(now())
   budgetId      String?
-  Budget        Budget?     @relation(fields: [budgetId], references: [id])
-  SavingsGoal   SavingsGoal @relation(fields: [savingsGoalId], references: [id])
-  User          User        @relation(fields: [userId], references: [id])
+
+  Budget        Budget?       @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  SavingsGoal   SavingsGoal?  @relation(fields: [savingsGoalId], references: [id], onDelete: SetNull)
+  User          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
+
 
 enum Status {
   DRAFT
@@ -427,9 +443,9 @@ enum AssessmentStatus {
 }
 
 model Module1 {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id     String  @id @default(uuid())
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   mindset                      String
   areasGivenAwayPen            String
@@ -453,9 +469,9 @@ model Module1 {
 }
 
 model Module2 {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id     String  @id @default(uuid())
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   goodFinancialManagement  String
   badFinancialManagement   String
@@ -493,9 +509,9 @@ model Module2 {
 }
 
 model Module3 {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id     String  @id @default(uuid())
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   projectPurpose      String
   skills              String
@@ -544,13 +560,14 @@ model Module3 {
   updatedAt DateTime @updatedAt
 }
 
-model FinanceSetup {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
 
-  currencyId String
-  currency   Currency @relation(fields: [currencyId], references: [id])
+model FinanceSetup {
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  currencyId String?
+  currency   Currency? @relation(fields: [currencyId], references: [id], onDelete: SetNull)
 
   salaryAmount Float
   icon         String?
@@ -561,3 +578,4 @@ model FinanceSetup {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+

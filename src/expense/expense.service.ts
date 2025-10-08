@@ -98,18 +98,23 @@ async create(userId: string, dto: CreateExpenseDto) {
 
   const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-  const categorySummary = expenses.reduce((acc, e) => {
-    const key = e.categoryId;
-    if (!acc[key]) {
-      acc[key] = {
-        icon: e.category.icon ?? 'default-icon.png', // Fallback icon if none provided
-        title: e.category.title,
-        amount: 0,
-      };
-    }
-    acc[key].amount += e.amount;
-    return acc;
-  }, {} as Record<string, { icon: string; title: string; amount: number }>);
+ const categorySummary = expenses.reduce((acc, e) => {
+  const key = e.categoryId ?? 'uncategorized'; // ✅ fallback for null IDs
+  const icon = e.category?.icon ?? 'default-icon.png';
+  const title = e.category?.title ?? 'Uncategorized';
+
+  if (!acc[key]) {
+    acc[key] = {
+      icon,
+      title,
+      amount: 0,
+    };
+  }
+
+  acc[key].amount += e.amount;
+  return acc;
+}, {} as Record<string, { icon: string; title: string; amount: number }>);
+
 
   const list = Object.values(categorySummary).map((item) => ({
     ...item,

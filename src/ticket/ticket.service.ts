@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
@@ -20,75 +20,11 @@ export class TicketService {
 
   // Create new ticket
 
-// async create(dto: CreateTicketDto, userId: string) {
-//   const ticketNumber = `TCK-${Date.now()}`;
-
-//   const ticket = await this.prisma.ticket.create({
-//     data: { ...dto, userId, ticketNumber },
-//     include: { user: {
-//           select: { 
-//             id: true,
-//             firstname: true,
-//             lastname: true,
-//             email: true,
-//             phone: true,
-//             profilePicture: true,
-//             status: true,
-//             isAdmin: true,
-//             createdAt: true,
-//             updatedAt: true, 
-//             },
-//         } }, // so we have user info for email
-//   });
-
-//   await this.activityLogService.log(userId, `Opened support ticket: ${dto.subject}`);
-
-//   // Notify all admins
-//   const admins = await this.prisma.user.findMany({
-//     where: { isAdmin: true },
-//     select: { id: true, email: true, name: true },
-//   });
-
-//   for (const admin of admins) {
-//     // In-app notification (must succeed)
-//     await this.notificationsService.sendToUser(
-//       admin.id,
-//       'New Support Ticket',
-//       `A new ticket "${dto.subject}" has been created by ${ticket.user.firstname ?? 'a user'}.`,
-//       { ticketId: ticket.id },
-//       'TICKET'
-//     );
-
-//     // Email notification (best effort — failure won’t break ticket creation)
-//     try {
-//       await this.mailService.sendEmailWithTemplate(
-//         admin.email,
-//         41132332, // Postmark template ID
-//         {
-//           title: 'New Support Ticket',
-//           fullName: admin.name ?? 'Admin',
-//           body: `A new ticket "<strong>${dto.subject}</strong>" has been created by ${ticket.user.firstname ?? 'a user'}.`,
-//           alertMessage: `Ticket Number: ${ticketNumber}`,
-//         }
-//       );
-//     } catch (error) {
-//       // Log the error but don’t throw it, so other admins still get the email
-//       this.logger.error(
-//         `Failed to send ticket email to admin ${admin.email}: ${error.message}`,
-//       );
-//     }
-//   }
-
-//   return {
-//     message: 'Ticket created successfully',
-//     ticket,
-//   };
-// }
 
  async create(dto: CreateTicketDto, userId: string) {
     const ticketNumber = `TCK-${Date.now()}`;
 
-    // ✅ Create the ticket and include user info for notifications/emails
+    // Create the ticket and include user info for notifications/emails
     const ticket = await this.prisma.ticket.create({
       data: { ...dto, userId, ticketNumber },
       include: {
@@ -120,7 +56,7 @@ export class TicketService {
 
     for (const admin of admins) {
       const adminName = `${admin.firstname ?? ''} ${admin.lastname ?? ''}`.trim() || 'Admin';
-      const userName = `${ticket.user.firstname ?? ''} ${ticket.user.lastname ?? ''}`.trim() || 'a user';
+      const userName = `${ticket.user?.firstname ?? ''} ${ticket.user?.lastname ?? ''}`.trim() || 'a user';
 
       // 🔔 In-app notification
       await this.notificationsService.sendToUser(
@@ -287,7 +223,7 @@ async findAll(params: {
       status: t.status,
       userId: t.userId,
       description: t.description,
-      userName: `${t.user.firstname ?? ''} ${t.user.lastname ?? ''}`.trim(),
+      userName: `${t.user?.firstname ?? ''} ${t.user?.lastname ?? ''}`.trim(),
       createdAt: t.createdAt,
     })),
     stats: {
@@ -315,7 +251,7 @@ async findAll(params: {
 async updateStatus(
   id: string,
   dto: UpdateTicketStatusDto,
-  senderId: string // required now
+  senderId: string
 ) {
   const ticket = await this.prisma.ticket.findUnique({
     where: { id },
@@ -341,6 +277,10 @@ async updateStatus(
     throw new NotFoundException('Ticket not found');
   }
 
+  if (!ticket.userId || !ticket.user) {
+    throw new BadRequestException('This ticket is not linked to a user.');
+  }
+
   const updated = await this.prisma.ticket.update({
     where: { id },
     data: { status: dto.status as TicketStatus },
@@ -348,17 +288,16 @@ async updateStatus(
 
   const formattedStatus = dto.status.replace(/_/g, ' ').toLowerCase();
 
-  // ✅ Send in-app notification from the admin
+  // ✅ Safe: we know userId and user are not null here
   await this.notificationsService.sendToUser(
-    senderId, // sender is admin
-    ticket.userId, // receiver is ticket owner
+    senderId,
+    ticket.userId,
     '🎫 Ticket Status Update',
     `Your ticket "${ticket.subject}" is now marked as ${formattedStatus}.`,
     { ticketId: ticket.id, newStatus: dto.status },
     'TICKET'
   );
 
-  // ✅ Send email notification
   await this.mailService.sendTicketStatusUpdateEmail(
     ticket.user.email,
     ticket.user.firstname ?? 'Valued User',
