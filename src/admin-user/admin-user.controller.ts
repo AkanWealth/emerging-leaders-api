@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { AdminUserService } from './admin-user.service';
 import { CreateUserByAdminDto } from './dto/create-user.dto';
@@ -81,8 +82,6 @@ async getAllUsers(
   });
 }
 
-
-
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Get('admins')
 @ApiOperation({ summary: 'Get all admins' })
@@ -153,6 +152,31 @@ editAdmin(@Param('id') id: string, @Body() dto: EditAdminDto) {
   return this.adminUserService.editAdmin(id, dto);
 }
 
+
+@UseGuards(JwtAuthGuard, AdminGuard)
+  @Patch(':id/profile-picture')
+  @ApiOperation({ summary: 'Update admin profile picture' })
+  @ApiParam({ name: 'id', description: 'Admin user ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        profilePicture: { type: 'string', example: 'https://res.cloudinary.com/demo/image/upload/v12345/sample.jpg' },
+      },
+      required: ['profilePicture'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Profile picture updated successfully' })
+  async updateProfilePicture(
+    @Param('id') id: string,
+    @Body('profilePicture') profilePicture: string,
+  ) {
+    if (!profilePicture) {
+      throw new NotFoundException('Profile picture URL is required');
+    }
+
+    return this.adminUserService.updateProfilePicture(id, profilePicture);
+  }
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')

@@ -385,6 +385,27 @@ async editAdmin(id: string, dto: EditAdminDto) {
 }
 
 
+ async updateProfilePicture(id: string, profilePicture: string) {
+    const existingAdmin = await this.prisma.user.findUnique({ where: { id } });
+    if (!existingAdmin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { profilePicture },
+    });
+
+    return {
+      message: 'Profile picture updated successfully',
+      admin: {
+        id: updated.id,
+        email: updated.email,
+        profilePicture: updated.profilePicture,
+      },
+    };
+  }
+
   // Optional: prevent editing super admin
   // if (existingAdmin.role === 'SUPER_ADMIN') {
   //   throw new ForbiddenException('You cannot edit a super admin.');
