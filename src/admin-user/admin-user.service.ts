@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { MailService } from '../mail/mail.service';
 import { CreateUserByAdminDto } from './dto/create-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
+import { EditAdminDto } from './dto/edit-admin.dto';
 import { UserStatus } from '@prisma/client'; 
 import {
   eachMonthOfInterval,
@@ -343,6 +344,33 @@ async getUserById(id: string) {
       data: dto,
     });
   }
+
+  async editAdmin(id: string, dto: EditAdminDto) {
+  const existingAdmin = await this.prisma.user.findUnique({ where: { id } });
+
+  if (!existingAdmin) {
+    throw new NotFoundException('Admin not found');
+  }
+
+  // Optional: prevent editing super admin
+  // if (existingAdmin.role === 'SUPER_ADMIN') {
+  //   throw new ForbiddenException('You cannot edit a super admin.');
+  // }
+
+  const updatedAdmin = await this.prisma.user.update({
+    where: { id },
+    data: {
+      ...dto,
+      updatedAt: new Date(),
+    },
+  });
+
+  return {
+    message: 'Admin updated successfully',
+    data: updatedAdmin,
+  };
+}
+
 
   async deleteUser(userId: string) {
     return this.prisma.user.delete({ where: { id: userId } });

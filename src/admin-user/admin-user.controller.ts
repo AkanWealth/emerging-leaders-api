@@ -13,6 +13,7 @@ import {
 import { AdminUserService } from './admin-user.service';
 import { CreateUserByAdminDto } from './dto/create-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
+import { EditAdminDto } from './dto/edit-admin.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
 import { AdminGuard } from '../common/decorators/guards/admin.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -32,33 +33,6 @@ import {
 export class AdminUserController {
   constructor(private readonly adminUserService: AdminUserService) {}
 
-// @UseGuards(JwtAuthGuard, AdminGuard)
-//   @Get()
-//   @ApiOperation({ summary: 'Get all users' })
-//   @ApiResponse({ status: 200, description: 'List of all users returned successfully.' })
-//   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default 1)' })
-//   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10)' })
-//   @ApiQuery({ name: 'email', required: false, type: String, description: 'Filter by email' })
-//   @ApiQuery({ name: 'name', required: false, type: String, description: 'Filter by name' })
-//   @ApiQuery({ name: 'role', required: false, type: String, description: 'Filter by role' })
-//   @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by status' })
-//   async getAllUsers(
-//     @Query('page') page?: string,
-//     @Query('limit') limit?: string,
-//     @Query('email') email?: string,
-//     @Query('name') name?: string,
-//     @Query('role') role?: string,
-//     @Query('status') status?: string,
-//   ) {
-//     return this.adminUserService.getAllUsers({
-//       page: page ? parseInt(page, 10) : 1,
-//       limit: limit ? parseInt(limit, 10) : 10,
-//       email,
-//       name,
-//       role,
-//       status,
-//     });
-//   }
  @UseGuards(JwtAuthGuard, AdminGuard)
   @Patch(':id/deactivate')
   @ApiOperation({ summary: 'Deactivate a user account' })
@@ -167,6 +141,18 @@ async getAllAdmins(
   editUser(@Param('id') id: string, @Body() dto: EditUserDto) {
     return this.adminUserService.editUser(id, dto);
   }
+
+
+   @UseGuards(JwtAuthGuard, AdminGuard)
+@Patch('edit/:id')
+@ApiOperation({ summary: 'Edit admin details' })
+@ApiParam({ name: 'id', description: 'Admin user ID' })
+@ApiResponse({ status: 200, description: 'Admin updated successfully.' })
+@ApiBody({ type: EditAdminDto })
+editAdmin(@Param('id') id: string, @Body() dto: EditAdminDto) {
+  return this.adminUserService.editAdmin(id, dto);
+}
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
