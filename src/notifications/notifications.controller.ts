@@ -89,26 +89,38 @@ getUnreadNotifications(
   }
 
   // Missing: Send to a single user (admin action)
-  @Post('send-to-user/:userId')
-  @ApiOperation({ summary: 'Send a notification to a specific user (Admin only)' })
-  @ApiParam({ name: 'userId', type: 'string', description: 'User ID' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        body: { type: 'string' },
-        data: { type: 'object', additionalProperties: true },
-        type: { type: 'string' },
-      },
+@Post('send-to-user/:userId')
+@ApiOperation({ summary: 'Send a notification to a specific user (Admin only)' })
+@ApiParam({ name: 'userId', type: 'string', description: 'User ID' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string' },
+      body: { type: 'string' },
+      data: { type: 'object', additionalProperties: true },
+      type: { type: 'string' },
     },
-  })
-  sendToUser(
-    @Param('userId') userId: string,
-    @Body() body: { title: string; body: string; data?: Record<string, any>; type?: string },
-  ) {
-    return this.notificationsService.sendToUser(userId, body.title, body.body, body.data, body.type);
-  }
+  },
+})
+@UseGuards(JwtAuthGuard)
+sendToUser(
+  @Req() req,
+  @Param('userId') userId: string,
+  @Body() body: { title: string; body: string; data?: Record<string, any>; type?: string },
+) {
+  const senderId = req.user.id; // ✅ from JWT
+
+  return this.notificationsService.sendToUser(
+    senderId,      // ✅ sender
+    userId,        // ✅ receiver
+    body.title,
+    body.body,
+    body.data,
+    body.type,
+  );
+}
+
 
   // Missing: Send to multiple users (admin action)
   @Post('send-to-users')
@@ -132,24 +144,35 @@ getUnreadNotifications(
   }
 
   // Missing: Broadcast to all users (admin action)
-  @Post('broadcast')
-  @ApiOperation({ summary: 'Broadcast a notification to all users (Admin only)' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        body: { type: 'string' },
-        data: { type: 'object', additionalProperties: true },
-        type: { type: 'string' },
-      },
+@Post('broadcast')
+@UseGuards(JwtAuthGuard)
+@ApiOperation({ summary: 'Broadcast a notification to all users (Admin only)' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string' },
+      body: { type: 'string' },
+      data: { type: 'object', additionalProperties: true },
+      type: { type: 'string' },
     },
-  })
-  broadcast(
-    @Body() body: { title: string; body: string; data?: Record<string, any>; type?: string },
-  ) {
-    return this.notificationsService.broadcastNotification(body.title, body.body, body.data, body.type);
-  }
+  },
+})
+broadcast(
+  @Req() req, // 👈 access JWT user info
+  @Body() payload: { title: string; body: string; data?: Record<string, any>; type?: string },
+) {
+  const senderId = req.user.id; // ✅ from JWT
+  return this.notificationsService.broadcastNotification(
+    senderId,
+    payload.title,
+    payload.body,
+    payload.data,
+    payload.type,
+  );
+}
+
+
 
 
     @Delete('delete-all')

@@ -44,7 +44,7 @@ model User {
   senseOfPurpose         String?
   sourceOfIncome         String?
   underageParent         Boolean?
-  lastLogin   DateTime? 
+  lastLogin              DateTime?
   financeCompleted       Boolean           @default(false)
   password               String
   ageGroup               String?
@@ -74,7 +74,8 @@ model User {
   financeSetups          FinanceSetup[]
   wallet                 Wallet?
   Category               Category[]
-  Notification           Notification[]
+  sentNotifications      Notification[]    @relation("SentNotifications")
+  receivedNotifications  Notification[]    @relation("ReceivedNotifications")
 }
 
 enum UserStatus {
@@ -85,20 +86,22 @@ enum UserStatus {
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  userId    String?
-  title     String
-  body      String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  type      String?  // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
-  data      Json?    // Store additional payload for frontend
+  id         String   @id @default(uuid())
+  senderId   String? // who sent the notification
+  receiverId String? // who receives it
+  title      String
+  body       String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  type       String? // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
+  data       Json? // Store additional payload for frontend
 
-  user User? @relation(fields: [userId], references: [id])
+  sender   User? @relation("SentNotifications", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedNotifications", fields: [receiverId], references: [id])
 
-  @@index([userId])
+  @@index([senderId])
+  @@index([receiverId])
 }
-
 
 model FcmToken {
   id        String   @id @default(uuid())
@@ -254,17 +257,17 @@ model Income {
 }
 
 model Ticket {
-  id          String       @id @default(uuid())   // DB primary key
-  ticketNumber String      @unique                // Public ticket ID, e.g., TCK-2025-0001
-  userId      String
-  subject     String
-  name        String
-  description String
-  status      TicketStatus @default(PENDING)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String       @id @default(uuid()) // DB primary key
+  ticketNumber String       @unique // Public ticket ID, e.g., TCK-2025-0001
+  userId       String
+  subject      String
+  name         String
+  description  String
+  status       TicketStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  user        User         @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model ActivityLog {
@@ -332,7 +335,7 @@ model Assessment {
   updatedAt      DateTime             @updatedAt
   scheduledFor   DateTime
   scheduledMonth String?
-  scheduledYear  Int?     
+  scheduledYear  Int?
   category       AssessmentCategory   @relation(fields: [categoryId], references: [id])
   questions      AssessmentQuestion[]
   userResponses  UserAssessment[]

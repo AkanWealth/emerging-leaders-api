@@ -13,7 +13,7 @@ export class AssessmentService {
     private notificationsService: NotificationsService
   ) {}
 
- async createAssessment(dto: CreateAssessmentDto) {
+async createAssessment(dto: CreateAssessmentDto, senderId: string) {
   try {
     const assessment = await this.prisma.assessment.create({
       data: {
@@ -22,12 +22,16 @@ export class AssessmentService {
       },
     });
 
-    // Send broadcast notification to all users
+    // ✅ Include senderId in broadcast
     await this.notificationsService.broadcastNotification(
-      'New Assessment Scheduled',
+      senderId,
+      '📘 New Assessment Scheduled',
       `An assessment has been scheduled for ${new Date(dto.scheduledFor).toLocaleString()}`,
-      { assessmentId: assessment.id, scheduledFor: assessment.scheduledFor.toISOString() },
-      'ASSESSMENT'
+      {
+        assessmentId: assessment.id,
+        scheduledFor: assessment.scheduledFor.toISOString(),
+      },
+      'ASSESSMENT',
     );
 
     return assessment;
@@ -37,9 +41,10 @@ export class AssessmentService {
         'The selected category does not exist. Please choose a valid category.'
       );
     }
-    throw error; // rethrow for other unexpected errors
+    throw error;
   }
 }
+
 
 
   async updateAssessment(id: string, dto: UpdateAssessmentDto) {

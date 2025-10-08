@@ -22,16 +22,21 @@ async completeUserAccount(userId: string) {
     where: { userId },
   });
 
-  for (const { token } of tokens) {
-   await this.notificationsService.sendToUser(
-  userId, // pass the userId, not the token
-  '🎉 Account Created!',
-  'Your account has been successfully set up. Welcome!',
-  { screen: 'Dashboard' }
-);
+  // Optional: you can skip looping tokens since sendToUser already handles push sending
+  // But if you want to keep it per-token, it’s fine.
 
+  for (const { token } of tokens) {
+    await this.notificationsService.sendToUser(
+      userId, // senderId (system-generated notification)
+      userId, // receiverId
+      '🎉 Account Created!',
+      'Your account has been successfully set up. Welcome!',
+      { screen: 'Dashboard' },
+      'ACCOUNT_CREATED' // optional type
+    );
   }
 }
+
 
 
 

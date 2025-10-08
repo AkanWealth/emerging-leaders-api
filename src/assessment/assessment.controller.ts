@@ -7,6 +7,7 @@ import {
   Param,
   Get,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AssessmentService } from './assessment.service';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
@@ -27,12 +28,14 @@ import { BulkCreateQuestionDto } from './dto/create-many-questions.dto';
 export class AssessmentController {
   constructor(private readonly service: AssessmentService) {}
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @Post()
-  @ApiOperation({ summary: 'Admin creates a new assessment' })
-  create(@Body() dto: CreateAssessmentDto) {
-    return this.service.createAssessment(dto);
-  }
+@UseGuards(JwtAuthGuard, AdminGuard)
+@Post()
+@ApiOperation({ summary: 'Admin creates a new assessment' })
+create(@Req() req, @Body() dto: CreateAssessmentDto) {
+  const senderId = req.user.id;
+  return this.service.createAssessment(dto, senderId);
+}
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Put(':id')

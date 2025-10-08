@@ -19,7 +19,7 @@ export class AssessmentCronService {
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get assessments for today only
+    // Get assessments scheduled for today (and still open)
     const assessments = await this.prisma.assessment.findMany({
       where: {
         scheduledFor: {
@@ -32,8 +32,12 @@ export class AssessmentCronService {
 
     if (!assessments.length) return;
 
+    // System notifications use a "system" sender (null or a special ID)
+    // If you have a system user in DB, use that user’s ID; otherwise keep null
+    const systemSenderId = 'SYSTEM'; // or leave as `undefined` if not in DB
+
     for (const assessment of assessments) {
-      // Check if a reminder already exists for this assessment today
+      // Check if a reminder has already been sent today for this assessment
       const alreadySent = await this.prisma.notification.findFirst({
         where: {
           type: 'ASSESSMENT',
@@ -41,21 +45,21 @@ export class AssessmentCronService {
             gte: startOfDay,
             lte: endOfDay,
           },
-          // JSON filter for Postgres
           data: {
-            equals: {
-              assessmentId: assessment.id,
-            },
+            // ✅ Safer JSON filtering
+            path: ['assessmentId'],
+            equals: assessment.id,
           },
         },
       });
 
       if (alreadySent) continue; // skip if already sent
 
-      // Send the reminder
+      // ✅ Send broadcast notification (now includes senderId)
       await this.notificationsService.broadcastNotification(
-        'Assessment Today',
-        `An assessment is scheduled for today at ${assessment.scheduledFor.toLocaleTimeString()}`,
+        systemSenderId,
+        '📘 Assessment Reminder',
+        `An assessment is scheduled for today at ${assessment.scheduledFor.toLocaleTimeString()}.`,
         {
           assessmentId: assessment.id,
           scheduledFor: assessment.scheduledFor.toISOString(),

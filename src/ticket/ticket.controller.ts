@@ -66,11 +66,17 @@ async findAll(
     return this.ticketService.findOne(id);
   }
 
+
   @Patch(':id/status')
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: 'Admin updates ticket status' })
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateTicketStatusDto) {
-    return this.ticketService.updateStatus(id, dto);
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateTicketStatusDto,
+    @Req() req
+  ) {
+    const senderId = req.user.id;
+    return this.ticketService.updateStatus(id, dto, senderId);
   }
 
   @Delete(':id')
