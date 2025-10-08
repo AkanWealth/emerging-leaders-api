@@ -338,38 +338,59 @@ async getUserById(id: string) {
     return user;
   }
 
-  async editUser(userId: string, dto: EditUserDto) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: dto,
-    });
+ async editUser(userId: string, dto: EditUserDto) {
+  const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
+  if (!existingUser) {
+    throw new NotFoundException('User not found');
   }
 
-  async editAdmin(id: string, dto: EditAdminDto) {
-  const existingAdmin = await this.prisma.user.findUnique({ where: { id } });
+  const updatedUser = await this.prisma.user.update({
+    where: { id: userId },
+    data: dto,
+  });
 
+  return {
+    message: 'User updated successfully',
+    user: {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      fullname: updatedUser.name ?? `${updatedUser.firstname ?? ''} ${updatedUser.lastname ?? ''}`.trim(),
+      status: updatedUser.status,
+    },
+  };
+}
+
+
+async editAdmin(id: string, dto: EditAdminDto) {
+  const existingAdmin = await this.prisma.user.findUnique({ where: { id } });
   if (!existingAdmin) {
     throw new NotFoundException('Admin not found');
   }
+
+  const updatedAdmin = await this.prisma.user.update({
+    where: { id },
+    data: dto,
+  });
+
+  return {
+    message: 'Admin updated successfully',
+    admin: {
+      id: updatedAdmin.id,
+      email: updatedAdmin.email,
+      fullname: updatedAdmin.name ?? `${updatedAdmin.firstname ?? ''} ${updatedAdmin.lastname ?? ''}`.trim(),
+      status: updatedAdmin.status,
+      isAdmin: updatedAdmin.isAdmin,
+    },
+  };
+}
+
 
   // Optional: prevent editing super admin
   // if (existingAdmin.role === 'SUPER_ADMIN') {
   //   throw new ForbiddenException('You cannot edit a super admin.');
   // }
 
-  const updatedAdmin = await this.prisma.user.update({
-    where: { id },
-    data: {
-      ...dto,
-      updatedAt: new Date(),
-    },
-  });
 
-  return {
-    message: 'Admin updated successfully',
-    data: updatedAdmin,
-  };
-}
 
 
   async deleteUser(userId: string) {

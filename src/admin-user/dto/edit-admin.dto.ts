@@ -5,12 +5,12 @@ export class EditAdminDto {
   @ApiPropertyOptional({ example: 'Jane', description: 'Updated first name of the user' })
     @IsOptional()
     @IsString()
-  firstName?: string;
+  firstname?: string;
 
   @ApiPropertyOptional({ example: 'Smith', description: 'Updated last name of the user' })
     @IsOptional()
     @IsString()
-  lastName?: string;
+  lastname?: string;
 
   @ApiPropertyOptional({ example: 'jane.smith@example.com', description: 'Updated email address' })
     @IsOptional()
