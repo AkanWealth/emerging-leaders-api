@@ -36,4 +36,9 @@ export class EditUserDto {
     @IsOptional()
     @IsInt()
   postalcode?: number;
+
+   @ApiPropertyOptional({ example: 'Nigeria', description: 'Updated phone of the user' })
+    @IsOptional()
+    @IsString()
+  phone?: string;
 }

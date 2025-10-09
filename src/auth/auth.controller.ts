@@ -12,6 +12,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,6 +22,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterFcmTokenDto } from './dto/fc-tonken.dto'; 
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -126,16 +128,20 @@ export class AuthController {
     );
   }
 
-  // auth.controller.ts
+  
 @Post('fcm-token')
 @UseGuards(JwtAuthGuard)
+@ApiOperation({ summary: 'Register FCM token for notifications' })
+@ApiBody({ type: RegisterFcmTokenDto })
+@ApiResponse({ status: 201, description: 'FCM token saved or ignored if duplicate' })
 async registerFcmToken(
-  @Req() req: any, // or @Req() req: Request as you had
-  @Body() dto: { token: string; platform: string }
+  @Req() req: any,
+  @Body() dto: RegisterFcmTokenDto
 ) {
-  const user = req.user; //  Works just fine
+  const user = req.user;
   return this.authService.saveFcmToken(user.id, dto.token, dto.platform);
 }
+
 
 
   // 👤 Complete profile after authentication

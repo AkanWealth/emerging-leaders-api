@@ -22,6 +22,19 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class ExpenseController {
   constructor(private readonly service: ExpenseService) {}
 
+   @ApiOperation({ summary: 'Get expenses analytics' })
+    @ApiResponse({ status: 200, description: 'Expensesanalytics data' }) 
+    @ApiParam({ name: 'filter', required: false, description: 'Filter type (weekly, monthly, yearly)' })
+    @ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'], description: 'Filter type for analytics' })
+    @Get('analytics')
+    getIncomeAnalytics(
+      @Query('filter') filter: 'weekly' | 'monthly' | 'yearly' = 'monthly',
+      @Req() req: any,
+    ) {
+      const userId = req.user.id;
+      return this.service.getExpenseAnalytics(userId, filter);
+    }
+    
   @Post(':userId')
   @ApiOperation({ summary: 'Create a new expense' })
   @ApiResponse({ status: 201, description: 'Expense created successfully.' })
@@ -57,16 +70,5 @@ export class ExpenseController {
     return this.service.remove(id, userId);
   }
 
-    @ApiOperation({ summary: 'Get income analytics' })
-    @ApiResponse({ status: 200, description: 'Income analytics data' }) 
-    @ApiParam({ name: 'filter', required: false, description: 'Filter type (weekly, monthly, yearly)' })
-    @ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'], description: 'Filter type for analytics' })
-    @Get('analytics')
-    getIncomeAnalytics(
-      @Query('filter') filter: 'weekly' | 'monthly' | 'yearly' = 'monthly',
-      @Req() req: any,
-    ) {
-      const userId = req.user.id;
-      return this.service.getExpenseAnalytics(userId, filter);
-    }
+   
 }

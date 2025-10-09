@@ -46,6 +46,24 @@ export class IncomeController {
     return this.incomeService.findAll(req.user.id);
   }
 
+   @ApiOperation({ summary: 'Get income analytics' })
+  @ApiResponse({ status: 200, description: 'Income analytics data' }) 
+  @ApiParam({ name: 'filter', required: false, description: 'Filter type (weekly, monthly, yearly)' })
+  @ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'], description: 'Filter type for analytics' })
+ @Get('analytics')
+@ApiOperation({ summary: 'Get income analytics' })
+@ApiResponse({ status: 200, description: 'Income analytics data' })
+@ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'] })
+async getIncomeAnalytics(
+  @Query('filter') filter: 'weekly' | 'monthly' | 'yearly' = 'monthly',
+  @Req() req: any,
+) {
+  const userId = req.user.id;
+  const data = await this.incomeService.getIncomeAnalytics(userId, filter);
+  // always return data, even if totalAmount=0
+  return data;
+}
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a single income entry by ID' })
   @ApiResponse({ status: 200, description: 'Income entry found' })
@@ -63,18 +81,8 @@ export class IncomeController {
     return this.incomeService.update(id, req.user.id, dto);
   }
 
-  @ApiOperation({ summary: 'Get income analytics' })
-  @ApiResponse({ status: 200, description: 'Income analytics data' }) 
-  @ApiParam({ name: 'filter', required: false, description: 'Filter type (weekly, monthly, yearly)' })
-  @ApiQuery({ name: 'filter', required: false, enum: ['weekly', 'monthly', 'yearly'], description: 'Filter type for analytics' })
-  @Get('analytics')
-  getIncomeAnalytics(
-    @Query('filter') filter: 'weekly' | 'monthly' | 'yearly' = 'monthly',
-    @Req() req: any,
-  ) {
-    const userId = req.user.id;
-    return this.incomeService.getIncomeAnalytics(userId, filter);
-  }
+ 
+
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an income entry' })
