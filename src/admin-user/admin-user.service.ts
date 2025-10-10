@@ -477,77 +477,189 @@ async deactivateAdmin(userId: string) {
     return Math.random().toString(36).substring(2, 12);
   }
 
-  async getAssessmentSummary() {
-    // ✅ Count all non-admin users
-    const totalUsers = await this.prisma.user.count({
-      where: {
-        isAdmin: false,
-        isSuperAdmin: false,
-      },
-    });
+async getAssessmentSummary(title?: string, startYear?: number, endYear?: number) {
+  // ✅ Count all non-admin users
+  const totalUsers = await this.prisma.user.count({
+    where: {
+      isAdmin: false,
+      isSuperAdmin: false,
+    },
+  });
 
-    // ✅ Fetch all assessments + responses
-    const assessments = await this.prisma.assessment.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        userResponses: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstname: true,
-                lastname: true,
-                profilePicture: true,
-              },
+  // ✅ Build dynamic filter
+  const where: any = {};
+
+  // 🔍 Optional title search
+  if (title) {
+    where.title = {
+      contains: title,
+      mode: 'insensitive',
+    };
+  }
+
+  // 📅 Optional year range filter
+  if (startYear && endYear) {
+    where.scheduledYear = {
+      gte: Number(startYear),
+      lte: Number(endYear),
+    };
+  } else if (startYear) {
+    where.scheduledYear = { gte: Number(startYear) };
+  } else if (endYear) {
+    where.scheduledYear = { lte: Number(endYear) };
+  }
+
+  // ✅ Fetch assessments
+  const assessments = await this.prisma.assessment.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      userResponses: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+              profilePicture: true,
             },
           },
         },
       },
-    });
+    },
+  });
 
-    // ✅ Build summary for each assessment
-    return assessments.map((assessment) => {
-      const filledUsers = assessment.userResponses.length;
-      const notFilledUsers = totalUsers - filledUsers;
+  // ✅ Construct summaries
+  return assessments.map((assessment) => {
+    const filledUsers = assessment.userResponses.length;
+    const notFilledUsers = totalUsers - filledUsers;
 
-      return {
-        id: assessment.id,
-        title: assessment.title,
-        scheduledMonth: assessment.scheduledMonth,
-        scheduledYear: assessment.scheduledYear,
-        totalUsers,
-        filledUsers,
-        notFilledUsers,
-        completionRate:
-          totalUsers > 0 ? ((filledUsers / totalUsers) * 100).toFixed(1) + '%' : '0%',
-        createdAt: assessment.createdAt,
-      };
-    });
-  }
+    return {
+      id: assessment.id,
+      title: assessment.title,
+      scheduledMonth: assessment.scheduledMonth,
+      scheduledYear: assessment.scheduledYear,
+      totalUsers,
+      filledUsers,
+      notFilledUsers,
+      completionRate:
+        totalUsers > 0 ? ((filledUsers / totalUsers) * 100).toFixed(1) + '%' : '0%',
+      createdAt: assessment.createdAt,
+    };
+  });
+}
+
+
 
   // ✅ Optionally: View details of who filled / not filled
-  async getAssessmentDetails(assessmentId: string) {
-    const allUsers = await this.prisma.user.findMany({
-      where: { isAdmin: false, isSuperAdmin: false },
-      select: { id: true, firstname: true, lastname: true, profilePicture: true },
-    });
+async getAssessmentDetails(
+  title?: string,
+  startYear?: string,
+  endYear?: string,
+) {
+  // ✅ Build dynamic filter
+  const where: any = {};
 
-    const filledResponses = await this.prisma.userAssessment.findMany({
-      where: { assessmentId },
-      select: {
-        user: { select: { id: true, firstname: true, lastname: true, profilePicture: true } },
+  if (title) {
+    where.title = { contains: title, mode: 'insensitive' };
+  }
+
+  if (startYear && endYear) {
+    where.scheduledYear = {
+      gte: Number(startYear),
+      lte: Number(endYear),
+    };
+  } else if (startYear) {
+    where.scheduledYear = { gte: Number(startYear) };
+  } else if (endYear) {
+    where.scheduledYear = { lte: Number(endYear) };
+  }
+
+  // ✅ Fetch assessments that match filter
+  const assessments = await this.prisma.assessment.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      userResponses: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+              profilePicture: true,
+            },
+          },
+        },
       },
-    });
+    },
+  });
 
-    const filledUserIds = new Set(filledResponses.map((r) => r.user?.id));
+  if (!assessments.length) {
+    return { message: 'No assessments found for the given filters.' };
+  }
+
+  // ✅ Get all non-admin users
+  const allUsers = await this.prisma.user.findMany({
+    where: { isAdmin: false, isSuperAdmin: false },
+    select: { id: true, firstname: true, lastname: true, profilePicture: true },
+  });
+
+  // ✅ Build results per assessment
+  return assessments.map((assessment) => {
+    const filledUserIds = new Set(
+      assessment.userResponses.map((r) => r.user?.id),
+    );
 
     const notFilledUsers = allUsers.filter((u) => !filledUserIds.has(u.id));
 
     return {
-      filledUsers: filledResponses.map((r) => r.user),
+      id: assessment.id,
+      title: assessment.title,
+      scheduledMonth: assessment.scheduledMonth,
+      scheduledYear: assessment.scheduledYear,
+      filledUsers: assessment.userResponses.map((r) => r.user),
       notFilledUsers,
+      totalFilled: assessment.userResponses.length,
+      totalNotFilled: notFilledUsers.length,
+      createdAt: assessment.createdAt,
     };
-  }
+  });
+}
+
+
+async getSingleAssessmentDetails(assessmentId: string) {
+  const assessment = await this.prisma.assessment.findUnique({
+    where: { id: assessmentId },
+    include: {
+      userResponses: {
+        include: { user: true },
+      },
+    },
+  });
+
+  if (!assessment) throw new NotFoundException('Assessment not found');
+
+  const allUsers = await this.prisma.user.findMany({
+    where: { isAdmin: false, isSuperAdmin: false },
+    select: { id: true, firstname: true, lastname: true, profilePicture: true },
+  });
+
+  const filledUserIds = new Set(assessment.userResponses.map((r) => r.user?.id));
+  const notFilledUsers = allUsers.filter((u) => !filledUserIds.has(u.id));
+
+  return {
+    id: assessment.id,
+    title: assessment.title,
+    scheduledMonth: assessment.scheduledMonth,
+    scheduledYear: assessment.scheduledYear,
+    filledUsers: assessment.userResponses.map((r) => r.user),
+    notFilledUsers,
+    totalFilled: assessment.userResponses.length,
+    totalNotFilled: notFilledUsers.length,
+  };
+}
+
 
 
   async getUserAssessmentReport(year: number = new Date().getFullYear()) {
@@ -623,25 +735,52 @@ async deactivateAdmin(userId: string) {
     };
   }
 
-   async getAssessmentsSummary() {
-    const assessments = await this.prisma.assessment.findMany({
-      include: {
-        questions: true,
-        userResponses: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+   async getAssessmentsSummary(title?: string, startYear?: string, endYear?: string) {
+  // 🧩 Dynamic filter construction
+  const where: any = {};
 
-    return assessments.map((a) => ({
-      id: a.id,
-      title: a.title,
-      date: a.scheduledFor,
-      totalQuestions: a.questions.length,
-      totalReplies: a.userResponses.length,
-      status: a.status,
-    }));
+  if (title) {
+    where.title = { contains: title, mode: 'insensitive' };
   }
+
+  if (startYear && endYear) {
+    where.scheduledYear = {
+      gte: Number(startYear),
+      lte: Number(endYear),
+    };
+  } else if (startYear) {
+    where.scheduledYear = { gte: Number(startYear) };
+  } else if (endYear) {
+    where.scheduledYear = { lte: Number(endYear) };
+  }
+
+  // 📊 Fetch assessments
+  const assessments = await this.prisma.assessment.findMany({
+    where,
+    include: {
+      questions: true,
+      userResponses: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  if (!assessments.length) {
+    return { message: 'No assessments found for the provided filters.' };
+  }
+
+  // 🧮 Build summarized report
+  return assessments.map((a) => ({
+    id: a.id,
+    title: a.title,
+    date: a.scheduledFor,
+    scheduledYear: a.scheduledYear,
+    totalQuestions: a.questions.length,
+    totalReplies: a.userResponses.length,
+    status: a.status,
+  }));
+}
+
   
 }

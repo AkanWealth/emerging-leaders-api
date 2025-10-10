@@ -223,19 +223,36 @@ editAdmin(@Param('id') id: string, @Body() dto: EditAdminDto) {
     return this.adminUserService.resendAdminInvite(dto.email);
   }
   
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get('assesment/summary')
-  @ApiOperation({ summary: 'Get summary of all assessments' })
-  async getSummary() {
-    return this.adminUserService.getAssessmentSummary();
-  }
+@UseGuards(JwtAuthGuard, AdminGuard)
+@Get('assessment/summary')
+@ApiOperation({ summary: 'Get summary of all assessments (filterable by title and year range)' })
+@ApiQuery({ name: 'title', required: false, description: 'Search assessments by title', example: 'Quarterly Review' })
+@ApiQuery({ name: 'startYear', required: false, description: 'Filter from this year (inclusive)', example: 2022 })
+@ApiQuery({ name: 'endYear', required: false, description: 'Filter up to this year (inclusive)', example: 2025 })
+async getSummary(
+  @Query('title') title?: string,
+  @Query('startYear') startYear?: number,
+  @Query('endYear') endYear?: number,
+) {
+  return this.adminUserService.getAssessmentSummary(title, startYear, endYear);
+}
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get(':assessmentId/details')
-  @ApiOperation({ summary: 'Get filled and not filled users for a specific assessment' })
-  async getDetails(@Param('assessmentId') assessmentId: string) {
-    return this.adminUserService.getAssessmentDetails(assessmentId);
-  }
+@UseGuards(JwtAuthGuard, AdminGuard)
+@Get('assessments/details')
+@ApiOperation({ summary: 'Get filled and not filled users (filterable by title or year range)' })
+async getDetails(
+  @Query('title') title?: string,
+  @Query('startYear') startYear?: string,
+  @Query('endYear') endYear?: string,
+) {
+  return this.adminUserService.getAssessmentDetails(title, startYear, endYear);
+}
+
+@Get('assessments/:assessmentId/details')
+async getById(@Param('assessmentId') id: string) {
+  return this.adminUserService.getSingleAssessmentDetails(id);
+}
+
 
    @UseGuards(JwtAuthGuard, AdminGuard)
    @Get('assessment/report')
@@ -245,11 +262,16 @@ editAdmin(@Param('id') id: string, @Body() dto: EditAdminDto) {
     return this.adminUserService.getUserAssessmentReport(year ? +year : undefined);
   }
 
-   @UseGuards(JwtAuthGuard, AdminGuard)
-   @Get('assessment/report/summary')
-  @ApiOperation({ summary: 'Get all assessments summary for admin' })
-  @ApiResponse({ status: 200, description: 'List of assessments summary returned successfully.' })
-  async getAssessmentsSummary() {
-    return this.adminUserService.getAssessmentsSummary();
-  }
+  @UseGuards(JwtAuthGuard, AdminGuard)
+@Get('assessment/report/summary')
+@ApiOperation({ summary: 'Get all assessments summary for admin (filterable by title and year range)' })
+@ApiResponse({ status: 200, description: 'List of filtered assessments summary returned successfully.' })
+async getAssessmentsSummary(
+  @Query('title') title?: string,
+  @Query('startYear') startYear?: string,
+  @Query('endYear') endYear?: string,
+) {
+  return this.adminUserService.getAssessmentsSummary(title, startYear, endYear);
+}
+
 }
