@@ -225,28 +225,41 @@ editAdmin(@Param('id') id: string, @Body() dto: EditAdminDto) {
   
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Get('assessment/summary')
-@ApiOperation({ summary: 'Get summary of all assessments (filterable by title and year range)' })
+@ApiOperation({ summary: 'Get summary of all assessments (filterable by title, year range, and paginated)' })
 @ApiQuery({ name: 'title', required: false, description: 'Search assessments by title', example: 'Quarterly Review' })
 @ApiQuery({ name: 'startYear', required: false, description: 'Filter from this year (inclusive)', example: 2022 })
 @ApiQuery({ name: 'endYear', required: false, description: 'Filter up to this year (inclusive)', example: 2025 })
+@ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)', example: 1 })
+@ApiQuery({ name: 'limit', required: false, description: 'Number of records per page (default: 10)', example: 10 })
 async getSummary(
   @Query('title') title?: string,
   @Query('startYear') startYear?: number,
   @Query('endYear') endYear?: number,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
 ) {
-  return this.adminUserService.getAssessmentSummary(title, startYear, endYear);
+  return this.adminUserService.getAssessmentSummary(title, startYear, endYear, page, limit);
 }
+
 
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Get('assessments/details')
-@ApiOperation({ summary: 'Get filled and not filled users (filterable by title or year range)' })
+@ApiOperation({ summary: 'Get filled and not filled users (filterable by title, year range, and paginated)' })
+@ApiQuery({ name: 'title', required: false, description: 'Search assessments by title', example: 'Quarterly Review' })
+@ApiQuery({ name: 'startYear', required: false, description: 'Filter from this year (inclusive)', example: 2022 })
+@ApiQuery({ name: 'endYear', required: false, description: 'Filter up to this year (inclusive)', example: 2025 })
+@ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)', example: 1 })
+@ApiQuery({ name: 'limit', required: false, description: 'Number of records per page (default: 10)', example: 10 })
 async getDetails(
   @Query('title') title?: string,
   @Query('startYear') startYear?: string,
   @Query('endYear') endYear?: string,
+  @Query('page') page = '1',
+  @Query('limit') limit = '10',
 ) {
-  return this.adminUserService.getAssessmentDetails(title, startYear, endYear);
+  return this.adminUserService.getAssessmentDetails(title, startYear, endYear, Number(page), Number(limit));
 }
+
 
 @Get('assessments/:assessmentId/details')
 async getById(@Param('assessmentId') id: string) {
@@ -254,24 +267,50 @@ async getById(@Param('assessmentId') id: string) {
 }
 
 
-   @UseGuards(JwtAuthGuard, AdminGuard)
-   @Get('assessment/report')
-  @ApiOperation({ summary: 'Get user-by-month assessment completion report' })
-  @ApiQuery({ name: 'year', required: false, type: Number, description: 'Filter by year (default current year)' })
-  async getReport(@Query('year') year?: number) {
-    return this.adminUserService.getUserAssessmentReport(year ? +year : undefined);
-  }
+ @UseGuards(JwtAuthGuard, AdminGuard)
+@Get('assessment/report')
+@ApiOperation({ summary: 'Get user-by-month assessment completion report (filterable by year and paginated)' })
+@ApiQuery({ name: 'year', required: false, type: Number, description: 'Filter by year (default: current year)', example: 2025 })
+@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)', example: 1 })
+@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of records per page (default: 10)', example: 10 })
+async getReport(
+  @Query('year') year?: number,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+) {
+  return this.adminUserService.getUserAssessmentReport(
+    year ? +year : undefined,
+    Number(page),
+    Number(limit),
+  );
+}
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
+
+@UseGuards(JwtAuthGuard, AdminGuard)
 @Get('assessment/report/summary')
-@ApiOperation({ summary: 'Get all assessments summary for admin (filterable by title and year range)' })
-@ApiResponse({ status: 200, description: 'List of filtered assessments summary returned successfully.' })
+@ApiOperation({
+  summary: 'Get all assessments summary for admin (filterable by title, year range, and paginated)',
+})
+@ApiQuery({ name: 'title', required: false, description: 'Filter assessments by title', example: 'Quarterly Review' })
+@ApiQuery({ name: 'startYear', required: false, description: 'Filter from this year (inclusive)', example: 2023 })
+@ApiQuery({ name: 'endYear', required: false, description: 'Filter up to this year (inclusive)', example: 2025 })
+@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)', example: 1 })
+@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of records per page (default: 10)', example: 10 })
+@ApiResponse({ status: 200, description: 'Paginated list of filtered assessments summary returned successfully.' })
 async getAssessmentsSummary(
   @Query('title') title?: string,
   @Query('startYear') startYear?: string,
   @Query('endYear') endYear?: string,
+  @Query('page') page = '1',
+  @Query('limit') limit = '10',
 ) {
-  return this.adminUserService.getAssessmentsSummary(title, startYear, endYear);
+  return this.adminUserService.getAssessmentsSummary(
+    title,
+    startYear,
+    endYear,
+    Number(page),
+    Number(limit),
+  );
 }
 
 }
