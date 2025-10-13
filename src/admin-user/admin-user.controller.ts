@@ -225,21 +225,22 @@ editAdmin(@Param('id') id: string, @Body() dto: EditAdminDto) {
   
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Get('assessment/summary')
-@ApiOperation({ summary: 'Get summary of all assessments (filterable by title, year range, and paginated)' })
-@ApiQuery({ name: 'title', required: false, description: 'Search assessments by title', example: 'Quarterly Review' })
-@ApiQuery({ name: 'startYear', required: false, description: 'Filter from this year (inclusive)', example: 2022 })
-@ApiQuery({ name: 'endYear', required: false, description: 'Filter up to this year (inclusive)', example: 2025 })
+@ApiOperation({
+  summary: 'Get summary of all assessments (filterable by year, search text, and paginated)',
+})
+@ApiQuery({ name: 'search', required: false, description: 'Search assessments by title, month, or category', example: 'Quarterly' })
+@ApiQuery({ name: 'year', required: false, description: 'Filter assessments by scheduled year', example: 2024 })
 @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)', example: 1 })
 @ApiQuery({ name: 'limit', required: false, description: 'Number of records per page (default: 10)', example: 10 })
 async getSummary(
-  @Query('title') title?: string,
-  @Query('startYear') startYear?: number,
-  @Query('endYear') endYear?: number,
+  @Query('search') search?: string,
+  @Query('year') year?: number,
   @Query('page') page = 1,
   @Query('limit') limit = 10,
 ) {
-  return this.adminUserService.getAssessmentSummary(title, startYear, endYear, page, limit);
+  return this.adminUserService.getAssessmentSummary(search, year, page, limit);
 }
+
 
 
 @UseGuards(JwtAuthGuard, AdminGuard)
@@ -267,23 +268,54 @@ async getById(@Param('assessmentId') id: string) {
 }
 
 
- @UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, AdminGuard)
 @Get('assessment/report')
-@ApiOperation({ summary: 'Get user-by-month assessment completion report (filterable by year and paginated)' })
-@ApiQuery({ name: 'year', required: false, type: Number, description: 'Filter by year (default: current year)', example: 2025 })
-@ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)', example: 1 })
-@ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of records per page (default: 10)', example: 10 })
+@ApiOperation({
+  summary:
+    'Get user-by-month assessment completion report (filterable by search, year, and paginated)',
+})
+@ApiQuery({
+  name: 'search',
+  required: false,
+  type: String,
+  description: 'Search users by name or month (e.g. "John" or "March")',
+  example: 'John',
+})
+@ApiQuery({
+  name: 'year',
+  required: false,
+  type: Number,
+  description: 'Filter by year (default: current year)',
+  example: 2025,
+})
+@ApiQuery({
+  name: 'page',
+  required: false,
+  type: Number,
+  description: 'Page number (default: 1)',
+  example: 1,
+})
+@ApiQuery({
+  name: 'limit',
+  required: false,
+  type: Number,
+  description: 'Number of records per page (default: 10)',
+  example: 10,
+})
 async getReport(
+  @Query('search') search?: string,
   @Query('year') year?: number,
   @Query('page') page = 1,
   @Query('limit') limit = 10,
 ) {
   return this.adminUserService.getUserAssessmentReport(
     year ? +year : undefined,
+    search,
     Number(page),
     Number(limit),
   );
 }
+
 
 
 @UseGuards(JwtAuthGuard, AdminGuard)

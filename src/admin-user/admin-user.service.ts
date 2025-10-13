@@ -478,9 +478,8 @@ async deactivateAdmin(userId: string) {
   }
 
 async getAssessmentSummary(
-  title?: string,
-  startYear?: number,
-  endYear?: number,
+  search?: string,
+  year?: number,
   page = 1,
   limit = 10,
 ) {
@@ -492,23 +491,29 @@ async getAssessmentSummary(
   // ✅ Build dynamic filters
   const where: any = {};
 
-  if (title) {
-    where.title = { contains: title, mode: 'insensitive' };
+  // 🔍 Search by multiple fields: title, month, category name (if relational)
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { scheduledMonth: { contains: search, mode: 'insensitive' } },
+      {
+        category: {
+          name: { contains: search, mode: 'insensitive' },
+        },
+      },
+    ];
   }
 
-  if (startYear && endYear) {
-    where.scheduledYear = { gte: Number(startYear), lte: Number(endYear) };
-  } else if (startYear) {
-    where.scheduledYear = { gte: Number(startYear) };
-  } else if (endYear) {
-    where.scheduledYear = { lte: Number(endYear) };
+  // 📅 Filter by year only
+  if (year) {
+    where.scheduledYear = Number(year);
   }
 
   // ✅ Pagination setup
   const skip = (Number(page) - 1) * Number(limit);
   const take = Number(limit);
 
-  // ✅ Get total matching records (for pagination metadata)
+  // ✅ Get total matching records
   const totalRecords = await this.prisma.assessment.count({ where });
 
   // ✅ Fetch paginated data
@@ -516,6 +521,7 @@ async getAssessmentSummary(
     where,
     orderBy: { createdAt: 'desc' },
     include: {
+      category: true,
       userResponses: {
         include: {
           user: {
@@ -536,6 +542,7 @@ async getAssessmentSummary(
     return {
       id: assessment.id,
       title: assessment.title,
+      category: assessment.category?.name ?? 'N/A',
       scheduledMonth: assessment.scheduledMonth,
       scheduledYear: assessment.scheduledYear,
       totalUsers,
@@ -558,6 +565,7 @@ async getAssessmentSummary(
     data,
   };
 }
+
 
 
   // ✅ Optionally: View details of who filled / not filled
@@ -686,23 +694,32 @@ async getSingleAssessmentDetails(assessmentId: string) {
 }
 
 
-
 async getUserAssessmentReport(
   year: number = new Date().getFullYear(),
+  search?: string,
   page = 1,
   limit = 10,
 ) {
-  // 1️⃣ Fetch all non-admin users
-  const totalUsers = await this.prisma.user.count({
-    where: { isAdmin: false, isSuperAdmin: false },
-  });
+  // 1️⃣ Build search filter for users
+  const userWhere: any = {
+    isAdmin: false,
+    isSuperAdmin: false,
+  };
 
-  // Pagination logic
+  if (search) {
+    userWhere.OR = [
+      { firstname: { contains: search, mode: 'insensitive' } },
+      { lastname: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  // 2️⃣ Count and paginate users
+  const totalUsers = await this.prisma.user.count({ where: userWhere });
   const skip = (page - 1) * limit;
   const take = limit;
 
   const users = await this.prisma.user.findMany({
-    where: { isAdmin: false, isSuperAdmin: false },
+    where: userWhere,
     select: {
       id: true,
       firstname: true,
@@ -714,13 +731,22 @@ async getUserAssessmentReport(
     orderBy: { createdAt: 'desc' },
   });
 
-  // 2️⃣ Fetch all assessments for the given year
+  // 3️⃣ Fetch all assessments for the given year (optionally filtered by search month)
+  const assessmentsWhere: any = { scheduledYear: year };
+  if (search) {
+    // If the search matches a month (e.g., "March"), include that
+    assessmentsWhere.OR = [
+      { scheduledMonth: { contains: search, mode: 'insensitive' } },
+      { title: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
   const assessments = await this.prisma.assessment.findMany({
-    where: { scheduledYear: year },
+    where: assessmentsWhere,
     select: { id: true, scheduledMonth: true, scheduledYear: true },
   });
 
-  // 3️⃣ Fetch all user responses for that year
+  // 4️⃣ Fetch all user responses for that year
   const userAssessments = await this.prisma.userAssessment.findMany({
     where: { assessment: { scheduledYear: year } },
     select: {
@@ -729,13 +755,13 @@ async getUserAssessmentReport(
     },
   });
 
-  // 4️⃣ Define all 12 months
+  // 5️⃣ Define all 12 months
   const months = eachMonthOfInterval({
     start: startOfYear(new Date(year, 0, 1)),
     end: endOfYear(new Date(year, 11, 31)),
   }).map((m) => format(m, 'MMMM'));
 
-  // 5️⃣ Build report
+  // 6️⃣ Build report
   const data = users.map((user) => {
     const monthStatus: Record<string, string> = {};
 
@@ -762,7 +788,7 @@ async getUserAssessmentReport(
     };
   });
 
-  // 6️⃣ Return with pagination metadata
+  // 7️⃣ Return with pagination metadata
   return {
     meta: {
       year,
@@ -774,6 +800,7 @@ async getUserAssessmentReport(
     data,
   };
 }
+
 
 async getAssessmentsSummary(
   title?: string,
