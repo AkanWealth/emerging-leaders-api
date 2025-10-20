@@ -53,7 +53,7 @@ async createUserDetail(email: string, name: string) {
   return this.prisma.user.create({
     data: {
       email,
-      name,
+      firstname: name,
       password: defaultPassword,
     },
   });

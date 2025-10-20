@@ -191,7 +191,6 @@ async getAllUsers(params: {
         firstname: true,
         lastname: true,
         email: true,
-        name: true,
         createdAt: true,
         lastLogin: true,
         status: true,
@@ -258,7 +257,6 @@ async getAllAdmins(params: {
         firstname: true,
         lastname: true,
         email: true,
-        name: true,
         createdAt: true,
         lastLogin: true,
         status: true,
@@ -330,7 +328,8 @@ async getUserById(id: string) {
       data: {
         email: dto.email,
         password: hashed,
-        name: `${dto.firstName} ${dto.lastName}`,
+        firstname: dto.firstName,
+        lastname: dto.lastName,
       },
     });
 
@@ -354,7 +353,7 @@ async getUserById(id: string) {
     user: {
       id: updatedUser.id,
       email: updatedUser.email,
-      fullname: updatedUser.name ?? `${updatedUser.firstname ?? ''} ${updatedUser.lastname ?? ''}`.trim(),
+      fullname: updatedUser.firstname ?? `${updatedUser.firstname ?? ''} ${updatedUser.lastname ?? ''}`.trim(),
       status: updatedUser.status,
     },
   };
@@ -377,7 +376,7 @@ async editAdmin(id: string, dto: EditAdminDto) {
     admin: {
       id: updatedAdmin.id,
       email: updatedAdmin.email,
-      fullname: updatedAdmin.name ?? `${updatedAdmin.firstname ?? ''} ${updatedAdmin.lastname ?? ''}`.trim(),
+      fullname: updatedAdmin.firstname ?? `${updatedAdmin.firstname ?? ''} ${updatedAdmin.lastname ?? ''}`.trim(),
       status: updatedAdmin.status,
       isAdmin: updatedAdmin.isAdmin,
     },
@@ -566,9 +565,7 @@ async getAssessmentSummary(
   };
 }
 
-
-
-  // ✅ Optionally: View details of who filled / not filled
+  // Optionally: View details of who filled / not filled
 async getAssessmentDetails(
   title?: string,
   startYear?: string,

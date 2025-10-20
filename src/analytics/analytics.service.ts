@@ -558,7 +558,7 @@ activityLogs.forEach((a) => {
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
-        user: { select: { name: true, email: true } },
+        user: { select: { firstname: true, lastname: true, email: true } },
       },
     });
   }

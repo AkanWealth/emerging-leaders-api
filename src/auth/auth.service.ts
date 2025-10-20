@@ -7,6 +7,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
+import { first } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -67,7 +68,8 @@ async login(email: string, name: string) {
   return {
     user: {
       id: user.id,
-      name: user.name,
+      firstname: user.firstname,
+      lastname: user.lastname,
       email: user.email,
       isAdmin: user.isAdmin,
       status: user.status,
@@ -228,7 +230,8 @@ async verifyOtp(email: string, otp: string) {
     select: {
       id: true,
       email: true,
-      name: true,
+      firstname: true,
+      lastname: true,
       password: true,
       isAdmin: true,
     },
@@ -254,7 +257,7 @@ async verifyOtp(email: string, otp: string) {
   return {
     user: {
       id: user.id,
-      name: user.name,
+      name: user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : undefined,
       email: user.email,
       isAdmin: user.isAdmin, // optional: include in response
     },
@@ -269,8 +272,9 @@ async loginWithGoogle(email: string, name: string) {
     select: {
       id: true,
       email: true,
-      name: true,
-      isAdmin: true, // ✅ include this for token payload
+      firstname: true,
+      lastname: true,
+      isAdmin: true, 
     },
   });
 
@@ -279,7 +283,6 @@ async loginWithGoogle(email: string, name: string) {
     const newUser = await this.prisma.user.create({
       data: {
         email,
-        name,
         password: 'google_oauth_placeholder_password',
         profileComplete: true,
       },
@@ -288,7 +291,8 @@ async loginWithGoogle(email: string, name: string) {
     user = {
       id: newUser.id,
       email: newUser.email,
-      name: newUser.name,
+      firstname: newUser.firstname,
+      lastname: newUser.lastname,
       isAdmin: false, // ✅ default new users to false
     };
   }

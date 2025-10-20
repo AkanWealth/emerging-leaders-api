@@ -38,7 +38,8 @@ export class AdminService {
       data: {
         email: dto.email,
         password: hashedPassword,
-        name: dto.name,
+        firstname: dto.firstname,
+        lastname: dto.lastname,
         isAdmin: true,
         isSuperAdmin: true,
       },
