@@ -100,7 +100,7 @@ async getUserStats(@Req() req) {
   //   return this.userService.getUserById(id);
   // }
 
-  @Get()
+  @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get currently authenticated user details' })
