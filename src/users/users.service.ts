@@ -9,12 +9,10 @@ import { MailService } from '../mail/mail.service';
 @Injectable()
 export class UsersService {
  private readonly logger = new Logger(UsersService.name);
-  // Inject NotificationService in your constructor
 constructor(
   private readonly prisma: PrismaService,
   private readonly notificationsService: NotificationsService,
   private readonly mailService: MailService,
-  // private readonly logger: Logger = new Logger('UsersService'),
 ) {}
 
 async completeUserAccount(userId: string) {
@@ -305,34 +303,65 @@ async getAllUsers() {
 }
 
 
-async getUserById(id: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id },
-    include: {
-      wallet: {
-        select: {
-          id: true,
-          balance: true,
-        },
-      },
-      RecurringIncome: {
-        where: { isActive: true },
-      },
-      currency: {
-        select: {
-          code: true,
-          symbol: true,
-        },
-      },
-    },
-  });
+// async getUserById(id: string) {
+//   const user = await this.prisma.user.findUnique({
+//     where: { id },
+//     include: {
+//       wallet: {
+//         select: {
+//           id: true,
+//           balance: true,
+//         },
+//       },
+//       RecurringIncome: {
+//         where: { isActive: true },
+//       },
+//       currency: {
+//         select: {
+//           code: true,
+//           symbol: true,
+//         },
+//       },
+//     },
+//   });
 
-  if (!user) {
-    throw new NotFoundException(`User with ID ${id} not found`);
+//   if (!user) {
+//     throw new NotFoundException(`User with ID ${id} not found`);
+//   }
+
+//   return user;
+// }
+
+ async getUserById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        wallet: {
+          select: {
+            id: true,
+            balance: true,
+          },
+        },
+        RecurringIncome: {
+          where: { isActive: true },
+        },
+        currency: {
+          select: {
+            code: true,
+            symbol: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Optional: remove sensitive info
+    const { password, ...safeUser } = user;
+    return safeUser;
   }
-
-  return user;
-}
 
 
   async clearOtp(userId: string) {

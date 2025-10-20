@@ -89,14 +89,26 @@ async getUserStats(@Req() req) {
   /**
    * Get a user by ID.
    */
-  @Get(':id')
+  // @Get(':id')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: 'Get user by ID' })
+  // @ApiResponse({ status: 200, description: 'User found', type: UpdateProfileDto })
+  // @ApiResponse({ status: 404, description: 'User not found' })
+  // @ApiResponse({ status: 401, description: 'Unauthorized' })
+  // async getUserById(@Param('id') id: string): Promise<User> {
+  //   return this.userService.getUserById(id);
+  // }
+
+  @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ status: 200, description: 'User found', type: UpdateProfileDto })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiOperation({ summary: 'Get currently authenticated user details' })
+  @ApiResponse({ status: 200, description: 'User details retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getUserById(@Param('id') id: string): Promise<User> {
-    return this.userService.getUserById(id);
+  async getCurrentUser(@Req() req) {
+    // Extract user ID directly from JWT payload
+    const userId = req.user.id;
+    return this.userService.getUserById(userId);
   }
 }
