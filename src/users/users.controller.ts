@@ -16,7 +16,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
-import { User } from '@prisma/client'; // or use a custom UserDto for response typing
+import { User } from '@prisma/client'; 
 
 @ApiTags('User Profile')
 @Controller('users')
@@ -83,22 +83,12 @@ async getUserStats(@Req() req) {
   @ApiResponse({ status: 200, description: 'List of verified users returned successfully', type: [UpdateProfileDto] })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async  getAllVerifiedUsers(): Promise<User[]> {
-    return this.userService.getAllUsers(); // Replace with actual logic for "verified"
+    return this.userService.getAllUsers(); 
   }
 
   /**
    * Get a user by ID.
    */
-  // @Get(':id')
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // @ApiOperation({ summary: 'Get user by ID' })
-  // @ApiResponse({ status: 200, description: 'User found', type: UpdateProfileDto })
-  // @ApiResponse({ status: 404, description: 'User not found' })
-  // @ApiResponse({ status: 401, description: 'Unauthorized' })
-  // async getUserById(@Param('id') id: string): Promise<User> {
-  //   return this.userService.getUserById(id);
-  // }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
@@ -107,7 +97,6 @@ async getUserStats(@Req() req) {
   @ApiResponse({ status: 200, description: 'User details retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCurrentUser(@Req() req) {
-    // Extract user ID directly from JWT payload
     const userId = req.user.id;
     return this.userService.getUserById(userId);
   }

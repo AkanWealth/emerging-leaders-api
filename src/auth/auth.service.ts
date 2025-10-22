@@ -7,6 +7,7 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
+import { NotificationPreferencesService } from '../notification-prefrence/notification-prefrence.service';
 import { first } from 'rxjs';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly prisma: PrismaService,
+    private readonly notificationPreferencesService: NotificationPreferencesService,
   ) {}
 
   /**
@@ -146,6 +148,8 @@ async refresh(userId: string, refreshToken: string) {
     const user = await this.usersService.createUser(dto.email, hashedPassword);
     await this.usersService.saveOtp(user.id, otp);
     await this.sendOtpToEmail(dto.email, otp);
+
+    await this. notificationPreferencesService.initializePreferencesForUser(user.id);
 
     return { message: 'OTP sent to your email' };
   }

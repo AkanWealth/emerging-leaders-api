@@ -9,57 +9,149 @@ export class NotificationsService {
   /**
    * Main notification sending function
    */
+// async sendNotification(
+//   receiverIds: string[],
+//   title: string,
+//   body: string,
+//   data?: Record<string, any>,
+//   type?: string,
+//   senderId?: string
+// ) {
+//   // Store in-app notifications
+//   await this.prisma.notification.createMany({
+//     data: receiverIds.map((receiverId) => ({
+//       senderId,
+//       receiverId,
+//       title,
+//       body,
+//       data,
+//       type,
+//     })),
+//   });
+
+//   // Get all FCM tokens for the receivers
+//   const tokens = await this.prisma.fcmToken.findMany({
+//     where: { userId: { in: receiverIds } },
+//     select: { token: true },
+//   });
+
+//   const pushTokens = tokens.map((t) => t.token);
+
+//   // Send push notifications if tokens exist
+//   if (pushTokens.length) {
+//     const messages = pushTokens.map((token) => ({
+//       token,
+//       notification: { title, body },
+//       data: {
+//         ...(data ?? {}), // ✅ safe spread
+//         click_action: 'FLUTTER_NOTIFICATION_CLICK',
+//       },
+//     }));
+
+//     try {
+//       const responses = await Promise.all(
+//         messages.map((msg) => firebaseAdmin.messaging().send(msg))
+//       );
+//       return { success: true, messageIds: responses };
+//     } catch (error) {
+//       console.error('Push Notification Error:', error);
+//       return { success: false, error };
+//     }
+//   }
+
+//   return { success: true, message: 'Stored without push' };
+// }
 async sendNotification(
   receiverIds: string[],
   title: string,
   body: string,
   data?: Record<string, any>,
-  type?: string,
+  type: string = 'GENERAL',
   senderId?: string
 ) {
-  // Store in-app notifications
-  await this.prisma.notification.createMany({
-    data: receiverIds.map((receiverId) => ({
-      senderId,
-      receiverId,
-      title,
-      body,
-      data,
-      type,
-    })),
+  // Fetch user preferences in bulk
+  const preferences = await this.prisma.notificationPreference.findMany({
+    where: {
+      userId: { in: receiverIds },
+      type: { in: [type, 'ALL'] },
+    },
   });
 
-  // Get all FCM tokens for the receivers
-  const tokens = await this.prisma.fcmToken.findMany({
-    where: { userId: { in: receiverIds } },
-    select: { token: true },
-  });
+  // Build lookup map
+  const prefsMap = new Map<string, Record<string, boolean>>();
+  for (const pref of preferences) {
+    if (!prefsMap.has(pref.userId)) prefsMap.set(pref.userId, {});
+    prefsMap.get(pref.userId)![pref.channel] = pref.enabled;
+  }
 
-  const pushTokens = tokens.map((t) => t.token);
+  // 🔹 Store in-app notifications (if enabled)
+  const inAppReceivers = receiverIds.filter(
+    (id) => prefsMap.get(id)?.['IN_APP'] ?? true // default ON
+  );
+  if (inAppReceivers.length) {
+    await this.prisma.notification.createMany({
+      data: inAppReceivers.map((receiverId) => ({
+        senderId,
+        receiverId,
+        title,
+        body,
+        data,
+        type,
+      })),
+    });
+  }
 
-  // Send push notifications if tokens exist
-  if (pushTokens.length) {
-    const messages = pushTokens.map((token) => ({
-      token,
-      notification: { title, body },
-      data: {
-        ...(data ?? {}), // ✅ safe spread
-        click_action: 'FLUTTER_NOTIFICATION_CLICK',
-      },
-    }));
+  // 🔹 Push notifications
+  const pushReceivers = receiverIds.filter(
+    (id) => prefsMap.get(id)?.['PUSH'] ?? true // default ON
+  );
 
-    try {
-      const responses = await Promise.all(
-        messages.map((msg) => firebaseAdmin.messaging().send(msg))
-      );
-      return { success: true, messageIds: responses };
-    } catch (error) {
-      console.error('Push Notification Error:', error);
-      return { success: false, error };
+  if (pushReceivers.length) {
+    const tokens = await this.prisma.fcmToken.findMany({
+      where: { userId: { in: pushReceivers } },
+      select: { token: true },
+    });
+
+    const pushTokens = tokens.map((t) => t.token);
+    if (pushTokens.length) {
+      const messages = pushTokens.map((token) => ({
+        token,
+        notification: { title, body },
+        data: {
+          ...(data ?? {}),
+          click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        },
+      }));
+
+      try {
+        await Promise.all(messages.map((msg) => firebaseAdmin.messaging().send(msg)));
+      } catch (error) {
+        console.error('Push Notification Error:', error);
+      }
     }
   }
 
-  return { success: true, message: 'Stored without push' };
+  // 🔹 Email notifications (optional, plug in your email service)
+  const emailReceivers = receiverIds.filter(
+    (id) => prefsMap.get(id)?.['EMAIL'] ?? false // default OFF
+  );
+
+  if (emailReceivers.length) {
+    // example: send emails asynchronously
+    for (const userId of emailReceivers) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, firstname: true },
+      });
+
+      if (user?.email) {
+        // e.g., this.mailService.sendNotificationEmail(...)
+        console.log(`Send email to ${user.email}: ${title}`);
+      }
+    }
+  }
+
+  return { success: true, message: 'Notifications processed respecting preferences' };
 }
 
 

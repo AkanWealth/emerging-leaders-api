@@ -8,12 +8,12 @@ datasource db {
 }
 
 model User {
-  id                     String            @id @default(uuid())
-  email                  String            @unique
+  id                     String                   @id @default(uuid())
+  email                  String                   @unique
   refreshToken           String?
-  createdAt              DateTime          @default(now())
-  updatedAt              DateTime          @updatedAt
-  profileComplete        Boolean           @default(false)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  profileComplete        Boolean                  @default(false)
   addiction              Boolean?
   age                    Int?
   postalcode             Int?
@@ -44,14 +44,14 @@ model User {
   sourceOfIncome         String?
   underageParent         Boolean?
   lastLogin              DateTime?
-  financeCompleted       Boolean           @default(false)
+  financeCompleted       Boolean                  @default(false)
   password               String
   ageGroup               String?
-  isAdmin                Boolean           @default(false)
-  isSuperAdmin           Boolean           @default(false)
+  isAdmin                Boolean                  @default(false)
+  isSuperAdmin           Boolean                  @default(false)
   currencyId             String?
   profilePicture         String?
-  status                 UserStatus        @default(PENDING)
+  status                 UserStatus               @default(PENDING)
   activityLogs           ActivityLog[]
   budgets                Budget[]
   contents               Content[]
@@ -68,13 +68,26 @@ model User {
   module2s               Module2[]
   module3s               Module3[]
   tickets                Ticket[]
-  currency               Currency?         @relation(fields: [currencyId], references: [id])
+  currency               Currency?                @relation(fields: [currencyId], references: [id])
   UserAssessment         UserAssessment[]
   financeSetups          FinanceSetup[]
   wallet                 Wallet?
   Category               Category[]
-  sentNotifications      Notification[]    @relation("SentNotifications")
-  receivedNotifications  Notification[]    @relation("ReceivedNotifications")
+  sentNotifications      Notification[]           @relation("SentNotifications")
+  receivedNotifications  Notification[]           @relation("ReceivedNotifications")
+  NotificationPreference NotificationPreference[]
+
+  // --- Indexes for performance optimization ---
+  @@index([firstname])
+  @@index([lastname])
+  @@index([email])
+  @@index([status])
+  @@index([isAdmin])
+  @@index([createdAt])
+  @@index([lastLogin])
+  @@index([city])
+  @@index([country])
+  @@index([gender])
 }
 
 enum UserStatus {
@@ -86,20 +99,35 @@ enum UserStatus {
 
 model Notification {
   id         String   @id @default(uuid())
-  senderId   String?  // who sent the notification
-  receiverId String?  // who receives it
+  senderId   String? // who sent the notification
+  receiverId String? // who receives it
   title      String
   body       String
   read       Boolean  @default(false)
   createdAt  DateTime @default(now())
-  type       String?  // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
-  data       Json?    // Store additional payload for frontend
+  type       String? // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST'
+  data       Json? // Store additional payload for frontend
 
   sender   User? @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
   receiver User? @relation("ReceivedNotifications", fields: [receiverId], references: [id], onDelete: SetNull)
 
   @@index([senderId])
   @@index([receiverId])
+}
+
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String // e.g., 'ASSESSMENT', 'REMINDER', 'BROADCAST', or 'ALL'
+  channel   String // e.g., 'PUSH', 'EMAIL', 'IN_APP'
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, channel])
+  @@index([userId])
 }
 
 model FcmToken {
@@ -151,7 +179,6 @@ model Category {
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
-
 model Content {
   id         String   @id @default(uuid())
   title      String
@@ -162,8 +189,8 @@ model Content {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  author     User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author   User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 }
 
 model Project {
@@ -179,9 +206,9 @@ model Project {
   updatedAt    DateTime @updatedAt
   projectColor String
 
-  goals      Goal[]
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  goals    Goal[]
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Goal {
@@ -198,19 +225,19 @@ model Goal {
   startTime   String?
   icon        String?
 
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model SavingsGoal {
-  id           String         @id @default(uuid())
+  id           String   @id @default(uuid())
   userId       String?
   targetAmount Float
   targetDate   DateTime
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   icon         String?
-  isCompleted  Boolean        @default(false)
-  savedAmount  Float          @default(0)
+  isCompleted  Boolean  @default(false)
+  savedAmount  Float    @default(0)
   title        String?
   budgetId     String?
 
@@ -220,13 +247,13 @@ model SavingsGoal {
 }
 
 model Budget {
-  id           String         @id @default(uuid())
-  userId       String?
-  limit        Float
-  categoryId   String?
-  repeat       String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id         String   @id @default(uuid())
+  userId     String?
+  limit      Float
+  categoryId String?
+  repeat     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   category     Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -245,9 +272,9 @@ model Expense {
   budgetId    String?
   updatedAt   DateTime @updatedAt
 
-  budget      Budget?   @relation(fields: [budgetId], references: [id], onDelete: SetNull)
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  budget   Budget?   @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Income {
@@ -259,8 +286,8 @@ model Income {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Ticket {
@@ -284,17 +311,17 @@ model ActivityLog {
   metadata  String?
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
 }
 
 model Currency {
-  id            String            @id @default(uuid())
-  symbol        String
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  code          String            @unique
+  id        String   @id @default(uuid())
+  symbol    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  code      String   @unique
 
   incomes       RecurringIncome[]
   financeSetups FinanceSetup[]
@@ -302,7 +329,7 @@ model Currency {
 }
 
 model RecurringIncome {
-  id          String               @id @default(uuid())
+  id          String     @id @default(uuid())
   userId      String?
   walletId    String?
   amount      Float
@@ -311,16 +338,15 @@ model RecurringIncome {
   type        IncomeType
   currencyId  String?
   startDate   DateTime
-  isActive    Boolean              @default(true)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  currency    Currency?            @relation(fields: [currencyId], references: [id], onDelete: SetNull)
-  user        User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-  wallet      Wallet?              @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  logs        RecurringIncomeLog[]
+  currency Currency?            @relation(fields: [currencyId], references: [id], onDelete: SetNull)
+  user     User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  wallet   Wallet?              @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  logs     RecurringIncomeLog[]
 }
-
 
 model RecurringIncomeLog {
   id                String          @id @default(uuid())
@@ -371,14 +397,14 @@ model AssessmentOption {
 }
 
 model UserAssessment {
-  id           String       @id @default(uuid())
+  id           String   @id @default(uuid())
   userId       String?
   assessmentId String
-  submittedAt  DateTime     @default(now())
+  submittedAt  DateTime @default(now())
   answers      Json
 
-  assessment   Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Note {
@@ -389,22 +415,21 @@ model Note {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model SavingsTopUp {
-  id            String        @id @default(uuid())
+  id            String   @id @default(uuid())
   savingsGoalId String?
   userId        String?
   amount        Float
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime @default(now())
   budgetId      String?
 
-  Budget        Budget?       @relation(fields: [budgetId], references: [id], onDelete: SetNull)
-  SavingsGoal   SavingsGoal?  @relation(fields: [savingsGoalId], references: [id], onDelete: SetNull)
-  User          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  Budget      Budget?      @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  SavingsGoal SavingsGoal? @relation(fields: [savingsGoalId], references: [id], onDelete: SetNull)
+  User        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
-
 
 enum Status {
   DRAFT
@@ -559,7 +584,6 @@ model Module3 {
   updatedAt DateTime @updatedAt
 }
 
-
 model FinanceSetup {
   id     String  @id @default(uuid())
   userId String?
@@ -577,4 +601,3 @@ model FinanceSetup {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-

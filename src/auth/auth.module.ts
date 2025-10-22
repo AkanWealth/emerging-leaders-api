@@ -4,9 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
-import { JwtStrategy } from './jwt.strategy';  
+import { JwtStrategy } from './jwt.strategy';
 import { MailModule } from '../mail/mail.module';
 import { UsersModule } from '../users/users.module';
+import { NotificationPrefrenceModule } from '../notification-prefrence/notification-prefrence.module';
 
 @Module({
   imports: [
@@ -17,9 +18,9 @@ import { UsersModule } from '../users/users.module';
     }),
     MailModule,
     UsersModule,
-   
+    NotificationPrefrenceModule, 
   ],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],  
+  providers: [AuthService, GoogleStrategy, JwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

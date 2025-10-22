@@ -155,18 +155,42 @@ async getAllUsers(params: {
     isAdmin: false, // only regular users
   };
 
-  // --- Optional search ---
+  // --- Smart search logic ---
   if (search) {
-    where.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { firstname: { contains: search, mode: 'insensitive' } },
-      { lastname: { contains: search, mode: 'insensitive' } },
-      { name: { contains: search, mode: 'insensitive' } },
-    ];
+    const cleanSearch = search.trim();
+    const terms = cleanSearch.split(/\s+/); // split by spaces
 
-    // if search is a valid date, check createdAt or lastLogin
-    const maybeDate = new Date(search);
+    if (terms.length === 1) {
+      // Single term: search firstname, lastname, or email
+      where.OR = [
+        { firstname: { contains: cleanSearch, mode: 'insensitive' } },
+        { lastname: { contains: cleanSearch, mode: 'insensitive' } },
+        { email: { contains: cleanSearch, mode: 'insensitive' } },
+      ];
+    } else if (terms.length >= 2) {
+      // Multiple terms (assume first + last name)
+      const [first, last] = terms;
+      where.OR = [
+        {
+          AND: [
+            { firstname: { contains: first, mode: 'insensitive' } },
+            { lastname: { contains: last, mode: 'insensitive' } },
+          ],
+        },
+        {
+          AND: [
+            { firstname: { contains: last, mode: 'insensitive' } },
+            { lastname: { contains: first, mode: 'insensitive' } },
+          ],
+        },
+        { email: { contains: cleanSearch, mode: 'insensitive' } },
+      ];
+    }
+
+    // Optional: if the search looks like a valid date
+    const maybeDate = new Date(cleanSearch);
     if (!isNaN(maybeDate.getTime())) {
+      where.OR = where.OR || [];
       where.OR.push(
         { createdAt: { gte: maybeDate } },
         { lastLogin: { gte: maybeDate } },
@@ -176,7 +200,7 @@ async getAllUsers(params: {
 
   // --- Optional status filter ---
   if (status) {
-    where.status = status.toUpperCase(); // e.g., "ACTIVE", "INACTIVE", etc.
+    where.status = status.toUpperCase(); // match enum case
   }
 
   // --- Query with pagination ---
@@ -210,6 +234,7 @@ async getAllUsers(params: {
   };
 }
 
+
 async getAllAdmins(params: {
   page?: number;
   limit?: number;
@@ -224,15 +249,42 @@ async getAllAdmins(params: {
 
   // --- Optional search ---
   if (search) {
-    where.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { firstname: { contains: search, mode: 'insensitive' } },
-      { lastname: { contains: search, mode: 'insensitive' } },
-      { name: { contains: search, mode: 'insensitive' } },
-    ];
+    // Trim extra spaces and normalize search text
+    const cleanSearch = search.trim();
+    const terms = cleanSearch.split(/\s+/); // split by space
 
-    const maybeDate = new Date(search);
+    if (terms.length === 1) {
+      // Single term: search by firstname, lastname, or email
+      where.OR = [
+        { firstname: { contains: cleanSearch, mode: 'insensitive' } },
+        { lastname: { contains: cleanSearch, mode: 'insensitive' } },
+        { email: { contains: cleanSearch, mode: 'insensitive' } },
+      ];
+    } else if (terms.length >= 2) {
+      // Two or more words (assume first and last name)
+      const [first, last] = terms;
+      where.OR = [
+        {
+          AND: [
+            { firstname: { contains: first, mode: 'insensitive' } },
+            { lastname: { contains: last, mode: 'insensitive' } },
+          ],
+        },
+        {
+          AND: [
+            { firstname: { contains: last, mode: 'insensitive' } },
+            { lastname: { contains: first, mode: 'insensitive' } },
+          ],
+        },
+        // Also include email search just in case
+        { email: { contains: cleanSearch, mode: 'insensitive' } },
+      ];
+    }
+
+    // Optional: if search looks like a date (for createdAt / lastLogin)
+    const maybeDate = new Date(cleanSearch);
     if (!isNaN(maybeDate.getTime())) {
+      where.OR = where.OR || [];
       where.OR.push(
         { createdAt: { gte: maybeDate } },
         { lastLogin: { gte: maybeDate } },
@@ -242,7 +294,7 @@ async getAllAdmins(params: {
 
   // --- Optional status filter ---
   if (status) {
-    where.status = status.toUpperCase(); // Prisma expects enum match (e.g., "ACTIVE")
+    where.status = status.toUpperCase(); // Prisma enum-safe
   }
 
   // --- Query with pagination ---
@@ -275,6 +327,7 @@ async getAllAdmins(params: {
     },
   };
 }
+
 
 
 async updateStatus(userId: string, status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'DEACTIVATED') {

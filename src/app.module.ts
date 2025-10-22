@@ -56,6 +56,7 @@ import { Module3Module } from './module3/module3.module';
 import { FinanceSetupModule } from './finance-setup/finance-setup.module';
 import { AssessmentCronService } from './assessment-cron/assessment-cron.service';
 import { AssessmentCronModule } from './assessment-cron/assessment-cron.module';
+import { NotificationPrefrenceModule } from './notification-prefrence/notification-prefrence.module';
 
 
 @Module({
@@ -93,6 +94,7 @@ import { AssessmentCronModule } from './assessment-cron/assessment-cron.module';
     Module3Module,
     FinanceSetupModule,
     AssessmentCronModule,
+    NotificationPrefrenceModule,
   ],
   controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController, Module2Controller], // Only controllers here that don't belong to other modules
   providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService, Module2Service, AssessmentCronService],      // Same with providers
