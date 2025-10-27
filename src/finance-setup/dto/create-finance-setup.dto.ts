@@ -11,21 +11,4 @@ export class CreateFinanceSetupDto {
   @IsNumber()
   salaryAmount: number;
 
-  @ApiProperty({ example: '🏠', required: false })
-  @IsOptional()
-  @IsString()
-  icon?: string;
-
-  @ApiProperty({ example: 'House Deposit' })
-  @IsNotEmpty()
-  @IsString()
-  title: string;
-
-  @ApiProperty({ example: 500000 })
-  @IsNumber()
-  targetAmount: number;
-
-  @ApiProperty({ example: '2025-12-31T00:00:00.000Z' })
-  @IsDateString()
-  targetDate: Date;
 }

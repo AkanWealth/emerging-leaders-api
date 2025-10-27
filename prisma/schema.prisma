@@ -594,9 +594,9 @@ model FinanceSetup {
 
   salaryAmount Float
   icon         String?
-  title        String
-  targetAmount Float
-  targetDate   DateTime
+  title        String?
+  targetAmount Float?
+  targetDate   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
