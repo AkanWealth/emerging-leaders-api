@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Param, Body, UseGuards, Patch, Req } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UseGuards, Patch, Req, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { GoalService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
@@ -18,6 +18,18 @@ export class GoalsController {
 create(@Req() req: RequestWithUser, @Body() dto: CreateGoalDto) {
   return this.goalService.create(req.user.id, dto); 
 }
+
+@Get('search')
+@ApiOperation({ summary: 'Search goals by date and project for current user' })
+@ApiResponse({ status: 200, description: 'Goals retrieved successfully' })
+async searchByDateAndProject(
+  @Req() req: RequestWithUser,
+  @Query('date') date: string,
+  @Query('projectId') projectId: string,
+) {
+  return this.goalService.findByDateAndProject(req.user.id, date, projectId);
+}
+
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming goals for the user' })
   async getUpcomingGoals(@Req() req) {

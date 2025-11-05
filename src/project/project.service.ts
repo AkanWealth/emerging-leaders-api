@@ -52,8 +52,6 @@ export class ProjectService {
 }
 
 
-
-
   findAll() {
     return this.prisma.project.findMany({
       include: {
@@ -73,7 +71,6 @@ export class ProjectService {
     },
     include:{
       category: true,
-      goals: true,
     },
   });
 }
@@ -83,7 +80,6 @@ export class ProjectService {
       where: { id },
       include: {
         category: true,
-        goals: true,
       },
     });
   }

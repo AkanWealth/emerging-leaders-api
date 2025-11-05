@@ -34,6 +34,11 @@ export class CreateGoalDto {
   @IsBoolean()
   isCompleted?: boolean;
 
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isRepeatEnabled?: boolean;
+
   @ApiProperty({ example: 'https://cdn.app/icons/goal-check.png', required: false })
   @IsOptional()
   @IsString()

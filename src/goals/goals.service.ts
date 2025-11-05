@@ -61,58 +61,140 @@ export class GoalService {
     });
   }
 
-  async update(id: string, dto: CreateGoalDto) {
-    const goal = await this.prisma.goal.findUnique({ where: { id } });
-    if (!goal) throw new NotFoundException('Goal not found');
+  async findByDateAndProject(userId: string, date: string, projectId: string) {
+  const targetDate = new Date(date);
 
-    const updatedGoal = await this.prisma.goal.update({
-      where: { id },
-      data: {
-        title: dto.title,
-        repeat: dto.repeat,
-        isCompleted: dto.isCompleted ?? goal.isCompleted,
-        startDate: new Date(dto.startDate),
-        endDate: new Date(dto.endDate),
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-        projectId: dto.projectId,
-        icon: dto.icon ?? goal.icon, // Use existing icon if not provided
+  return this.prisma.goal.findMany({
+    where: {
+      projectId,
+      project: {
+        userId, // ✅ ensures the project belongs to the current user
       },
-    });
+      startDate: { lte: targetDate },
+      endDate: { gte: targetDate },
+    },
+    include: {
+      project: true,
+    },
+    orderBy: {
+      startDate: 'asc',
+    },
+  });
+}
 
-    if (dto.isCompleted && goal.repeat) {
-      const repeatPattern = goal.repeat.toLowerCase();
-      let nextStart = new Date(goal.startDate);
-      let nextEnd = new Date(goal.endDate);
+  // async update(id: string, dto: CreateGoalDto) {
+  //   const goal = await this.prisma.goal.findUnique({ where: { id } });
+  //   if (!goal) throw new NotFoundException('Goal not found');
 
-      if (repeatPattern === 'daily') {
+  //   const updatedGoal = await this.prisma.goal.update({
+  //     where: { id },
+  //     data: {
+  //       title: dto.title,
+  //       repeat: dto.repeat,
+  //       isCompleted: dto.isCompleted ?? goal.isCompleted,
+  //       startDate: new Date(dto.startDate),
+  //       endDate: new Date(dto.endDate),
+  //       startTime: dto.startTime,
+  //       endTime: dto.endTime,
+  //       projectId: dto.projectId,
+  //       icon: dto.icon ?? goal.icon, // Use existing icon if not provided
+  //     },
+  //   });
+
+  //   if (dto.isCompleted && goal.repeat) {
+  //     const repeatPattern = goal.repeat.toLowerCase();
+  //     let nextStart = new Date(goal.startDate);
+  //     let nextEnd = new Date(goal.endDate);
+
+  //     if (repeatPattern === 'daily') {
+  //       nextStart = addDays(nextStart, 1);
+  //       nextEnd = addDays(nextEnd, 1);
+  //     } else if (repeatPattern === 'weekly') {
+  //       nextStart = addWeeks(nextStart, 1);
+  //       nextEnd = addWeeks(nextEnd, 1);
+  //     } else if (repeatPattern === 'monthly') {
+  //       nextStart = addMonths(nextStart, 1);
+  //       nextEnd = addMonths(nextEnd, 1);
+  //     }
+
+  //     await this.prisma.goal.create({
+  //       data: {
+  //         title: goal.title,
+  //         repeat: goal.repeat,
+  //         isCompleted: false,
+  //         startDate: nextStart,
+  //         endDate: nextEnd,
+  //         startTime: goal.startTime,
+  //         endTime: goal.endTime,
+  //         projectId: goal.projectId,
+  //         icon: goal.icon, // Use existing icon
+  //       },
+  //     });
+  //   }
+
+  //   return updatedGoal;
+  // }
+
+  async update(id: string, dto: CreateGoalDto) {
+  const goal = await this.prisma.goal.findUnique({ where: { id } });
+  if (!goal) throw new NotFoundException('Goal not found');
+
+  const updatedGoal = await this.prisma.goal.update({
+    where: { id },
+    data: {
+      title: dto.title,
+      repeat: dto.repeat,
+      isRepeatEnabled: dto.isRepeatEnabled ?? goal.isRepeatEnabled,
+      isCompleted: dto.isCompleted ?? goal.isCompleted,
+      startDate: new Date(dto.startDate),
+      endDate: new Date(dto.endDate),
+      startTime: dto.startTime,
+      endTime: dto.endTime,
+      projectId: dto.projectId,
+      icon: dto.icon ?? goal.icon,
+    },
+  });
+
+  // ✅ Only create next goal if repeat is enabled and goal was just completed
+  if (dto.isCompleted && goal.isRepeatEnabled && goal.repeat) {
+    const repeatPattern = goal.repeat.toLowerCase();
+    let nextStart = new Date(goal.startDate);
+    let nextEnd = new Date(goal.endDate);
+
+    switch (repeatPattern) {
+      case 'daily':
         nextStart = addDays(nextStart, 1);
         nextEnd = addDays(nextEnd, 1);
-      } else if (repeatPattern === 'weekly') {
+        break;
+      case 'weekly':
         nextStart = addWeeks(nextStart, 1);
         nextEnd = addWeeks(nextEnd, 1);
-      } else if (repeatPattern === 'monthly') {
+        break;
+      case 'monthly':
         nextStart = addMonths(nextStart, 1);
         nextEnd = addMonths(nextEnd, 1);
-      }
-
-      await this.prisma.goal.create({
-        data: {
-          title: goal.title,
-          repeat: goal.repeat,
-          isCompleted: false,
-          startDate: nextStart,
-          endDate: nextEnd,
-          startTime: goal.startTime,
-          endTime: goal.endTime,
-          projectId: goal.projectId,
-          icon: goal.icon, // Use existing icon
-        },
-      });
+        break;
     }
 
-    return updatedGoal;
+    await this.prisma.goal.create({
+      data: {
+        title: goal.title,
+        repeat: goal.repeat,
+        isRepeatEnabled: goal.isRepeatEnabled,
+        isCompleted: false,
+        startDate: nextStart,
+        endDate: nextEnd,
+        startTime: goal.startTime,
+        endTime: goal.endTime,
+        projectId: goal.projectId,
+        icon: goal.icon,
+      },
+    });
   }
+
+  return updatedGoal;
+}
+
 
 async getUpcomingGoals(userId: string) {
   const now = new Date();
