@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
   ApiQuery
 } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
@@ -25,6 +26,7 @@ import { Request } from 'express';
 import { RequestWithUser } from 'src/types/request-with-user'; 
 
 @ApiTags('Projects')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard) // Protect all routes
 @Controller('projects')
 export class ProjectController {

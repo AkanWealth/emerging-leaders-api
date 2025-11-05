@@ -61,19 +61,36 @@ export class ProjectService {
     });
   }
 
-  findAllUserProject(userId: string) {
-  return this.prisma.project.findMany({
-    where: {
-      userId, 
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include:{
+ async findAllUserProject(userId: string) {
+  const projects = await this.prisma.project.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    include: {
       category: true,
+      goals: {
+        select: {
+          id: true,
+          isCompleted: true,
+        },
+      },
     },
   });
+
+  // Add computed fields
+  return projects.map((project) => {
+    const totalGoals = project.goals.length;
+    const completedGoals = project.goals.filter((g) => g.isCompleted).length;
+    const completionRate = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+
+    return {
+      ...project,
+      totalGoals,
+      completedGoals,
+      completionRate: Number(completionRate.toFixed(1)), // e.g., 67.5%
+    };
+  });
 }
+
 
   findOne(id: string) {
     return this.prisma.project.findUnique({
