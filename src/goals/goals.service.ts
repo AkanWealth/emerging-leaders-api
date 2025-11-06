@@ -23,18 +23,19 @@ export class GoalService {
     });
   }
 
- async create(userId: string, dto: CreateGoalDto) {
+async create(userId: string, dto: CreateGoalDto) {
   const goal = await this.prisma.goal.create({
     data: {
       title: dto.title,
-      repeat: dto.repeat,
+      repeat: dto.repeat, // e.g. "daily", "weekly", etc.
+      isRepeatEnabled: dto.isRepeatEnabled ?? false, 
       isCompleted: dto.isCompleted ?? false,
       startDate: new Date(dto.startDate),
       endDate: new Date(dto.endDate),
       startTime: dto.startTime,
       endTime: dto.endTime,
       projectId: dto.projectId,
-      icon: dto.icon ?? 'https://cdn.app/icons/goal-check.png', // Default icon if not provided
+      icon: dto.icon ?? 'https://cdn.app/icons/goal-check.png', // Default icon
     },
   });
 
