@@ -135,31 +135,38 @@ export class GoalService {
   //   return updatedGoal;
   // }
 
-  async update(id: string, dto: CreateGoalDto) {
+async update(id: string, dto: CreateGoalDto) {
   const goal = await this.prisma.goal.findUnique({ where: { id } });
   if (!goal) throw new NotFoundException('Goal not found');
 
+  // Explicitly handle boolean fields (true or false both should be saved)
   const updatedGoal = await this.prisma.goal.update({
     where: { id },
     data: {
-      title: dto.title,
-      repeat: dto.repeat,
-      isRepeatEnabled: dto.isRepeatEnabled ?? goal.isRepeatEnabled,
-      isCompleted: dto.isCompleted ?? goal.isCompleted,
-      startDate: new Date(dto.startDate),
-      endDate: new Date(dto.endDate),
-      startTime: dto.startTime,
-      endTime: dto.endTime,
-      projectId: dto.projectId,
+      title: dto.title ?? goal.title,
+      repeat: dto.repeat ?? goal.repeat,
+      isRepeatEnabled:
+        typeof dto.isRepeatEnabled === 'boolean'
+          ? dto.isRepeatEnabled
+          : goal.isRepeatEnabled,
+      isCompleted:
+        typeof dto.isCompleted === 'boolean'
+          ? dto.isCompleted
+          : goal.isCompleted,
+      startDate: dto.startDate ? new Date(dto.startDate) : goal.startDate,
+      endDate: dto.endDate ? new Date(dto.endDate) : goal.endDate,
+      startTime: dto.startTime ?? goal.startTime,
+      endTime: dto.endTime ?? goal.endTime,
+      projectId: dto.projectId ?? goal.projectId,
       icon: dto.icon ?? goal.icon,
     },
   });
 
-  // ✅ Only create next goal if repeat is enabled and goal was just completed
-  if (dto.isCompleted && goal.isRepeatEnabled && goal.repeat) {
-    const repeatPattern = goal.repeat.toLowerCase();
-    let nextStart = new Date(goal.startDate);
-    let nextEnd = new Date(goal.endDate);
+  // Use updatedGoal, not the old goal
+  if (updatedGoal.isCompleted && updatedGoal.isRepeatEnabled && updatedGoal.repeat) {
+    const repeatPattern = updatedGoal.repeat.toLowerCase();
+    let nextStart = new Date(updatedGoal.startDate);
+    let nextEnd = new Date(updatedGoal.endDate);
 
     switch (repeatPattern) {
       case 'daily':
@@ -178,16 +185,16 @@ export class GoalService {
 
     await this.prisma.goal.create({
       data: {
-        title: goal.title,
-        repeat: goal.repeat,
-        isRepeatEnabled: goal.isRepeatEnabled,
+        title: updatedGoal.title,
+        repeat: updatedGoal.repeat,
+        isRepeatEnabled: updatedGoal.isRepeatEnabled,
         isCompleted: false,
         startDate: nextStart,
         endDate: nextEnd,
-        startTime: goal.startTime,
-        endTime: goal.endTime,
-        projectId: goal.projectId,
-        icon: goal.icon,
+        startTime: updatedGoal.startTime,
+        endTime: updatedGoal.endTime,
+        projectId: updatedGoal.projectId,
+        icon: updatedGoal.icon,
       },
     });
   }

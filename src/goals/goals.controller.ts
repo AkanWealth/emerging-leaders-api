@@ -33,7 +33,7 @@ async searchByDateAndProject(
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming goals for the user' })
   async getUpcomingGoals(@Req() req) {
-    const userId = req.user.id; // ⚠️ assuming user ID is injected via auth guard
+    const userId = req.user.id; // assuming user ID is injected via auth guard
     return this.goalService.getUpcomingGoals(userId);
   }
 
