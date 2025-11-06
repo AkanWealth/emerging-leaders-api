@@ -4,6 +4,7 @@ import { GoalService } from './goals.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequestWithUser } from 'src/types/request-with-user'; 
+import { UpdateGoalDto } from './dto/update-goal.dto';
 
 @ApiTags('Goals')
 @UseGuards(JwtAuthGuard) // Ensure all goal routes are protected
@@ -29,6 +30,7 @@ async searchByDateAndProject(
 ) {
   return this.goalService.findByDateAndProject(req.user.id, date, projectId);
 }
+
 
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming goals for the user' })
@@ -59,7 +61,7 @@ async searchByDateAndProject(
   @ApiResponse({ status: 200, description: 'Goal updated successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 404, description: 'Goal not found' })
-  update(@Param('id') id: string, @Body() dto: CreateGoalDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateGoalDto) {
     return this.goalService.update(id, dto);
   }
 

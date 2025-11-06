@@ -212,21 +212,22 @@ model Project {
 }
 
 model Goal {
-  id          String   @id @default(uuid())
-  title       String
-  repeat      String?
-  isRepeatEnabled Boolean  @default(false) 
-  projectId   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  endDate     DateTime
-  endTime     String?
-  isCompleted Boolean  @default(false)
-  startDate   DateTime
-  startTime   String?
-  icon        String?
+  id              String   @id @default(uuid())
+  title           String
+  repeat          String?
+  completedDates  Json?    @default("[]") 
+  isRepeatEnabled Boolean  @default(false)
+  projectId       String?
+  startDate       DateTime
+  endDate         DateTime
+  startTime       String?
+  endTime         String?
+  isCompleted     Boolean  @default(false)
+  icon            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project         Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model SavingsGoal {
