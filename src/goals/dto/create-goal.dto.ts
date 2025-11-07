@@ -15,19 +15,19 @@ export class CreateGoalDto {
   @IsDateString()
   startDate: string;
 
-  @ApiProperty({ example: '2025-06-16T17:00:00Z' })
-  @IsDateString()
-  endDate: string;
+  // @ApiProperty({ example: '2025-06-16T17:00:00Z' })
+  // @IsDateString()
+  // endDate: string;
 
   @ApiProperty({ example: '08:00', required: false })
   @IsOptional()
   @IsString()
   startTime?: string;
 
-  @ApiProperty({ example: '17:00', required: false })
-  @IsOptional()
-  @IsString()
-  endTime?: string;
+  // @ApiProperty({ example: '17:00', required: false })
+  // @IsOptional()
+  // @IsString()
+  // endTime?: string;
 
   @ApiProperty({ example: false, required: false })
   @IsOptional()

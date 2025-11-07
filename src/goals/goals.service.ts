@@ -24,7 +24,41 @@ export class GoalService {
     });
   }
 
+// async create(userId: string, dto: CreateGoalDto) {
+//   const goal = await this.prisma.goal.create({
+//     data: {
+//       title: dto.title,
+//       repeat: dto.repeat,
+//       isRepeatEnabled: dto.isRepeatEnabled ?? false,
+//       isCompleted: dto.isCompleted ?? false,
+//       startDate: new Date(dto.startDate),
+//       endDate: new Date(dto.endDate),
+//       startTime: dto.startTime,
+//       endTime: dto.endTime,
+//       projectId: dto.projectId,
+//       icon: dto.icon ?? 'https://cdn.app/icons/goal-check.png',
+//     },
+//   });
+
+//   await this.activityLogService.log(userId, `Created goal: ${dto.title}`);
+//   return goal;
+// }
+
 async create(userId: string, dto: CreateGoalDto) {
+  // 1️⃣ Fetch the project to get its end date
+  const project = await this.prisma.project.findUnique({
+    where: { id: dto.projectId },
+  });
+
+  if (!project) throw new NotFoundException('Project not found');
+
+  // 2️⃣ Set goal end date same as project end date
+  const endDate = project.endDate;
+
+  // 3️⃣ Keep endTime same as startTime (repeats daily)
+  const endTime = dto.startTime;
+
+  // 4️⃣ Create the goal
   const goal = await this.prisma.goal.create({
     data: {
       title: dto.title,
@@ -32,18 +66,19 @@ async create(userId: string, dto: CreateGoalDto) {
       isRepeatEnabled: dto.isRepeatEnabled ?? false,
       isCompleted: dto.isCompleted ?? false,
       startDate: new Date(dto.startDate),
-      endDate: new Date(dto.endDate),
+      endDate: endDate, // ✅ project end date
       startTime: dto.startTime,
-      endTime: dto.endTime,
+      endTime: endTime, // ✅ same as start time
       projectId: dto.projectId,
       icon: dto.icon ?? 'https://cdn.app/icons/goal-check.png',
     },
   });
 
+  // 5️⃣ Log the creation
   await this.activityLogService.log(userId, `Created goal: ${dto.title}`);
+
   return goal;
 }
-
 
 
   async findAll() {
@@ -64,107 +99,7 @@ async create(userId: string, dto: CreateGoalDto) {
     });
   }
 
-//   async findByDateAndProject(userId: string, date: string, projectId: string) {
-//   const targetDate = new Date(date);
 
-//   return this.prisma.goal.findMany({
-//     where: {
-//       projectId,
-//       project: {
-//         userId, 
-//       },
-//       startDate: { lte: targetDate },
-//       endDate: { gte: targetDate },
-//     },
-//     include: {
-//       project: true,
-//     },
-//     orderBy: {
-//       startDate: 'asc',
-//     },
-//   });
-// }
-
-  // async update(id: string, dto: CreateGoalDto) {
-  //   const goal = await this.prisma.goal.findUnique({ where: { id } });
-  //   if (!goal) throw new NotFoundException('Goal not found');
-
-  //   const updatedGoal = await this.prisma.goal.update({
-  //     where: { id },
-  //     data: {
-  //       title: dto.title,
-  //       repeat: dto.repeat,
-  //       isCompleted: dto.isCompleted ?? goal.isCompleted,
-  //       startDate: new Date(dto.startDate),
-  //       endDate: new Date(dto.endDate),
-  //       startTime: dto.startTime,
-  //       endTime: dto.endTime,
-  //       projectId: dto.projectId,
-  //       icon: dto.icon ?? goal.icon, // Use existing icon if not provided
-  //     },
-  //   });
-
-  //   if (dto.isCompleted && goal.repeat) {
-  //     const repeatPattern = goal.repeat.toLowerCase();
-  //     let nextStart = new Date(goal.startDate);
-  //     let nextEnd = new Date(goal.endDate);
-
-  //     if (repeatPattern === 'daily') {
-  //       nextStart = addDays(nextStart, 1);
-  //       nextEnd = addDays(nextEnd, 1);
-  //     } else if (repeatPattern === 'weekly') {
-  //       nextStart = addWeeks(nextStart, 1);
-  //       nextEnd = addWeeks(nextEnd, 1);
-  //     } else if (repeatPattern === 'monthly') {
-  //       nextStart = addMonths(nextStart, 1);
-  //       nextEnd = addMonths(nextEnd, 1);
-  //     }
-
-  //     await this.prisma.goal.create({
-  //       data: {
-  //         title: goal.title,
-  //         repeat: goal.repeat,
-  //         isCompleted: false,
-  //         startDate: nextStart,
-  //         endDate: nextEnd,
-  //         startTime: goal.startTime,
-  //         endTime: goal.endTime,
-  //         projectId: goal.projectId,
-  //         icon: goal.icon, // Use existing icon
-  //       },
-  //     });
-  //   }
-
-  //   return updatedGoal;
-  // }
-
-// async findByDateAndProject(userId: string, date: string, projectId: string) {
-//   const targetDate = new Date(date);
-//   const formatted = format(targetDate, 'yyyy-MM-dd');
-
-//   const goals = await this.prisma.goal.findMany({
-//     where: {
-//       projectId,
-//       project: { userId },
-//       startDate: { lte: targetDate },
-//       endDate: { gte: targetDate },
-//     },
-//     include: { project: true },
-//     orderBy: { startDate: 'asc' },
-//   });
-
-//   return goals.map(goal => {
-//     // Safely ensure completedDates is an array
-//     const completedDates = Array.isArray(goal.completedDates)
-//       ? goal.completedDates
-//       : [];
-
-//     return {
-//       ...goal,
-//       isCompletedToday: completedDates.includes(formatted),
-//     };
-//   });
-// }
 async findByDateAndProject(userId: string, date: string, projectId: string) {
   const targetDate = new Date(date);
   const formatted = format(targetDate, 'yyyy-MM-dd');
@@ -192,73 +127,6 @@ async findByDateAndProject(userId: string, date: string, projectId: string) {
   });
 }
 
-
-// async update(id: string, dto: CreateGoalDto) {
-//   const goal = await this.prisma.goal.findUnique({ where: { id } });
-//   if (!goal) throw new NotFoundException('Goal not found');
-
-//   // Explicitly handle boolean fields (true or false both should be saved)
-//   const updatedGoal = await this.prisma.goal.update({
-//     where: { id },
-//     data: {
-//       title: dto.title ?? goal.title,
-//       repeat: dto.repeat ?? goal.repeat,
-//       isRepeatEnabled:
-//         typeof dto.isRepeatEnabled === 'boolean'
-//           ? dto.isRepeatEnabled
-//           : goal.isRepeatEnabled,
-//       isCompleted:
-//         typeof dto.isCompleted === 'boolean'
-//           ? dto.isCompleted
-//           : goal.isCompleted,
-//       startDate: dto.startDate ? new Date(dto.startDate) : goal.startDate,
-//       endDate: dto.endDate ? new Date(dto.endDate) : goal.endDate,
-//       startTime: dto.startTime ?? goal.startTime,
-//       endTime: dto.endTime ?? goal.endTime,
-//       projectId: dto.projectId ?? goal.projectId,
-//       icon: dto.icon ?? goal.icon,
-//     },
-//   });
-
-//   // Use updatedGoal, not the old goal
-//   if (updatedGoal.isCompleted && updatedGoal.isRepeatEnabled && updatedGoal.repeat) {
-//     const repeatPattern = updatedGoal.repeat.toLowerCase();
-//     let nextStart = new Date(updatedGoal.startDate);
-//     let nextEnd = new Date(updatedGoal.endDate);
-
-//     switch (repeatPattern) {
-//       case 'daily':
-//         nextStart = addDays(nextStart, 1);
-//         nextEnd = addDays(nextEnd, 1);
-//         break;
-//       case 'weekly':
-//         nextStart = addWeeks(nextStart, 1);
-//         nextEnd = addWeeks(nextEnd, 1);
-//         break;
-//       case 'monthly':
-//         nextStart = addMonths(nextStart, 1);
-//         nextEnd = addMonths(nextEnd, 1);
-//         break;
-//     }
-
-//     await this.prisma.goal.create({
-//       data: {
-//         title: updatedGoal.title,
-//         repeat: updatedGoal.repeat,
-//         isRepeatEnabled: updatedGoal.isRepeatEnabled,
-//         isCompleted: false,
-//         startDate: nextStart,
-//         endDate: nextEnd,
-//         startTime: updatedGoal.startTime,
-//         endTime: updatedGoal.endTime,
-//         projectId: updatedGoal.projectId,
-//         icon: updatedGoal.icon,
-//       },
-//     });
-//   }
-
-//   return updatedGoal;
-// }
 async update(id: string, dto: UpdateGoalDto) {
   const goal = await this.prisma.goal.findUnique({ where: { id } });
   if (!goal) throw new NotFoundException('Goal not found');
