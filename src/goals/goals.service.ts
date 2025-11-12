@@ -559,6 +559,57 @@ async findByDateRangeAndProject(
   };
 }
 
+// async update(id: string, dto: UpdateGoalDto) {
+//   const goal = await this.prisma.goal.findUnique({ where: { id } });
+//   if (!goal) throw new NotFoundException('Goal not found');
+
+//   const today = format(new Date(), 'yyyy-MM-dd');
+
+//   // ✅ Ensure completedDates is always an array of strings
+//   const existingDates: string[] = Array.isArray(goal.completedDates)
+//     ? (goal.completedDates as string[])
+//     : [];
+
+//   const completed = new Set(existingDates);
+
+//   // Add or remove today's date
+//   if (dto.isCompleted) {
+//     completed.add(today);
+//   } else {
+//     completed.delete(today);
+//   }
+
+//   //  Check if all days in the goal range are completed
+//   const allDays = eachDayOfInterval({
+//     start: goal.startDate,
+//     end: goal.endDate,
+//   }).map(d => format(d, 'yyyy-MM-dd'));
+
+//   const allDone = allDays.every(d => completed.has(d));
+
+//   const updatedGoal = await this.prisma.goal.update({
+//     where: { id },
+//     data: {
+//       title: dto.title ?? goal.title,
+//       repeat: dto.repeat ?? goal.repeat,
+//       isRepeatEnabled:
+//         typeof dto.isRepeatEnabled === 'boolean'
+//           ? dto.isRepeatEnabled
+//           : goal.isRepeatEnabled,
+//       completedDates: Array.from(completed), // convert Set back to array
+//       isCompleted: allDone,
+//       startDate: dto.startDate ? new Date(dto.startDate) : goal.startDate,
+//       endDate: dto.endDate ? new Date(dto.endDate) : goal.endDate,
+//       startTime: dto.startTime ?? goal.startTime,
+//       endTime: dto.endTime ?? goal.endTime,
+//       projectId: dto.projectId ?? goal.projectId,
+//       icon: dto.icon ?? goal.icon,
+//     },
+//   });
+
+//   return updatedGoal;
+// }
+
 async update(id: string, dto: UpdateGoalDto) {
   const goal = await this.prisma.goal.findUnique({ where: { id } });
   if (!goal) throw new NotFoundException('Goal not found');
@@ -579,13 +630,22 @@ async update(id: string, dto: UpdateGoalDto) {
     completed.delete(today);
   }
 
-  //  Check if all days in the goal range are completed
-  const allDays = eachDayOfInterval({
-    start: goal.startDate,
-    end: goal.endDate,
-  }).map(d => format(d, 'yyyy-MM-dd'));
+  // Determine isCompleted based on whether goal is repeating or not
+  let allDone = false;
 
-  const allDone = allDays.every(d => completed.has(d));
+  if (goal.isRepeatEnabled) {
+    // For repeating goals: check if all days in the goal range are completed
+    const allDays = eachDayOfInterval({
+      start: goal.startDate,
+      end: goal.endDate,
+    }).map(d => format(d, 'yyyy-MM-dd'));
+
+    allDone = allDays.every(d => completed.has(d));
+  } else {
+    // For non-repeating goals: it's completed if today (or the goal's date) is in completedDates
+    const goalDateStr = format(goal.startDate, 'yyyy-MM-dd');
+    allDone = completed.has(goalDateStr);
+  }
 
   const updatedGoal = await this.prisma.goal.update({
     where: { id },
