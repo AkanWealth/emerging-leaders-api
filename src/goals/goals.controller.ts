@@ -20,6 +20,17 @@ create(@Req() req: RequestWithUser, @Body() dto: CreateGoalDto) {
   return this.goalService.create(req.user.id, dto); 
 }
 
+// @Get('search')
+// @ApiOperation({ summary: 'Search goals by date and project for current user' })
+// @ApiResponse({ status: 200, description: 'Goals retrieved successfully' })
+// async searchByDateAndProject(
+//   @Req() req: RequestWithUser,
+//   @Query('date') date: string,
+//   @Query('projectId') projectId: string,
+// ) {
+//   return this.goalService.findByDateAndProject(req.user.id, date, projectId);
+// }
+
 @Get('search')
 @ApiOperation({ summary: 'Search goals by date and project for current user' })
 @ApiResponse({ status: 200, description: 'Goals retrieved successfully' })
@@ -27,10 +38,44 @@ async searchByDateAndProject(
   @Req() req: RequestWithUser,
   @Query('date') date: string,
   @Query('projectId') projectId: string,
+  @Query('page') page: string = '1',
+  @Query('limit') limit: string = '50',
 ) {
-  return this.goalService.findByDateAndProject(req.user.id, date, projectId);
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50)); // Max 100 per page
+  
+  return this.goalService.findByDateAndProject(
+    req.user.id, 
+    date, 
+    projectId,
+    pageNum,
+    limitNum
+  );
 }
 
+@Get('search/range')
+@ApiOperation({ summary: 'Search goals by date range and project for current user' })
+@ApiResponse({ status: 200, description: 'Goals retrieved successfully' })
+async searchByDateRangeAndProject(
+  @Req() req: RequestWithUser,
+  @Query('startDate') startDate: string,
+  @Query('endDate') endDate: string,
+  @Query('projectId') projectId: string,
+  @Query('page') page: string = '1',
+  @Query('limit') limit: string = '50',
+) {
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+  
+  return this.goalService.findByDateRangeAndProject(
+    req.user.id, 
+    startDate,
+    endDate,
+    projectId,
+    pageNum,
+    limitNum
+  );
+}
 
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming goals for the user' })
