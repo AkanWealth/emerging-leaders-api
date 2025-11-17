@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -172,13 +173,17 @@ broadcast(
   );
 }
 
-
-
-
-    @Delete('delete-all')
-  async deleteAll(@Req() req) {
-    const userId = req.user.id; // Assuming your JWT sets req.user
+@Delete('delete-all')
+async deleteAll(@Req() req) {
+  try {
+    const userId = req.user.id;
+    console.log('Deleting notifications for user:', userId);
     await this.notificationsService.deleteAllNotifications(userId);
     return { success: true, message: 'All notifications deleted' };
+  } catch (error) {
+    console.error(error);
+    throw new InternalServerErrorException('Failed to delete notifications');
   }
+}
+
 }
