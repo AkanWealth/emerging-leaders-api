@@ -176,8 +176,7 @@ broadcast(
 @Delete('delete-all')
 async deleteAll(@Req() req) {
   try {
-    const userId = req.user.id;
-    console.log('Deleting notifications for user:', userId);
+    const userId = req.user.sub; // JWT uses 'sub'
     await this.notificationsService.deleteAllNotifications(userId);
     return { success: true, message: 'All notifications deleted' };
   } catch (error) {
@@ -185,5 +184,6 @@ async deleteAll(@Req() req) {
     throw new InternalServerErrorException('Failed to delete notifications');
   }
 }
+
 
 }
