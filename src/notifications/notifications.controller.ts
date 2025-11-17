@@ -69,7 +69,17 @@ getUnreadNotifications(
     return this.notificationsService.markAllAsRead(req.user.id);
   }
 
- 
+ @Delete('delete-all')
+async deleteAll(@Req() req) {
+  try {
+    const userId = req.user.sub; // Use 'sub' from JWT
+    await this.notificationsService.deleteAllNotifications(userId);
+    return { success: true, message: 'All notifications deleted' };
+  } catch (error) {
+    console.error(error);
+    throw new InternalServerErrorException('Failed to delete notifications');
+  }
+}
 
   //Already existing
   @Patch(':id/read')
@@ -80,14 +90,6 @@ getUnreadNotifications(
     return this.notificationsService.markAsRead(id);
   }
 
-  // Already existing
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a notification' })
-  @ApiParam({ name: 'id', type: 'string', description: 'Notification ID' })
-  deleteNotification(@Param('id') id: string) {
-    return this.notificationsService.deleteNotification(id);
-  }
 
   // Missing: Send to a single user (admin action)
 @Post('send-to-user/:userId')
@@ -173,17 +175,15 @@ broadcast(
   );
 }
 
-@Delete('delete-all')
-async deleteAll(@Req() req) {
-  try {
-    const userId = req.user.sub; // Use 'sub' from JWT
-    await this.notificationsService.deleteAllNotifications(userId);
-    return { success: true, message: 'All notifications deleted' };
-  } catch (error) {
-    console.error(error);
-    throw new InternalServerErrorException('Failed to delete notifications');
+
+  // Already existing
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a notification' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Notification ID' })
+  deleteNotification(@Param('id') id: string) {
+    return this.notificationsService.deleteNotification(id);
   }
-}
 
 
 }
