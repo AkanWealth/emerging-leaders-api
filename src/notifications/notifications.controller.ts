@@ -176,7 +176,7 @@ broadcast(
 @Delete('delete-all')
 async deleteAll(@Req() req) {
   try {
-    const userId = req.user.sub; // JWT uses 'sub'
+    const userId = req.user.sub; // Use 'sub' from JWT
     await this.notificationsService.deleteAllNotifications(userId);
     return { success: true, message: 'All notifications deleted' };
   } catch (error) {

@@ -289,11 +289,11 @@ async sendNotification(
   /**
    * Delete all notifications for a user
    */
-  async deleteAllNotifications(receiverId: string) {
-    return this.prisma.notification.deleteMany({
-      where: { receiverId },
-    });
-  }
+async deleteAllNotifications(receiverId: string) {
+  return this.prisma.notification.deleteMany({
+    where: { receiverId }, // deleteMany never throws if zero records exist
+  });
+}
 
   /**
    * Delete a single notification
