@@ -10,6 +10,10 @@ export class CreateSavingsGoalDto {
   @IsString()
   title: string;
 
+   @ApiProperty({ example: 'House Deposit', description: 'Description of the savings goal' })
+  @IsString()
+  description: string;
+
   @ApiProperty({ example: 500000, description: 'Target amount to save for the goal' })
   @IsNumber()
   targetAmount: number;

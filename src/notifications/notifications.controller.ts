@@ -52,8 +52,6 @@ getUnreadNotifications(
     Number(limit),
   );
 }
-
-
   // Missing: Get unread count
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notifications count for the logged-in user' })
@@ -165,7 +163,7 @@ broadcast(
   @Req() req, // 👈 access JWT user info
   @Body() payload: { title: string; body: string; data?: Record<string, any>; type?: string },
 ) {
-  const senderId = req.user.id; // ✅ from JWT
+  const senderId = req.user.id; 
   return this.notificationsService.broadcastNotification(
     senderId,
     payload.title,

@@ -40,6 +40,7 @@ export class SavingsGoalService {
           targetAmount: dto.targetAmount,
           targetDate: new Date(dto.targetDate),
           budgetId: dto.budgetId || null,
+          description: dto.description,
           savedAmount: dto.targetAmount,
           isCompleted: dto.targetAmount >= dto.targetAmount, // or true if it's fully funded immediately
         },
