@@ -728,24 +728,29 @@ async getLeaderboard(query: Record<string, string | undefined>) {
   const limitNum = Number(limit);
 
   // --- 1. Fetch users and related data ---
-  const users = await this.prisma.user.findMany({
-    where: {
-      ...(search
-        ? {
-            OR: [
-              { firstname: { contains: search, mode: 'insensitive' } },
-              { lastname: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
-            ],
-          }
-        : {}),
+ const users = await this.prisma.user.findMany({
+  where: {
+    ...(search
+      ? {
+          OR: [
+            { firstname: { contains: search, mode: 'insensitive' } },
+            { lastname: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  },
+  include: {
+    projects: {
+      include: {
+        goals: true,   // assumes Project has: goals Goal[]
+      },
     },
-    include: {
-      projects: { include: { goals: true } },
-      savingsGoals: true,
-      budgets: true,
-    },
-  });
+    savingsGoals: true,
+    budgets: true,
+  },
+});
+
 
   // --- 2. Build the leaderboard structure ---
   const leaderboard = users

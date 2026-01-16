@@ -118,7 +118,7 @@ async create(userId: string, dto: CreateGoalDto) {
     await this.autoCompletePastGoals();
     return this.prisma.goal.findMany({
       include: {
-        project: true,
+        projects: true,
       },
     });
   }
@@ -127,7 +127,7 @@ async create(userId: string, dto: CreateGoalDto) {
     return this.prisma.goal.findUnique({
       where: { id },
       include: {
-        project: true,
+        projects: true,
       },
     });
   }
@@ -308,8 +308,8 @@ async findByDateAndProject(
 
   // Fetch all goals for this project and user
   const rawGoals = await this.prisma.goal.findMany({
-    where: { projectId, project: { userId } },
-    include: { project: true },
+    where: { projectId, projects: { userId } },
+    include: { projects: true },
     orderBy: { startDate: 'asc' },
   });
 
@@ -432,8 +432,8 @@ async findByDateRangeAndProject(
 }> {
   // Fetch all goals for this project and user
   const rawGoals = await this.prisma.goal.findMany({
-    where: { projectId, project: { userId } },
-    include: { project: true },
+    where: { projectId, projects: { userId } },
+    include: { projects: true },
     orderBy: { startDate: 'asc' },
   });
 
@@ -679,12 +679,12 @@ async getUpcomingGoals(userId: string) {
       startDate: {
         gte: now,
       },
-      project: {
+      projects: {
         userId,
       },
     },
     include: {
-      project: true,
+      projects: true,
     },
     orderBy: {
       startDate: 'asc',

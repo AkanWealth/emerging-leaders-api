@@ -62,29 +62,29 @@ async createAssessment(dto: CreateAssessmentDto, senderId: string) {
   }
 
   async addQuestion(dto: CreateQuestionDto) {
-    const question = await this.prisma.assessmentQuestion.create({
-      data: {
-        assessmentId: dto.assessmentId,
-        question: dto.question,
-        type: dto.type,
-        required: dto.required,
-      },
-    });
+  const question = await this.prisma.assessmentQuestion.create({
+    data: {
+      assessmentId: dto.assessmentId,
+      question: dto.question,
+      type: dto.type,
+      required: dto.required,
+    },
+  });
 
-    if (dto.options?.length) {
-      await this.prisma.assessmentOption.createMany({
-        data: dto.options.map((val) => ({
-          value: val,
-          questionId: question.id,
-        })),
-      });
-    }
-
-    return this.prisma.assessmentQuestion.findUnique({
-      where: { id: question.id },
-      include: { options: true },
+  if (dto.options?.length) {
+    await this.prisma.assessmentOption.createMany({
+      data: dto.options.map((val) => ({
+        value: val,
+        questionId: question.id,
+      })),
     });
   }
+
+  return this.prisma.assessmentQuestion.findUnique({
+    where: { id: question.id },
+    include: { AssessmentOption: true }, // ✅ use the correct relation field name
+  });
+}
 
   async addQuestionsBulk(questionsDto: CreateQuestionDto[]) {
   // 1. Create all questions first
@@ -121,7 +121,7 @@ async createAssessment(dto: CreateAssessmentDto, senderId: string) {
     where: {
       id: { in: createdQuestions.map((q) => q.id) },
     },
-    include: { options: true },
+    include: { AssessmentOption: true },
     orderBy: { order: 'asc' }, // optional: keep questions ordered
   });
 }
@@ -145,34 +145,35 @@ async createAssessment(dto: CreateAssessmentDto, senderId: string) {
   }
 
   async getUserAssessments(userId: string) {
-    const now = new Date();
-    const assessments = await this.prisma.assessment.findMany({
-      where: {
-        status: 'OPEN',
-        scheduledFor: { lte: now },
+  const now = new Date();
+  const assessments = await this.prisma.assessment.findMany({
+    where: {
+      status: 'OPEN',
+      scheduledFor: { lte: now },
+    },
+    include: {
+      category: true,
+      questions: { include: { AssessmentOption: true } },
+      userResponses: {       // ✅ use the correct relation name
+        where: { userId },
+        select: { id: true },
       },
-      include: {
-        category: true,
-        questions: { include: { options: true } },
-        userResponses: {
-          where: { userId },
-          select: { id: true },
-        },
-      },
-      orderBy: { scheduledFor: 'asc' },
-    });
+    },
+    orderBy: { scheduledFor: 'asc' },
+  });
 
-    return assessments.map((a) => ({
-      ...a,
-      submitted: a.userResponses.length > 0,
-    }));
-  }
+  return assessments.map((a) => ({
+    ...a,
+    submitted: a.userResponses.length > 0, // ✅ match the relation field
+  }));
+}
+
 
   async getAssessmentsWithStats(userId: string) {
     const assessments = await this.prisma.assessment.findMany({
       include: {
         category: true,
-        questions: { include: { options: true } },
+        questions: { include: { AssessmentOption: true } },
         userResponses: {
           where: { userId },
           select: { id: true },

@@ -57,6 +57,11 @@ import { FinanceSetupModule } from './finance-setup/finance-setup.module';
 import { AssessmentCronService } from './assessment-cron/assessment-cron.service';
 import { AssessmentCronModule } from './assessment-cron/assessment-cron.module';
 import { NotificationPrefrenceModule } from './notification-prefrence/notification-prefrence.module';
+import { MindsetModule } from './mindset/mindset.module';
+import { BudgetNotificationService } from './budget-notification/budget-notification.service';
+import { BudgetNotificationController } from './budget-notification/budget-notification.controller';
+import { BudgetNotificationModule } from './budget-notification/budget-notification.module';
+import { GoalNotificationModule } from './goal-notification/goal-notification.module';
 
 
 @Module({
@@ -95,8 +100,11 @@ import { NotificationPrefrenceModule } from './notification-prefrence/notificati
     FinanceSetupModule,
     AssessmentCronModule,
     NotificationPrefrenceModule,
+    MindsetModule,
+    BudgetNotificationModule,
+    GoalNotificationModule,
   ],
-  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController, Module2Controller], // Only controllers here that don't belong to other modules
-  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService, Module2Service, AssessmentCronService],      // Same with providers
+  controllers: [AppController, IncomeController, BudgetController, AnalyticsController, AdminUserController, TicketController, RecurringIncomeController, CurrencyController, NotificationsController, AssessmentCategoryController, NotebookController, Module2Controller, BudgetNotificationController], // Only controllers here that don't belong to other modules
+  providers: [AppService, IncomeService, BudgetService, AnalyticsService, AdminUserService, TicketService, RecurringIncomeService, CurrencyService, NotificationsService, AssessmentCategoryService, NotebookService, Module2Service, AssessmentCronService, BudgetNotificationService],      // Same with providers
 })
 export class AppModule {}

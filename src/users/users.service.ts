@@ -392,7 +392,7 @@ async getAllUsers() {
     this.prisma.goal.count({
       where: {
         isCompleted: true,
-        project: {
+        projects: {
           userId: userId,
         },
       },
