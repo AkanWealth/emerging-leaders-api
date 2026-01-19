@@ -126,8 +126,9 @@ model GoalNotification {
 model Category {
   id           String    @id @default(uuid())
   icon         String?
-  title        String
+  title        String    
   description  String
+  defaultCate  Boolean @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   usageContext String?

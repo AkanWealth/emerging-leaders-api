@@ -231,84 +231,97 @@
 //   .finally(async () => {
 //     await prisma.$disconnect();
 //   });
-// import { PrismaClient } from '@prisma/client';
-// import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '@prisma/client';
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-// const categories = [
-//   {
-//     title: "Set goals for your personal development",
-//     description: "Set goals for your personal development",
-//     icon: "assets/icons/personal_development/personal_development_1.png",
-//   },
-//   {
-//     title: "Health and wellbeing",
-//     description: "Set goals for your health and wellness",
-//     icon: "assets/icons/health/health_1.png",
-//   },
-//   {
-//     title: "Family",
-//     description: "Set goals for your family",
-//     icon: "assets/icons/family/family_1.png",
-//   },
-//   {
-//     title: "Education",
-//     description: "Set goals for your education",
-//     icon: "assets/icons/education/education_1.png",
-//   },
-//   {
-//     title: "Entrepreneurship",
-//     description: "Set goals for your entrepreneurship goals",
-//     icon: "assets/icons/entrepreneurship/entrepreneurship_1.png",
-//   },
-//   {
-//     title: "Career development",
-//     description: "Set goals for your career development",
-//     icon: "assets/icons/career/career_1.png",
-//   },
-//   {
-//     title: "Community",
-//     description: "Set goals for your community",
-//     icon: "assets/icons/community/community_1.png",
-//   },
-//   {
-//     title: "Financial growth",
-//     description: "Set goals for financial freedom",
-//     icon: "assets/icons/financial/financial_1.png",
-//   },
-// ];
+const categories = [
+  {
+    title: "Set goals for your personal development",
+    description: "Set goals for your personal development",
+    icon: "assets/icons/personal_development/personal_development_1.png",
+  },
+  {
+    title: "Health and wellbeing",
+    description: "Set goals for your health and wellness",
+    icon: "assets/icons/health/health_1.png",
+  },
+  {
+    title: "Family",
+    description: "Set goals for your family",
+    icon: "assets/icons/family/family_1.png",
+  },
+  {
+    title: "Education",
+    description: "Set goals for your education",
+    icon: "assets/icons/education/education_1.png",
+  },
+  {
+    title: "Entrepreneurship",
+    description: "Set goals for your entrepreneurship goals",
+    icon: "assets/icons/entrepreneurship/entrepreneurship_1.png",
+  },
+  {
+    title: "Career development",
+    description: "Set goals for your career development",
+    icon: "assets/icons/career/career_1.png",
+  },
+  {
+    title: "Community",
+    description: "Set goals for your community",
+    icon: "assets/icons/community/community_1.png",
+  },
+  {
+    title: "Financial growth",
+    description: "Set goals for financial freedom",
+    icon: "assets/icons/financial/financial_1.png",
+  },
+];
 
-// async function seedCategories() {
-//   console.log("🌱 Seeding Default Categories...");
+async function seedCategories() {
+  console.log("🌱 Seeding Default Categories...");
 
-//   for (const cat of categories) {
-//     try {
-//       const created = await prisma.category.create({
-//         data: {
-//           id: uuidv4(), // unique ID for Prisma
-//           title: cat.title,
-//           description: cat.description,
-//           icon: cat.icon,
-//         },
-//       });
-//       console.log("Inserted category:", created.title);
-//     } catch (error) {
-//       console.error("Failed to insert category:", cat.title, error);
-//     }
-//   }
+  for (const cat of categories) {
+    const existing = await prisma.category.findFirst({
+      where: {
+        title: cat.title,
+        defaultCate: true,
+        userId: null, // system category
+      },
+    });
 
-//   console.log("✅ Default categories seeding complete.");
-// }
+    if (existing) {
+      await prisma.category.update({
+        where: { id: existing.id },
+        data: {
+          description: cat.description,
+          icon: cat.icon,
+        },
+      });
+      console.log("✔ Updated:", cat.title);
+    } else {
+      await prisma.category.create({
+        data: {
+          title: cat.title,
+          description: cat.description,
+          icon: cat.icon,
+          defaultCate: true,
+          userId: null,
+        },
+      });
+      console.log("➕ Inserted:", cat.title);
+    }
+  }
 
-// // Run the seed
-// seedCategories()
-//   .catch((e) => {
-//     console.error("❌ Seed failed:", e);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
+  console.log("✅ Default categories seeded safely.");
+}
+
+seedCategories()
+  .catch(console.error)
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
 
@@ -450,44 +463,44 @@
 // main()
 //   .catch((e) => console.error(e))
 //   .finally(() => prisma.$disconnect());
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
-async function main() {
-  const users = await prisma.user.findMany();
+// async function main() {
+//   const users = await prisma.user.findMany();
 
-  const messages = [
-    'Be proactive. What step can you take now to help you move forward?',
-    'You’ve taken the next step in your project. Keep on going. You’ve got this.',
-    'You’re staying focused and right on target.',
-    'You’re writing the next chapter of your story, despite the challenges along the way.',
-    'Now you’ve completed that goal, what else do you want to achieve?',
-    'Where is your next “THERE”?',
-    'Take some time to celebrate, and to thank those that helped along the way.',
-    'You’re moving in the right direction. What is your next step from here to there?',
-    'What new skills, resources, people or experience do you need for the next step in your journey?',
-    'Go back to your WHY and remember what’s at the heart of all this.',
-    'Who are the people you know and need to know that can help you write the next steps of your goal?',
-  ];
+//   const messages = [
+//     'Be proactive. What step can you take now to help you move forward?',
+//     'You’ve taken the next step in your project. Keep on going. You’ve got this.',
+//     'You’re staying focused and right on target.',
+//     'You’re writing the next chapter of your story, despite the challenges along the way.',
+//     'Now you’ve completed that goal, what else do you want to achieve?',
+//     'Where is your next “THERE”?',
+//     'Take some time to celebrate, and to thank those that helped along the way.',
+//     'You’re moving in the right direction. What is your next step from here to there?',
+//     'What new skills, resources, people or experience do you need for the next step in your journey?',
+//     'Go back to your WHY and remember what’s at the heart of all this.',
+//     'Who are the people you know and need to know that can help you write the next steps of your goal?',
+//   ];
 
-  for (const user of users) {
-    const notifications = messages.map((body) => ({
-      userId: user.id,
-      title: 'Goal Notification',
-      body,
-      type: 'GOAL_MOTIVATION',
-    }));
+//   for (const user of users) {
+//     const notifications = messages.map((body) => ({
+//       userId: user.id,
+//       title: 'Goal Notification',
+//       body,
+//       type: 'GOAL_MOTIVATION',
+//     }));
 
-    await prisma.goalNotification.createMany({
-      data: notifications,
-      skipDuplicates: true,
-    });
-  }
+//     await prisma.goalNotification.createMany({
+//       data: notifications,
+//       skipDuplicates: true,
+//     });
+//   }
 
-  console.log('Goal notifications seeded successfully!');
-}
+//   console.log('Goal notifications seeded successfully!');
+// }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+// main()
+//   .catch(console.error)
+//   .finally(() => prisma.$disconnect());

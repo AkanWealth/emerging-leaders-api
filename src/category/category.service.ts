@@ -23,16 +23,20 @@ export class CategoryService {
     return this.prisma.category.findMany();
   }
 
-  findAllUserCate(userId: string) {
+findAllUserCate(userId: string) {
   return this.prisma.category.findMany({
     where: {
-      userId, 
+      OR: [
+        { userId },                 // user-created
+        { defaultCate: true },      // system defaults
+      ],
     },
     orderBy: {
       createdAt: 'desc',
     },
   });
 }
+
 
   findOne(id: string) {
     return this.prisma.category.findUnique({
