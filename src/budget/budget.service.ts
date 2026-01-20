@@ -28,7 +28,7 @@ export class BudgetService {
         category: true,
         expenses: true,
         SavingsGoal: true,       // ✅ link savings goals attached to this budget
-        SavingsTopUp: true,      // ✅ link top-ups done under this budget
+        SavingsTopUp: true,      // ✅ link top-ups done under this budget     
       },
     });
   }

@@ -17,6 +17,13 @@ export class CreateBudgetDto {
   categoryId: string;
 
   @ApiProperty({
+    example: 'i am a good person',
+    description: 'The description of the category this budget belongs to',
+  })
+  @IsString()
+  description: string;
+
+  @ApiProperty({
     enum: ['one-off', 'daily', 'weekly', 'monthly'],
     example: 'monthly',
     description: 'The recurrence pattern of the budget',
