@@ -1,14 +1,32 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Req } from '@nestjs/common';
 import { MindsetService } from './mindset.service';
 
 @Controller('mindset')
 export class MindsetController {
   constructor(private readonly mindsetService: MindsetService) {}
 
-  /** Fetch cards for a group */
+  /** Fetch all cards in a group (admin / preview use) */
   @Get('group/:name')
   async getGroupCards(@Param('name') name: string) {
     const cards = await this.mindsetService.getGroupCards(name);
-    return cards.map(c => ({ id: c.id, text: c.text, order: c.order }));
+    return cards.map(c => ({
+      id: c.id,
+      text: c.text,
+      order: c.order,
+    }));
+  }
+
+  /** Fetch today’s popup cards (what frontend shows as modal) */
+  @Get('today')
+  async getTodayMindsets(@Req() req) {
+    const userId = req.user.id; // from auth guard
+    const progress = await this.mindsetService.getTodayCards(userId);
+
+    return progress.map(p => ({
+      group: p.group.name,
+      cardId: p.cardId,
+      text: p.card.text,
+      date: p.createdAt,
+    }));
   }
 }

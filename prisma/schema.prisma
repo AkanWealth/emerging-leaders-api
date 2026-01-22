@@ -68,20 +68,21 @@ model AssessmentQuestion {
 }
 
 model Budget {
-  id                  String               @id @default(cuid())
-  userId              String?
-  limit               Float
-  categoryId          String?
-  description         String?
-  repeat              String
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  category            Category?            @relation(fields: [categoryId], references: [id])
-  User                User?                @relation(fields: [userId], references: [id])
-  expenses            Expense[]
-  SavingsGoal         SavingsGoal[]
-  SavingsTopUp        SavingsTopUp[]
-  budgetNotifications BudgetNotification[]
+  id                   String               @id @default(cuid())
+  userId               String?
+  limit                Float
+  categoryId           String?
+  description          String?
+  repeat               String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  category             Category?            @relation(fields: [categoryId], references: [id])
+  User                 User?                @relation(fields: [userId], references: [id])
+  expenses             Expense[]
+  SavingsGoal          SavingsGoal[]
+  SavingsTopUp         SavingsTopUp[]
+  budgetNotifications  BudgetNotification[]
+  userBudgetProgresses UserBudgetProgress[]
 }
 
 model BudgetNotification {
@@ -124,12 +125,40 @@ model GoalNotification {
   @@index([projectId])
 }
 
+model UserGoalProgress {
+  id             String   @id @default(uuid())
+  userId         String
+  goalId         String
+  lastMessageIdx Int      @default(-1) // Tracks which message was last shown
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  goal Goal @relation(fields: [goalId], references: [id])
+
+  @@unique([userId, goalId])
+}
+
+model UserProjectProgress {
+  id             String   @id @default(uuid())
+  userId         String
+  projectId      String
+  lastMessageIdx Int      @default(-1) // Tracks which message was last shown
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
 model Category {
   id           String    @id @default(uuid())
   icon         String?
-  title        String    
+  title        String
   description  String
-  defaultCate  Boolean @default(false)
+  defaultCate  Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   usageContext String?
@@ -205,22 +234,23 @@ model FinanceSetup {
 }
 
 model Goal {
-  id                String             @id @default(uuid())
-  title             String
-  repeat            String?
-  projectId         String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  endDate           DateTime
-  endTime           String?
-  isCompleted       Boolean            @default(false)
-  startDate         DateTime
-  startTime         String?
-  icon              String?
-  isRepeatEnabled   Boolean            @default(false)
-  completedDates    Json?              @default("[]")
-  projects          Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  goalNotifications GoalNotification[]
+  id                 String             @id @default(uuid())
+  title              String
+  repeat             String?
+  projectId          String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  endDate            DateTime
+  endTime            String?
+  isCompleted        Boolean            @default(false)
+  startDate          DateTime
+  startTime          String?
+  icon               String?
+  isRepeatEnabled    Boolean            @default(false)
+  completedDates     Json?              @default("[]")
+  projects           Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  goalNotifications  GoalNotification[]
+  userGoalProgresses UserGoalProgress[]
 }
 
 model Income {
@@ -368,20 +398,22 @@ model Notification {
 }
 
 model MindsetGroup {
-  id           String        @id @default(uuid())
-  name         String        @unique // General | 7 Negative Mindsets | 7 Leadership Mindsets
-  items        MindsetItem[]
-  intervalDays Int           @default(7)
-  createdAt    DateTime      @default(now())
+  id                    String                @id @default(uuid())
+  name                  String                @unique // General | 7 Negative Mindsets | 7 Leadership Mindsets
+  items                 MindsetItem[]
+  intervalDays          Int                   @default(7)
+  createdAt             DateTime              @default(now())
+  userMindsetProgresses UserMindsetProgress[]
 }
 
 model MindsetItem {
-  id        String       @id @default(uuid())
-  groupId   String
-  text      String // one full card sentence
-  order     Int // display order
-  group     MindsetGroup @relation(fields: [groupId], references: [id])
-  createdAt DateTime     @default(now())
+  id                    String                @id @default(uuid())
+  groupId               String
+  text                  String // one full card sentence
+  order                 Int // display order
+  group                 MindsetGroup          @relation(fields: [groupId], references: [id])
+  createdAt             DateTime              @default(now())
+  userMindsetProgresses UserMindsetProgress[]
 }
 
 model UserMindsetProgress {
@@ -390,6 +422,9 @@ model UserMindsetProgress {
   groupId   String
   cardId    String
   createdAt DateTime @default(now())
+
+  card  MindsetItem  @relation(fields: [cardId], references: [id])
+  group MindsetGroup @relation(fields: [groupId], references: [id])
 }
 
 model NotificationPreference {
@@ -419,21 +454,22 @@ model Otp {
 }
 
 model Project {
-  id                String             @id @default(uuid())
-  name              String
-  description       String
-  startDate         DateTime
-  endDate           DateTime
-  categoryId        String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  projectColor      String
-  userId            String?
-  completed         Boolean            @default(false)
-  goals             Goal[]
-  category          Category?          @relation(fields: [categoryId], references: [id])
-  User              User?              @relation(fields: [userId], references: [id])
-  goalNotifications GoalNotification[]
+  id                    String                @id @default(uuid())
+  name                  String
+  description           String
+  startDate             DateTime
+  endDate               DateTime
+  categoryId            String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  projectColor          String
+  userId                String?
+  completed             Boolean               @default(false)
+  goals                 Goal[]
+  category              Category?             @relation(fields: [categoryId], references: [id])
+  User                  User?                 @relation(fields: [userId], references: [id])
+  goalNotifications     GoalNotification[]
+  userProjectProgresses UserProjectProgress[]
 }
 
 model RecurringIncome {
@@ -462,23 +498,42 @@ model RecurringIncomeLog {
   recurringIncome   RecurringIncome @relation(fields: [recurringIncomeId], references: [id])
 }
 
+model UserBudgetProgress {
+  id             String   @id @default(uuid())
+  userId         String
+  savingsGoalId  String? // for savings goal messages
+  budgetId       String? // for budget overspend messages
+  lastMessageIdx Int      @default(-1) // last message shown index
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id])
+  SavingsGoal SavingsGoal? @relation(fields: [savingsGoalId], references: [id])
+  Budget      Budget?      @relation(fields: [budgetId], references: [id])
+
+  @@index([userId])
+  @@index([savingsGoalId])
+  @@index([budgetId])
+}
+
 model SavingsGoal {
-  id                  String               @id @default(uuid())
-  userId              String?
-  targetAmount        Float
-  targetDate          DateTime
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  icon                String?
-  isCompleted         Boolean              @default(false)
-  savedAmount         Float                @default(0)
-  title               String?
-  budgetId            String?
-  description         String?
-  Budget              Budget?              @relation(fields: [budgetId], references: [id])
-  user                User?                @relation(fields: [userId], references: [id])
-  SavingsTopUp        SavingsTopUp[]
-  budgetNotifications BudgetNotification[]
+  id                   String               @id @default(uuid())
+  userId               String?
+  targetAmount         Float
+  targetDate           DateTime
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  icon                 String?
+  isCompleted          Boolean              @default(false)
+  savedAmount          Float                @default(0)
+  title                String?
+  budgetId             String?
+  description          String?
+  Budget               Budget?              @relation(fields: [budgetId], references: [id])
+  user                 User?                @relation(fields: [userId], references: [id])
+  SavingsTopUp         SavingsTopUp[]
+  budgetNotifications  BudgetNotification[]
+  userBudgetProgresses UserBudgetProgress[]
 }
 
 model SavingsTopUp {
@@ -577,6 +632,9 @@ model User {
   wallet                                     Wallet?
   budgetNotifications                        BudgetNotification[]
   goalNotifications                          GoalNotification[]
+  userGoalProgresses                         UserGoalProgress[]
+  userProjectProgresses                      UserProjectProgress[]
+  userBudgetProgresses                       UserBudgetProgress[]
 
   @@index([city])
   @@index([country])

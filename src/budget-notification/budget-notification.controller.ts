@@ -5,13 +5,19 @@ import { BudgetNotificationService } from './budget-notification.service';
 export class BudgetNotificationController {
   constructor(private readonly service: BudgetNotificationService) {}
 
-  // fetch unread notifications for a user
+  // Fetch today's messages (one per event)
+  @Get('today/:userId')
+  async getToday(@Param('userId') userId: string) {
+    return this.service.getTodayMessages(userId);
+  }
+
+  // Fetch unread notifications
   @Get('unread/:userId')
   async getUnread(@Param('userId') userId: string) {
     return this.service.fetchUnread(userId);
   }
 
-  // mark a notification as read (clicked)
+  // Mark a notification as read
   @Patch(':id/read')
   async markRead(@Param('id') id: string) {
     return this.service.markAsRead(id);
