@@ -1,8 +1,11 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { MindsetService } from './mindset.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('Mindset')
 @Controller('mindset')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class MindsetController {
   constructor(private readonly mindsetService: MindsetService) {}

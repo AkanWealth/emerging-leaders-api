@@ -1,7 +1,13 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { GoalNotificationService } from './goal-notification.service';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';    
 
 @Controller('goal-notification')
+@ApiBearerAuth()
+@ApiTags('Goal Notification')
+@UseGuards(JwtAuthGuard)
 export class GoalNotificationController {
   constructor(private readonly goalNotificationService: GoalNotificationService) {}
 

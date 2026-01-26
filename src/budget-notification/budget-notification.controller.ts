@@ -1,6 +1,12 @@
 import { Controller, Get, Param, Patch } from '@nestjs/common';
 import { BudgetNotificationService } from './budget-notification.service';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@ApiTags('Budget Notifications')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('budget-notifications')
 export class BudgetNotificationController {
   constructor(private readonly service: BudgetNotificationService) {}
