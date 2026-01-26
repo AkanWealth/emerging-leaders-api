@@ -187,13 +187,15 @@ model Content {
 model Currency {
   id              String            @id @default(uuid())
   symbol          String
+  code            String            @unique
+  logoUrl         String          // <-- optional logo
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  code            String            @unique
   FinanceSetup    FinanceSetup[]
   RecurringIncome RecurringIncome[]
   User            User[]
 }
+
 
 model Expense {
   id          String    @id @default(uuid())

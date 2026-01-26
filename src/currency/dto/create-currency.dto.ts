@@ -6,6 +6,11 @@ export class CreateCurrencyDto {
   @IsString()
   code: string;
 
+  
+  @ApiProperty({ example: 'logo.png' })
+  @IsString()
+  logoUrl: string;
+
   @ApiProperty({ example: '₦' })
   @IsString()
   symbol: string;

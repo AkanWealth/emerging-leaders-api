@@ -429,42 +429,149 @@
 //   .finally(() => prisma.$disconnect());
 
 
+// import { PrismaClient } from '@prisma/client';
+// const prisma = new PrismaClient();
+
+// async function main() {
+//   const users = await prisma.user.findMany(); // or pick specific users
+
+//   const messages = [
+//     "Saving towards your Bigger Yes!",
+//     "You made it to your target! Go use that money to write the next chapter of your story, however big or small. And celebrate. You did it!",
+//     "Now that you’ve hit that target, what else can you be saving towards? What is your medium or long term goal?",
+//     "Small changes make a BIG difference. Congratulations!",
+//     "Remember, you’ve got this. You’re saving towards that Bigger Yes!",
+//     "If we don’t lead our finances our finances will lead us",
+//     "In order to lead our money, we must first lead ourselves."
+//   ];
+
+//   for (const user of users) {
+//     const notifications = messages.map((body) => ({
+//       userId: user.id,
+//       title: 'Budget Notification',
+//       body,
+//       type: 'SAVINGS_TARGET'
+//     }));
+
+//     await prisma.budgetNotification.createMany({
+//       data: notifications,
+//       skipDuplicates: true, // won't create duplicates if rerun
+//     });
+//   }
+
+//   console.log('Budget notifications seeded successfully!');
+// }
+
+// main()
+//   .catch((e) => console.error(e))
+//   .finally(() => prisma.$disconnect());
+
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 async function main() {
-  const users = await prisma.user.findMany(); // or pick specific users
-
-  const messages = [
-    "Saving towards your Bigger Yes!",
-    "You made it to your target! Go use that money to write the next chapter of your story, however big or small. And celebrate. You did it!",
-    "Now that you’ve hit that target, what else can you be saving towards? What is your medium or long term goal?",
-    "Small changes make a BIG difference. Congratulations!",
-    "Remember, you’ve got this. You’re saving towards that Bigger Yes!",
-    "If we don’t lead our finances our finances will lead us",
-    "In order to lead our money, we must first lead ourselves."
+  const currencies = [
+    {
+      code: 'EUR',
+      symbol: '€',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769246313/ab6caef4f5a14ad1160f3c8bafc5da7fc8f46ef7_gy7fhi.png',
+    },
+    {
+      code: 'MGA',
+      symbol: 'Ar',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769246389/Madagascar_d6lq4e.png',
+    },
+    {
+      code: 'PHP',
+      symbol: '₱',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769246513/Philippines_dwqeya.png',
+    },
+    {
+      code: 'NIO',
+      symbol: 'C$',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769246611/Nicaragua_xzo975.png',
+    },
+    {
+      code: 'GTQ',
+      symbol: 'Q',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769246722/Guatemala_wyc5cp.png',
+    },
+    {
+      code: 'PEN',
+      symbol: 'S/',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769246923/Peru_ilpgu1.png',
+    },
+    {
+      code: 'BRL',
+      symbol: 'R$',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247020/Brazil_zimh7p.png',
+    },
+    {
+      code: 'INR',
+      symbol: '₹',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247081/India_ewbct0.png',
+    },
+    {
+      code: 'LRD',
+      symbol: '$',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247152/Liberia_ldvkaz.png',
+    },
+    {
+      code: 'XAF',
+      symbol: 'CM',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247216/Cameroon_dp6dud.png',
+    },
+    {
+      code: 'MWK',
+      symbol: 'MK',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247268/Malawi_kqzyzu.png',
+    },
+    {
+      code: 'RWF',
+      symbol: 'RF',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247331/Rwanda_dufnls.png',
+    },
+    {
+      code: 'SLE',
+      symbol: 'LE',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247651/Sierra_Leone_ncnv3g.png',
+    },
+    {
+      code: 'ZAR',
+      symbol: 'R',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769247842/South_Africa_gsjdwc.png',
+    },
+    {
+      code: 'KES',
+      symbol: 'KSh',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769248066/Kenya_ayacvk.png',
+    },
+    {
+      code: 'GBP',
+      symbol: '£',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769248150/United_Kingdom_benu7f.png',
+    },
+    {
+      code: 'USD',
+      symbol: '$',
+      logoUrl: 'https://res.cloudinary.com/dx7vw2wsp/image/upload/v1769248306/United_States_of_America_bjogu1.png',
+    },
   ];
 
-  for (const user of users) {
-    const notifications = messages.map((body) => ({
-      userId: user.id,
-      title: 'Budget Notification',
-      body,
-      type: 'SAVINGS_TARGET'
-    }));
-
-    await prisma.budgetNotification.createMany({
-      data: notifications,
-      skipDuplicates: true, // won't create duplicates if rerun
+  for (const currency of currencies) {
+    await prisma.currency.upsert({
+      where: { code: currency.code },
+      update: currency,
+      create: currency,
     });
   }
-
-  console.log('Budget notifications seeded successfully!');
 }
 
 main()
-  .catch((e) => console.error(e))
+  .catch(console.error)
   .finally(() => prisma.$disconnect());
+
 
 // import { PrismaClient } from '@prisma/client';
 
