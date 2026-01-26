@@ -44,52 +44,69 @@ export class MindsetService {
 
   /** Daily job: advance progress only (no notifications) */
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
-  async advanceMindsets() {
-    const users = await this.prisma.user.findMany();
-    const groups = await this.prisma.mindsetGroup.findMany();
+async advanceMindsets() {
+  const users = await this.prisma.user.findMany();
+  const groups = await this.prisma.mindsetGroup.findMany({
+    orderBy: { order: 'asc' },
+  });
 
-    for (const user of users) {
-      for (const group of groups) {
-        const firstInCycle = await this.prisma.userMindsetProgress.findFirst({
-          where: { userId: user.id, groupId: group.id },
-          orderBy: { createdAt: 'asc' },
-        });
+  for (const user of users) {
+    // find current active group
+    let activeGroup: typeof groups[number] | null = null;
 
-        if (firstInCycle) {
-          const cycleEnd = new Date(firstInCycle.createdAt);
-          cycleEnd.setDate(cycleEnd.getDate() + group.intervalDays);
-          if (new Date() > cycleEnd) continue; // interval finished
-        }
+    for (const group of groups) {
+      const first = await this.prisma.userMindsetProgress.findFirst({
+        where: { userId: user.id, groupId: group.id },
+        orderBy: { createdAt: 'asc' },
+      });
 
-        const card = await this.getNextSequentialCard(user.id, group.id);
-        if (!card) continue;
+      if (!first) {
+        activeGroup = group;
+        break;
+      }
 
-        await this.prisma.userMindsetProgress.create({
-          data: {
-            userId: user.id,
-            groupId: group.id,
-            cardId: card.id,
-          },
-        });
+      const cycleEnd = new Date(first.createdAt);
+      cycleEnd.setDate(cycleEnd.getDate() + group.intervalDays);
+
+      if (new Date() <= cycleEnd) {
+        activeGroup = group;
+        break;
       }
     }
-  }
 
-  /** What the frontend uses for popup */
-  async getTodayCards(userId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    if (!activeGroup) continue;
 
-    return this.prisma.userMindsetProgress.findMany({
-      where: {
-        userId,
-        createdAt: { gte: today },
+    const card = await this.getNextSequentialCard(user.id, activeGroup.id);
+    if (!card) continue;
+
+    await this.prisma.userMindsetProgress.create({
+      data: {
+        userId: user.id,
+        groupId: activeGroup.id,
+        cardId: card.id,
       },
-      include: {
-        card: true,
-        group: true,
-      },
-      orderBy: { createdAt: 'desc' },
     });
   }
+}
+
+
+  /** What the frontend uses for popup */
+  
+  async getTodayCards(userId: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return this.prisma.userMindsetProgress.findFirst({
+    where: {
+      userId,
+      createdAt: { gte: today },
+    },
+    include: {
+      card: true,
+      group: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 }

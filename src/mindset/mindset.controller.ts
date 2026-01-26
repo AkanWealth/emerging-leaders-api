@@ -22,16 +22,19 @@ export class MindsetController {
   }
 
   /** Fetch today’s popup cards (what frontend shows as modal) */
-  @Get('today')
-  async getTodayMindsets(@Req() req) {
-    const userId = req.user.id; // from auth guard
-    const progress = await this.mindsetService.getTodayCards(userId);
+ @Get('today')
+async getTodayMindsets(@Req() req) {
+  const userId = req.user.id;
+  const p = await this.mindsetService.getTodayCards(userId);
 
-    return progress.map(p => ({
-      group: p.group.name,
-      cardId: p.cardId,
-      text: p.card.text,
-      date: p.createdAt,
-    }));
-  }
+  if (!p) return null;
+
+  return {
+    group: p.group.name,
+    cardId: p.cardId,
+    text: p.card.text,
+    date: p.createdAt,
+  };
+}
+
 }

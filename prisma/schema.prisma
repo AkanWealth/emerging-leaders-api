@@ -402,6 +402,7 @@ model Notification {
 model MindsetGroup {
   id                    String                @id @default(uuid())
   name                  String                @unique // General | 7 Negative Mindsets | 7 Leadership Mindsets
+  order                 Int                   @default(1)
   items                 MindsetItem[]
   intervalDays          Int                   @default(7)
   createdAt             DateTime              @default(now())
