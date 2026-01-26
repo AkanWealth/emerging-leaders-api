@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Req } from '@nestjs/common';
 import { BudgetNotificationService } from './budget-notification.service';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
@@ -12,10 +12,12 @@ export class BudgetNotificationController {
   constructor(private readonly service: BudgetNotificationService) {}
 
   // Fetch today's messages (one per event)
-  @Get('today/:userId')
-  async getToday(@Param('userId') userId: string) {
-    return this.service.getTodayMessages(userId);
-  }
+    @Get('today')
+    @UseGuards(JwtAuthGuard)
+    async getToday(@Req() req) {
+      return this.service.getTodayMessages(req.user.id);
+    }
+
 
   // Fetch unread notifications
   @Get('unread/:userId')
