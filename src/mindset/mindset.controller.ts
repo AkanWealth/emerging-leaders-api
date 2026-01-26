@@ -1,7 +1,9 @@
-import { Controller, Get, Param, Req } from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { MindsetService } from './mindset.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('mindset')
+@UseGuards(JwtAuthGuard)
 export class MindsetController {
   constructor(private readonly mindsetService: MindsetService) {}
 
