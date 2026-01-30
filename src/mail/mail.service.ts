@@ -152,7 +152,7 @@ async sendAdminPasswordResetLink(email: string, fullName: string, resetLink: str
    */
   async sendOtpEmail(email: string, otp: string) {
     try {
-      await this.sendEmailWithTemplate(email, 40266285, { otp }); // Replace with your Postmark OTP template ID
+      await this.sendEmailWithTemplate(email, 40266285, { otp }); 
       this.logger.log(`OTP email sent to: ${email}`);
     } catch (error) {
       this.logger.error(`Failed to send OTP email to ${email}:`, error);

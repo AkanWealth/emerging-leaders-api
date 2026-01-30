@@ -27,6 +27,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
+import { ResendOtpDto } from './dto/resend';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -58,14 +59,14 @@ export class AuthController {
   }
 
   // Resend OTP for email verification
-  @Post('resend-otp')
-  @ApiOperation({ summary: 'Resend OTP for account verification' })
-  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
-  @ApiResponse({ status: 400, description: 'Account already verified or inactive' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async resendOtp(@Body('email') email: string) {
-    return this.authService.resendOtp(email);
-  }
+ @Post('resend-otp')
+@ApiOperation({ summary: 'Resend OTP for account verification' })
+@ApiResponse({ status: 200, description: 'OTP resent successfully' })
+@ApiResponse({ status: 400, description: 'Account already verified or inactive' })
+@ApiResponse({ status: 404, description: 'User not found' })
+async resendOtp(@Body() dto: ResendOtpDto) {
+  return this.authService.resendOtp(dto.email);
+}
 
 
   //  Google login using mobile ID token

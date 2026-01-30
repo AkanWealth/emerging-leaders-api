@@ -5,7 +5,7 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class AssessmentCronService {
-  private readonly intervalsInMonths = [1, 3, 6]; // The recurring pattern
+  private readonly intervalsInMonths = [1, 3, 6]; 
 
   constructor(
     private prisma: PrismaService,
