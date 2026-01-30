@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -127,7 +127,7 @@ async refresh(userId: string, refreshToken: string) {
   const tokens = await this.getTokens({
     id: user.id,
     email: user.email,
-    isAdmin: user.isAdmin, // ✅ Pass isAdmin
+    isAdmin: user.isAdmin, 
   });
 
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
@@ -228,7 +228,7 @@ async verifyOtp(email: string, otp: string) {
     return this.usersService.updatePassword(user.id, hashedPassword);
   }
 
- async loginWithCredentials(email: string, password: string) {
+async loginWithCredentials(email: string, password: string) {
   const user = await this.prisma.user.findUnique({
     where: { email },
     select: {
@@ -238,6 +238,7 @@ async verifyOtp(email: string, otp: string) {
       lastname: true,
       password: true,
       isAdmin: true,
+      status: true, // 👈 required
     },
   });
 
@@ -247,13 +248,28 @@ async verifyOtp(email: string, otp: string) {
 
   const passwordValid = await bcrypt.compare(password, user.password);
   if (!passwordValid) {
-    throw new UnauthorizedException('Invalid credentials');
+    throw new UnauthorizedException('Invalid email or password');
+  }
+
+  // 🚫 Block users that are not verified/active
+  if (user.status !== 'ACTIVE') {
+    let message = 'Account not active.';
+
+    if (user.status === 'PENDING') {
+      message = 'Please verify your account to continue.';
+    } else if (user.status === 'INACTIVE') {
+      message = 'Your account is inactive. Please contact support.';
+    } else if (user.status === 'DEACTIVATED') {
+      message = 'Your account has been deactivated.';
+    }
+
+    throw new ForbiddenException(message);
   }
 
   const tokens = await this.getTokens({
     id: user.id,
     email: user.email,
-    isAdmin: user.isAdmin, 
+    isAdmin: user.isAdmin,
   });
 
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
@@ -261,11 +277,37 @@ async verifyOtp(email: string, otp: string) {
   return {
     user: {
       id: user.id,
-      name: user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : undefined,
+      name:
+        user.firstname && user.lastname
+          ? `${user.firstname} ${user.lastname}`
+          : undefined,
       email: user.email,
-      isAdmin: user.isAdmin, // optional: include in response
+      isAdmin: user.isAdmin,
     },
     tokens,
+  };
+}
+
+async resendOtp(email: string) {
+  const user = await this.usersService.findByEmail(email);
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  // 🚫 Only pending users can resend OTP
+  if (user.status !== 'PENDING') {
+    throw new BadRequestException('Account is already verified or inactive');
+  }
+
+  const otp = this.generateOtp();
+
+  // Replace any existing OTP
+  await this.usersService.updateOtp(user.id, otp);
+
+  await this.sendOtpToEmail(user.email, otp);
+
+  return {
+    message: 'OTP resent successfully. Please check your email.',
   };
 }
 

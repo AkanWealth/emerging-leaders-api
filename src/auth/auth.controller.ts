@@ -57,6 +57,17 @@ export class AuthController {
     return this.authService.loginWithCredentials(dto.email, dto.password);
   }
 
+  // Resend OTP for email verification
+  @Post('resend-otp')
+  @ApiOperation({ summary: 'Resend OTP for account verification' })
+  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
+  @ApiResponse({ status: 400, description: 'Account already verified or inactive' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async resendOtp(@Body('email') email: string) {
+    return this.authService.resendOtp(email);
+  }
+
+
   //  Google login using mobile ID token
   @Post('google')
   @ApiOperation({ summary: 'Login or Register using Google ID token' })
