@@ -21,77 +21,174 @@ export class TicketService {
   // Create new ticket
 
 
- async create(dto: CreateTicketDto, userId: string) {
-    const ticketNumber = `TCK-${Date.now()}`;
+//  async create(dto: CreateTicketDto, userId: string) {
+//     const ticketNumber = `TCK-${Date.now()}`;
 
-    // Create the ticket and include user info for notifications/emails
-    const ticket = await this.prisma.ticket.create({
-      data: { ...dto, userId, ticketNumber },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstname: true,
-            lastname: true,
-            email: true,
-            phone: true,
-            profilePicture: true,
-            status: true,
-            isAdmin: true,
-            createdAt: true,
-            updatedAt: true,
-          },
+//     // Create the ticket and include user info for notifications/emails
+//     const ticket = await this.prisma.ticket.create({
+//       data: { ...dto, userId, ticketNumber },
+//       include: {
+//         user: {
+//           select: {
+//             id: true,
+//             firstname: true,
+//             lastname: true,
+//             email: true,
+//             phone: true,
+//             profilePicture: true,
+//             status: true,
+//             isAdmin: true,
+//             createdAt: true,
+//             updatedAt: true,
+//           },
+//         },
+//       },
+//     });
+
+//     // ✅ Log user activity
+//     await this.activityLogService.log(userId, `Opened support ticket: ${dto.subject}`);
+
+//     // ✅ Notify all admins (in-app + email)
+//     const admins = await this.prisma.user.findMany({
+//       where: { isAdmin: true },
+//       select: { id: true, email: true, firstname: true, lastname: true },
+//     });
+
+//     for (const admin of admins) {
+//       const adminName = `${admin.firstname ?? ''} ${admin.lastname ?? ''}`.trim() || 'Admin';
+//       const userName = `${ticket.user?.firstname ?? ''} ${ticket.user?.lastname ?? ''}`.trim() || 'a user';
+
+//       // 🔔 In-app notification
+//       await this.notificationsService.sendToUser(
+//         userId, // sender = ticket creator
+//         admin.id, // receiver = admin
+//         '🎟️ New Support Ticket',
+//         `A new ticket "${dto.subject}" has been created by ${userName}.`,
+//         { ticketId: ticket.id },
+//         'TICKET',
+//       );
+
+//       // 📧 Email notification (non-blocking)
+//       try {
+//         await this.mailService.sendEmailWithTemplate(
+//           admin.email,
+//           41132332, // Postmark Template ID
+//           {
+//             title: 'New Support Ticket',
+//             fullName: adminName,
+//             body: `A new ticket "<strong>${dto.subject}</strong>" has been created by ${userName}.`,
+//             alertMessage: `Ticket Number: ${ticketNumber}`,
+//           },
+//         );
+//       } catch (error) {
+//         this.logger.error(
+//           `❌ Failed to send ticket email to admin ${admin.email}: ${error.message}`,
+//         );
+//       }
+//     }
+
+//     return {
+//       message: '✅ Ticket created successfully',
+//       ticket,
+//     };
+//   }
+
+async create(dto: CreateTicketDto, userId: string) {
+  const ticketNumber = `TCK-${Date.now()}`;
+
+  const ticket = await this.prisma.ticket.create({
+    data: { ...dto, userId, ticketNumber },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          email: true,
         },
       },
-    });
+    },
+  });
 
-    // ✅ Log user activity
-    await this.activityLogService.log(userId, `Opened support ticket: ${dto.subject}`);
-
-    // ✅ Notify all admins (in-app + email)
-    const admins = await this.prisma.user.findMany({
-      where: { isAdmin: true },
-      select: { id: true, email: true, firstname: true, lastname: true },
-    });
-
-    for (const admin of admins) {
-      const adminName = `${admin.firstname ?? ''} ${admin.lastname ?? ''}`.trim() || 'Admin';
-      const userName = `${ticket.user?.firstname ?? ''} ${ticket.user?.lastname ?? ''}`.trim() || 'a user';
-
-      // 🔔 In-app notification
-      await this.notificationsService.sendToUser(
-        userId, // sender = ticket creator
-        admin.id, // receiver = admin
-        '🎟️ New Support Ticket',
-        `A new ticket "${dto.subject}" has been created by ${userName}.`,
-        { ticketId: ticket.id },
-        'TICKET',
-      );
-
-      // 📧 Email notification (non-blocking)
-      try {
-        await this.mailService.sendEmailWithTemplate(
-          admin.email,
-          41132332, // Postmark Template ID
-          {
-            title: 'New Support Ticket',
-            fullName: adminName,
-            body: `A new ticket "<strong>${dto.subject}</strong>" has been created by ${userName}.`,
-            alertMessage: `Ticket Number: ${ticketNumber}`,
-          },
-        );
-      } catch (error) {
-        this.logger.error(
-          `❌ Failed to send ticket email to admin ${admin.email}: ${error.message}`,
-        );
-      }
-    }
-
-    return {
-      message: '✅ Ticket created successfully',
-      ticket,
-    };
+  // ✅ FIX: Ensure user exists
+  if (!ticket.user) {
+    throw new Error('User not found for this ticket');
   }
+
+  const userFullName =
+    `${ticket.user.firstname ?? ''} ${ticket.user.lastname ?? ''}`.trim() || 'Customer';
+
+  // ✅ Log activity
+  await this.activityLogService.log(userId, `Opened support ticket: ${dto.subject}`);
+
+  // =====================================================
+  // ✅ NOTIFY ADMINS
+  // =====================================================
+  const admins = await this.prisma.user.findMany({
+    where: { isAdmin: true },
+    select: { id: true, email: true, firstname: true, lastname: true },
+  });
+
+  for (const admin of admins) {
+    const adminName =
+      `${admin.firstname ?? ''} ${admin.lastname ?? ''}`.trim() || 'Admin';
+
+    await this.notificationsService.sendToUser(
+      userId,
+      admin.id,
+      '🎟️ New Support Ticket',
+      `A new ticket "${dto.subject}" has been created by ${userFullName}.`,
+      { ticketId: ticket.id },
+      'TICKET',
+    );
+
+    try {
+      await this.mailService.sendEmailWithTemplate(
+        admin.email,
+        41132332,
+        {
+          title: 'New Support Ticket',
+          fullName: adminName,
+          subject: dto.subject,
+          userName: userFullName,
+          ticketNumber,
+        },
+      );
+    } catch (error) {
+      this.logger.error(
+        `❌ Failed to send ticket email to admin ${admin.email}: ${error.message}`,
+      );
+    }
+  }
+
+  // =====================================================
+  // ✅ AUTO-RESPONSE TO USER
+  // =====================================================
+  try {
+    await this.mailService.sendEmailWithTemplate(
+      ticket.user.email,
+      41132332,
+      {
+        title: 'We Received Your Complaint',
+        fullName: userFullName,
+        subject: dto.subject,
+        ticketNumber,
+        message:
+          'Thank you for contacting our support team. We have received your complaint and are reviewing it. We will get back to you shortly.',
+      },
+    );
+  } catch (error) {
+    this.logger.error(
+      `❌ Failed to send auto-response email to user ${ticket.user.email}: ${error.message}`,
+    );
+  }
+
+  return {
+    message: '✅ Ticket created successfully',
+    ticket,
+  };
+}
+
   
   // Get tickets for a specific user
   findUserTickets(userId: string) {
