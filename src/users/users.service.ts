@@ -139,7 +139,7 @@ async updateRefreshToken(
   async markProfileComplete(userId: string) {
     return this.prisma.user.update({
       where: { id: userId },
-      data: { profileComplete: true },
+      data: { profileComplete: true, status: 'ACTIVE' },
     });
   }
 
