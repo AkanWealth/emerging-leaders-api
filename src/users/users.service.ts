@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, Logger } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { NotificationsService } from '../notifications/notifications.service'; // Import your NotificationService
+import { NotificationsService } from '../notifications/notifications.service'; 
 import { MailService } from '../mail/mail.service';
 
 
@@ -63,7 +63,7 @@ async saveOtp(userId: string, otp: string) {
       userId,
       otp,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000), // expires in 15 minutes
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // expires in 15 minutes
     },
   });
 }
