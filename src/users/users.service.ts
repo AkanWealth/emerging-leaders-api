@@ -35,9 +35,6 @@ async completeUserAccount(userId: string) {
   }
 }
 
-
-
-
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
   }

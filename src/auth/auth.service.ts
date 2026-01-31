@@ -91,7 +91,7 @@ async login(email: string, name: string) {
       },
       {
         secret: process.env.JWT_ACCESS_SECRET,
-        expiresIn: '15m',
+        expiresIn: '3d',
       },
     ),
     this.jwtService.signAsync(
@@ -179,7 +179,7 @@ async verifyOtp(email: string, otp: string) {
   const tokens = await this.getTokens({
     id: user.id,
     email: user.email,
-    isAdmin: user.isAdmin, // ✅ Include this
+    isAdmin: user.isAdmin, 
   });
 
   await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);

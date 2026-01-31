@@ -14,7 +14,7 @@ import { NotificationPrefrenceModule } from '../notification-prefrence/notificat
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: undefined },
+      signOptions: { expiresIn: '3d' },
     }),
     MailModule,
     UsersModule,
