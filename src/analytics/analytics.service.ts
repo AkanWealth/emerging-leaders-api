@@ -464,7 +464,7 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
 //   };
 // }
 
-async getMonthlyGrowthChart() {
+  async getMonthlyGrowthChart() {
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -501,11 +501,19 @@ async getMonthlyGrowthChart() {
   const currentMonthActiveSet = new Set<string>();
   const previousMonthActiveSet = new Set<string>();
 
+  // a) Include activity log users
   activityLogs.forEach(a => {
     if (!a.userId || !activeUserIds.has(a.userId)) return;
     const date = new Date(a.createdAt);
     if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
     else previousMonthActiveSet.add(a.userId);
+  });
+
+  // b) Include users created this month (even without activity logs)
+  activeUsers.forEach(u => {
+    const createdDate = new Date(u.createdAt);
+    if (createdDate >= currentMonthStart) currentMonthActiveSet.add(u.id);
+    else if (createdDate >= previousMonthStart && createdDate < currentMonthStart) previousMonthActiveSet.add(u.id);
   });
 
   const activeUsersCurrent = currentMonthActiveSet.size;
@@ -550,6 +558,12 @@ async getMonthlyGrowthChart() {
         .filter(a => a.userId && activeUserIds.has(a.userId) && new Date(a.createdAt).toDateString() === date.toDateString())
         .map(a => a.userId)
     );
+
+    // Include users created this day even if no activity log
+    activeUsers.forEach(u => {
+      if (new Date(u.createdAt).toDateString() === date.toDateString()) set.add(u.id);
+    });
+
     return { label, value: set.size };
   });
 
@@ -727,8 +741,8 @@ async getLeaderboard(query: Record<string, string | undefined>) {
     page = '1',
     limit = '20',
     search,
-    ranking = 'highest', // can be 'lowest' or 'highest'
-    sortBy = 'streak',   // default sort field
+    ranking = 'highest', 
+    sortBy = 'streak',   
     completedMin,
     completedMax,
     goalsMin,
@@ -762,7 +776,7 @@ async getLeaderboard(query: Record<string, string | undefined>) {
   include: {
     projects: {
       include: {
-        goals: true,   // assumes Project has: goals Goal[]
+        goals: true,   
       },
     },
     savingsGoals: true,
@@ -773,7 +787,7 @@ async getLeaderboard(query: Record<string, string | undefined>) {
 
   // --- 2. Build the leaderboard structure ---
   const leaderboard = users
-    .filter(u => u.firstname || u.lastname || u.email) // filter missing names
+    .filter(u => u.firstname || u.lastname || u.email) 
     .map((user) => {
       const totalProjects = user.projects.length;
       const totalCompletedGoals = user.projects
@@ -781,7 +795,7 @@ async getLeaderboard(query: Record<string, string | undefined>) {
         .filter((g) => g.isCompleted).length;
       const totalSavings = user.savingsGoals.reduce((sum, g) => sum + (g.savedAmount || 0), 0);
       const totalBudget = user.budgets.reduce((sum, b) => sum + (b.limit || 0), 0);
-      const consistencyStreak = totalCompletedGoals; // placeholder until streak logic defined
+      const consistencyStreak = totalCompletedGoals; 
 
       return {
         id: user.id,
