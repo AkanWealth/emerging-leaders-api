@@ -683,105 +683,94 @@ async getMonthlyGrowthChart() {
 //     page = '1',
 //     limit = '20',
 //     search,
-//     ranking = 'highest', // lowest or highest
-//     sortBy = 'streak',   // default sort field
+//     ranking = 'highest', 
+//     sortBy = 'streak',   
+//     completedMin,
+//     completedMax,
+//     goalsMin,
+//     goalsMax,
+//     streakMin,
+//     streakMax,
+//     savingsMin,
+//     savingsMax,
+//     projectsMin,
+//     projectsMax,
+//     budgetMin,
+//     budgetMax,
 //   } = query;
 
 //   const pageNum = Number(page);
 //   const limitNum = Number(limit);
 
-//   // Fetch users
-//   const users = await this.prisma.user.findMany({
-//     where: {
-//       ...(search
-//         ? {
-//             OR: [
-//               { firstname: { contains: search, mode: 'insensitive' } },
-//               { lastname: { contains: search, mode: 'insensitive' } },
-//               { email: { contains: search, mode: 'insensitive' } },
-//             ],
-//           }
-//         : {}),
+//   // --- 1. Fetch users and related data ---
+//  const users = await this.prisma.user.findMany({
+//   where: {
+//     ...(search
+//       ? {
+//           OR: [
+//             { firstname: { contains: search, mode: 'insensitive' } },
+//             { lastname: { contains: search, mode: 'insensitive' } },
+//             { email: { contains: search, mode: 'insensitive' } },
+//           ],
+//         }
+//       : {}),
+//   },
+//   include: {
+//     projects: {
+//       include: {
+//         goals: true,   
+//       },
 //     },
-//     include: {
-//       projects: { include: { goals: true } },
-//       savingsGoals: true,
-//       budgets: true,
-//     },
-//   });
+//     savingsGoals: true,
+//     budgets: true,
+//   },
+// });
 
-//   // Build leaderboard
-//   const leaderboard = users.map((user) => {
-//     const totalProjects = user.projects.length;
-//     const totalCompletedGoals = user.projects
-//       .flatMap((p) => p.goals)
-//       .filter((g) => g.isCompleted).length;
-//     const totalSavings = user.savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
-//     const totalBudget = user.budgets.reduce((sum, b) => sum + b.limit, 0);
-//     const consistencyStreak = totalCompletedGoals; // placeholder for streak logic
 
-//     return {
-//       id: user.id,
-//       name: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.email,
-//       projects: totalProjects,
-//       completed: totalCompletedGoals,
-//       goals: totalCompletedGoals,
-//       savings: totalSavings,
-//       budget: totalBudget,
-//       streak: consistencyStreak,
-//     };
-//   });
+//   // --- 2. Build the leaderboard structure ---
+//   const leaderboard = users
+//     .filter(u => u.firstname || u.lastname || u.email) 
+//     .map((user) => {
+//       const totalProjects = user.projects.length;
+//       const totalCompletedGoals = user.projects
+//         .flatMap((p) => p.goals)
+//         .filter((g) => g.isCompleted).length;
+//       const totalSavings = user.savingsGoals.reduce((sum, g) => sum + (g.savedAmount || 0), 0);
+//       const totalBudget = user.budgets.reduce((sum, b) => sum + (b.limit || 0), 0);
+//       const consistencyStreak = totalCompletedGoals; 
 
-//   // --- Filtering logic ---
-//   const filterByRange = (value: number, ranges: [number, number | null][]) => {
-//     return ranges.some(([min, max]) => {
-//       if (max === null) return value >= min;
-//       return value >= min && value <= max;
+//       return {
+//         id: user.id,
+//         name: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.email,
+//         projects: totalProjects,
+//         completed: totalCompletedGoals,
+//         goals: totalCompletedGoals,
+//         savings: totalSavings,
+//         budget: totalBudget,
+//         streak: consistencyStreak,
+//       };
 //     });
+
+//   // --- 3. Helper: range filter function ---
+//   const inRange = (value: number, min?: string, max?: string) => {
+//     const minVal = min ? Number(min) : undefined;
+//     const maxVal = max ? Number(max) : undefined;
+//     if (minVal !== undefined && value < minVal) return false;
+//     if (maxVal !== undefined && value > maxVal) return false;
+//     return true;
 //   };
 
-//   let filtered = leaderboard;
+//   // --- 4. Apply optional numeric filters ---
+//   let filtered = leaderboard.filter((u) =>
+//     inRange(u.completed, completedMin, completedMax) &&
+//     inRange(u.goals, goalsMin, goalsMax) &&
+//     inRange(u.streak, streakMin, streakMax) &&
+//     inRange(u.savings, savingsMin, savingsMax) &&
+//     inRange(u.projects, projectsMin, projectsMax) &&
+//     inRange(u.budget, budgetMin, budgetMax)
+//   );
 
-//   // 2) Projects Completed
-//   if (query.projects) {
-//     const projectsFilter: [number, number | null][] =
-//       query.projects === '0-20'
-//         ? [[0, 20]]
-//         : query.projects === '21-50'
-//         ? [[21, 50]]
-//         : query.projects === '51+'
-//         ? [[51, null]]
-//         : [];
-//     filtered = filtered.filter((u) => filterByRange(u.projects, projectsFilter));
-//   }
-
-//   // 3) Goals Completed
-//   if (query.goals) {
-//     const goalsFilter: [number, number | null][] =
-//       query.goals === '0-100'
-//         ? [[0, 100]]
-//         : query.goals === '101-300'
-//         ? [[101, 300]]
-//         : query.goals === '301+'
-//         ? [[301, null]]
-//         : [];
-//     filtered = filtered.filter((u) => filterByRange(u.goals, goalsFilter));
-//   }
-
-//   // 4) Consistency Streak
-//   if (query.streak) {
-//     const streakFilter: [number, number | null][] =
-//       query.streak === '0-20'
-//         ? [[0, 20]]
-//         : query.streak === '21-50'
-//         ? [[21, 50]]
-//         : query.streak === '51+'
-//         ? [[51, null]]
-//         : [];
-//     filtered = filtered.filter((u) => filterByRange(u.streak, streakFilter));
-//   }
-
-//   // --- Sorting (ranking) ---
+//   // --- 5. Sorting logic (default highest first) ---
 //   const sortField = sortBy as keyof typeof filtered[number];
 //   filtered.sort((a, b) => {
 //     const aVal = a[sortField];
@@ -798,7 +787,7 @@ async getMonthlyGrowthChart() {
 //       : (bVal as number) - (aVal as number);
 //   });
 
-//   // --- Pagination ---
+//   // --- 6. Pagination ---
 //   const total = filtered.length;
 //   const startIndex = (pageNum - 1) * limitNum;
 //   const paginated = filtered.slice(startIndex, startIndex + limitNum);
@@ -821,8 +810,8 @@ async getLeaderboard(query: Record<string, string | undefined>) {
     page = '1',
     limit = '20',
     search,
-    ranking = 'highest', 
-    sortBy = 'streak',   
+    ranking = 'highest',
+    sortBy = 'streak',
     completedMin,
     completedMax,
     goalsMin,
@@ -840,10 +829,11 @@ async getLeaderboard(query: Record<string, string | undefined>) {
   const pageNum = Number(page);
   const limitNum = Number(limit);
 
-  // --- 1. Fetch users and related data ---
- const users = await this.prisma.user.findMany({
-  where: {
-    ...(search
+  // -----------------------------
+  // 1. Fetch users (LEAN)
+  // -----------------------------
+  const users = await this.prisma.user.findMany({
+    where: search
       ? {
           OR: [
             { firstname: { contains: search, mode: 'insensitive' } },
@@ -851,55 +841,87 @@ async getLeaderboard(query: Record<string, string | undefined>) {
             { email: { contains: search, mode: 'insensitive' } },
           ],
         }
-      : {}),
-  },
-  include: {
-    projects: {
-      include: {
-        goals: true,   
+      : undefined,
+    select: {
+      id: true,
+      firstname: true,
+      lastname: true,
+      email: true,
+
+      _count: {
+        select: {
+          projects: true,
+        },
+      },
+
+      projects: {
+        select: {
+          goals: {
+            select: {
+              isCompleted: true,
+            },
+          },
+        },
+      },
+
+      savingsGoals: {
+        select: {
+          savedAmount: true,
+        },
+      },
+
+      budgets: {
+        select: {
+          limit: true,
+        },
       },
     },
-    savingsGoals: true,
-    budgets: true,
-  },
-});
+  });
 
+  // -----------------------------
+  // 2. Build leaderboard rows
+  // -----------------------------
+  const leaderboard = users.map((user) => {
+    const allGoals = user.projects.flatMap(p => p.goals);
 
-  // --- 2. Build the leaderboard structure ---
-  const leaderboard = users
-    .filter(u => u.firstname || u.lastname || u.email) 
-    .map((user) => {
-      const totalProjects = user.projects.length;
-      const totalCompletedGoals = user.projects
-        .flatMap((p) => p.goals)
-        .filter((g) => g.isCompleted).length;
-      const totalSavings = user.savingsGoals.reduce((sum, g) => sum + (g.savedAmount || 0), 0);
-      const totalBudget = user.budgets.reduce((sum, b) => sum + (b.limit || 0), 0);
-      const consistencyStreak = totalCompletedGoals; 
+    const totalGoals = allGoals.length;
+    const completedGoals = allGoals.filter(g => g.isCompleted).length;
 
-      return {
-        id: user.id,
-        name: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.email,
-        projects: totalProjects,
-        completed: totalCompletedGoals,
-        goals: totalCompletedGoals,
-        savings: totalSavings,
-        budget: totalBudget,
-        streak: consistencyStreak,
-      };
-    });
+    const totalSavings = user.savingsGoals.reduce(
+      (sum, g) => sum + (g.savedAmount || 0),
+      0
+    );
 
-  // --- 3. Helper: range filter function ---
+    const totalBudget = user.budgets.reduce(
+      (sum, b) => sum + (b.limit || 0),
+      0
+    );
+
+    return {
+      id: user.id,
+      name:
+        [user.firstname, user.lastname].filter(Boolean).join(' ') ||
+        user.email,
+
+      projects: user._count.projects,
+      goals: totalGoals,                 
+      completed: completedGoals,
+      streak: completedGoals,            
+      savings: totalSavings,
+      budget: totalBudget,
+    };
+  });
+
+  // -----------------------------
+  // 3. Range filter helper
+  // -----------------------------
   const inRange = (value: number, min?: string, max?: string) => {
-    const minVal = min ? Number(min) : undefined;
-    const maxVal = max ? Number(max) : undefined;
-    if (minVal !== undefined && value < minVal) return false;
-    if (maxVal !== undefined && value > maxVal) return false;
+    if (min && value < Number(min)) return false;
+    if (max && value > Number(max)) return false;
     return true;
   };
 
-  // --- 4. Apply optional numeric filters ---
-  let filtered = leaderboard.filter((u) =>
+  const filtered = leaderboard.filter((u) =>
     inRange(u.completed, completedMin, completedMax) &&
     inRange(u.goals, goalsMin, goalsMax) &&
     inRange(u.streak, streakMin, streakMax) &&
@@ -908,30 +930,28 @@ async getLeaderboard(query: Record<string, string | undefined>) {
     inRange(u.budget, budgetMin, budgetMax)
   );
 
-  // --- 5. Sorting logic (default highest first) ---
+  // -----------------------------
+  // 4. Sorting
+  // -----------------------------
   const sortField = sortBy as keyof typeof filtered[number];
+
   filtered.sort((a, b) => {
     const aVal = a[sortField];
     const bVal = b[sortField];
 
-    if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return ranking === 'lowest'
-        ? aVal.localeCompare(bVal)
-        : bVal.localeCompare(aVal);
-    }
-
     return ranking === 'lowest'
-      ? (aVal as number) - (bVal as number)
-      : (bVal as number) - (aVal as number);
+      ? Number(aVal) - Number(bVal)
+      : Number(bVal) - Number(aVal);
   });
 
-  // --- 6. Pagination ---
+  // -----------------------------
+  // 5. Pagination
+  // -----------------------------
   const total = filtered.length;
-  const startIndex = (pageNum - 1) * limitNum;
-  const paginated = filtered.slice(startIndex, startIndex + limitNum);
+  const start = (pageNum - 1) * limitNum;
 
   return {
-    data: paginated,
+    data: filtered.slice(start, start + limitNum),
     meta: {
       page: pageNum,
       limit: limitNum,
