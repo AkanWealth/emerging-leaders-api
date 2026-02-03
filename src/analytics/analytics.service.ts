@@ -360,93 +360,109 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
 
 
 // async getMonthlyGrowthChart() {
-//     const now = new Date();
-//     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-//     const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-//     const previousMonthEnd = currentMonthStart;
+//   const now = new Date();
+//   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+//   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+//   const previousMonthEnd = currentMonthStart;
 
-//     // 1. Fetch new registrations grouped by month
-//     const registrations = await this.prisma.user.groupBy({
-//       by: ['createdAt'],
-//       _count: { id: true },
-//       where: {
-//         createdAt: { gte: previousMonthStart, lt: now },
-//       },
-//     });
+//   // 1Fetch all users (needed for cumulative totals)
+//   const allUsers = await this.prisma.user.findMany({
+//     select: { createdAt: true },
+//     where: { createdAt: { lt: now } },
+//   });
 
-//     // 2. Fetch active users grouped by month from activity logs
-//     const activeUsersRaw = await this.prisma.activityLog.groupBy({
-//       by: ['userId', 'createdAt'],
-//       _count: { userId: true },
-//       where: { createdAt: { gte: previousMonthStart, lt: now } },
-//     });
+//   // Only users created since previous month
+//   const users = allUsers.filter((u) => u.createdAt >= previousMonthStart);
 
-//     // 3. Compute totals for charts
-//     let newRegistrationsCurrent = 0;
-//     let newRegistrationsPrevious = 0;
-//     let activeUsersCurrent = 0;
-//     let activeUsersPrevious = 0;
+//   // Fetch activity logs since previous month
+//   const activityLogs = await this.prisma.activityLog.findMany({
+//     select: { userId: true, createdAt: true },
+//     where: { createdAt: { gte: previousMonthStart, lt: now } },
+//   });
 
-//     registrations.forEach((r) => {
-//       const date = new Date(r.createdAt);
-//       if (date >= currentMonthStart) newRegistrationsCurrent += r._count.id;
-//       else newRegistrationsPrevious += r._count.id;
-//     });
+//   //Compute summary numbers
+//   let newRegistrationsCurrent = 0;
+//   let newRegistrationsPrevious = 0;
 
-//     // Active users: count unique userIds
-//     const currentMonthIds = new Set<string>();
-//     const previousMonthIds = new Set<string>();
-//     activeUsersRaw.forEach((a) => {
-//       const date = new Date(a.createdAt);
-//       if (date >= currentMonthStart) currentMonthIds.add(a.userId);
-//       else previousMonthIds.add(a.userId);
-//     });
-//     activeUsersCurrent = currentMonthIds.size;
-//     activeUsersPrevious = previousMonthIds.size;
+//   users.forEach((u) => {
+//     const date = new Date(u.createdAt);
+//     if (date >= currentMonthStart) newRegistrationsCurrent += 1;
+//     else newRegistrationsPrevious += 1;
+//   });
 
-//     // Total users
-//     const totalUsersCurrent = await this.prisma.user.count({ where: { createdAt: { lt: now } } });
-//     const totalUsersPrevious = await this.prisma.user.count({ where: { createdAt: { lt: previousMonthEnd } } });
+//   // Active users: unique per month
+//   const currentMonthActiveSet = new Set<string>();
+//   const previousMonthActiveSet = new Set<string>();
+// activityLogs.forEach((a) => {
+//   if (!a.userId) return; 
+//   const date = new Date(a.createdAt);
+//   if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
+//   else previousMonthActiveSet.add(a.userId);
+// });
 
-//     // Helper to compute growth, percentage, and trend
-//     const computeGrowth = (current: number, previous: number) => {
-//       const growth = current - previous;
-//       const growthPercentage =
-//         previous > 0 ? (growth / previous) * 100 : current > 0 ? 100 : 0;
-//       const trend = growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral';
-//       return {
-//         current,
-//         previous,
-//         growth,
-//         growthPercentage: Number(growthPercentage.toFixed(2)),
-//         trend,
-//       };
-//     };
 
-//     // Build chart data per day for last 30 days
-//     const days = Array.from({ length: 30 }, (_, i) => {
-//       const day = new Date();
-//       day.setDate(now.getDate() - (29 - i));
-//       const label = day.toLocaleDateString('default', { day: 'numeric', month: 'short' });
+//   const activeUsersCurrent = currentMonthActiveSet.size;
+//   const activeUsersPrevious = previousMonthActiveSet.size;
 
-//       const registrationCount = registrations
-//         .filter((r) => new Date(r.createdAt).toDateString() === day.toDateString())
-//         .reduce((sum, r) => sum + r._count.id, 0);
+//   // Total users cumulative
+//   const totalUsersCurrent = allUsers.length;
+//   const totalUsersPrevious = allUsers.filter((u) => u.createdAt < previousMonthEnd).length;
 
-//       const activeCount = activeUsersRaw
-//         .filter((a) => new Date(a.createdAt).toDateString() === day.toDateString())
-//         .reduce((sum, a) => sum + 1, 0); // each activity log counts as 1 (unique users already counted above)
-
-//       return { label, newRegistrations: registrationCount, activeUsers: activeCount };
-//     });
-
+//   // Helper to compute growth and trend
+//   const computeGrowth = (current: number, previous: number) => {
+//     const growth = current - previous;
+//     const growthPercentage = previous > 0 ? (growth / previous) * 100 : current > 0 ? 100 : 0;
+//     const trend = growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral';
 //     return {
-//       totalUsers: computeGrowth(totalUsersCurrent, totalUsersPrevious),
-//       activeUsers: computeGrowth(activeUsersCurrent, activeUsersPrevious),
-//       newRegistrations: computeGrowth(newRegistrationsCurrent, newRegistrationsPrevious),
-//       chartData: days,
+//       current,
+//       previous,
+//       growth,
+//       growthPercentage: Number(growthPercentage.toFixed(2)),
+//       trend,
 //     };
-//   }
+//   };
+
+//   // Build daily chart data separately
+//   const days = Array.from({ length: 30 }, (_, i) => {
+//     const day = new Date();
+//     day.setDate(now.getDate() - (29 - i));
+//     return {
+//       date: day,
+//       label: day.toLocaleDateString('default', { day: 'numeric', month: 'short' }),
+//     };
+//   });
+
+//   const newRegistrationsChart = days.map(({ date, label }) => {
+//     const count = users.filter((u) => new Date(u.createdAt).toDateString() === date.toDateString()).length;
+//     return { label, value: count };
+//   });
+
+//   const activeUsersChart = days.map(({ date, label }) => {
+//     const set = new Set(
+//       activityLogs
+//         .filter((a) => new Date(a.createdAt).toDateString() === date.toDateString())
+//         .map((a) => a.userId)
+//     );
+//     return { label, value: set.size };
+//   });
+
+//   const totalUsersChart = days.map(({ date, label }) => {
+//     const count = allUsers.filter((u) => u.createdAt <= date).length;
+//     return { label, value: count };
+//   });
+
+//   //  Return final structured data
+//   return {
+//     totalUsers: computeGrowth(totalUsersCurrent, totalUsersPrevious),
+//     activeUsers: computeGrowth(activeUsersCurrent, activeUsersPrevious),
+//     newRegistrations: computeGrowth(newRegistrationsCurrent, newRegistrationsPrevious),
+//     charts: {
+//       newRegistrations: newRegistrationsChart,
+//       activeUsers: activeUsersChart,
+//       totalUsers: totalUsersChart,
+//     },
+//   };
+// }
 
 async getMonthlyGrowthChart() {
   const now = new Date();
@@ -454,48 +470,50 @@ async getMonthlyGrowthChart() {
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const previousMonthEnd = currentMonthStart;
 
-  // 1️⃣ Fetch all users (needed for cumulative totals)
-  const allUsers = await this.prisma.user.findMany({
-    select: { createdAt: true },
-    where: { createdAt: { lt: now } },
+  // 1. Fetch only ACTIVE users
+  const activeUsers = await this.prisma.user.findMany({
+    select: { id: true, createdAt: true },
+    where: { status: 'ACTIVE', createdAt: { lt: now } },
   });
 
-  // Only users created since previous month
-  const users = allUsers.filter((u) => u.createdAt >= previousMonthStart);
+  const activeUserIds = new Set(activeUsers.map(u => u.id));
 
-  // 2️⃣ Fetch activity logs since previous month
+  // 2. Users created since previous month
+  const recentUsers = activeUsers.filter(u => u.createdAt >= previousMonthStart);
+
+  // 3. Fetch activity logs since previous month
   const activityLogs = await this.prisma.activityLog.findMany({
     select: { userId: true, createdAt: true },
     where: { createdAt: { gte: previousMonthStart, lt: now } },
   });
 
-  // 3️⃣ Compute summary numbers
+  // 4. Compute new registrations
   let newRegistrationsCurrent = 0;
   let newRegistrationsPrevious = 0;
 
-  users.forEach((u) => {
+  recentUsers.forEach(u => {
     const date = new Date(u.createdAt);
     if (date >= currentMonthStart) newRegistrationsCurrent += 1;
     else newRegistrationsPrevious += 1;
   });
 
-  // Active users: unique per month
+  // 5. Compute active users per month
   const currentMonthActiveSet = new Set<string>();
   const previousMonthActiveSet = new Set<string>();
-activityLogs.forEach((a) => {
-  if (!a.userId) return; // ✅ skip if null
-  const date = new Date(a.createdAt);
-  if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
-  else previousMonthActiveSet.add(a.userId);
-});
 
+  activityLogs.forEach(a => {
+    if (!a.userId || !activeUserIds.has(a.userId)) return;
+    const date = new Date(a.createdAt);
+    if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
+    else previousMonthActiveSet.add(a.userId);
+  });
 
   const activeUsersCurrent = currentMonthActiveSet.size;
   const activeUsersPrevious = previousMonthActiveSet.size;
 
-  // Total users cumulative
-  const totalUsersCurrent = allUsers.length;
-  const totalUsersPrevious = allUsers.filter((u) => u.createdAt < previousMonthEnd).length;
+  // 6. Compute cumulative total users
+  const totalUsersCurrent = activeUsers.length;
+  const totalUsersPrevious = activeUsers.filter(u => u.createdAt < previousMonthEnd).length;
 
   // Helper to compute growth and trend
   const computeGrowth = (current: number, previous: number) => {
@@ -511,7 +529,7 @@ activityLogs.forEach((a) => {
     };
   };
 
-  // 4️⃣ Build daily chart data separately
+  // 7. Build daily chart data (last 30 days)
   const days = Array.from({ length: 30 }, (_, i) => {
     const day = new Date();
     day.setDate(now.getDate() - (29 - i));
@@ -522,25 +540,25 @@ activityLogs.forEach((a) => {
   });
 
   const newRegistrationsChart = days.map(({ date, label }) => {
-    const count = users.filter((u) => new Date(u.createdAt).toDateString() === date.toDateString()).length;
+    const count = recentUsers.filter(u => new Date(u.createdAt).toDateString() === date.toDateString()).length;
     return { label, value: count };
   });
 
   const activeUsersChart = days.map(({ date, label }) => {
     const set = new Set(
       activityLogs
-        .filter((a) => new Date(a.createdAt).toDateString() === date.toDateString())
-        .map((a) => a.userId)
+        .filter(a => a.userId && activeUserIds.has(a.userId) && new Date(a.createdAt).toDateString() === date.toDateString())
+        .map(a => a.userId)
     );
     return { label, value: set.size };
   });
 
   const totalUsersChart = days.map(({ date, label }) => {
-    const count = allUsers.filter((u) => u.createdAt <= date).length;
+    const count = activeUsers.filter(u => u.createdAt <= date).length;
     return { label, value: count };
   });
 
-  // 5️⃣ Return final structured data
+  // 8. Return final structured data
   return {
     totalUsers: computeGrowth(totalUsersCurrent, totalUsersPrevious),
     activeUsers: computeGrowth(activeUsersCurrent, activeUsersPrevious),
@@ -552,6 +570,7 @@ activityLogs.forEach((a) => {
     },
   };
 }
+
 
   async getRecentActivities(limit = 10) {
     return this.prisma.activityLog.findMany({

@@ -104,7 +104,7 @@ async resendOtp(@Body() dto: ResendOtpDto) {
     res.redirect(302, redirectUrl);
   }
 
-  // 📱 Dedicated endpoint for Google mobile login
+  // Dedicated endpoint for Google mobile login
   @Post('google/mobile')
   @ApiOperation({ summary: 'Mobile Google login using Google ID token' })
   @ApiResponse({ status: 200, description: 'User authenticated with Google ID token' })
@@ -112,7 +112,7 @@ async resendOtp(@Body() dto: ResendOtpDto) {
     return this.authService.verifyGoogleIdToken(idToken);
   }
 
-  // 🔄 Refresh tokens
+  // Refresh tokens
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh JWT access & refresh tokens' })
   @ApiResponse({ status: 200, description: 'Returns new tokens' })
@@ -120,7 +120,7 @@ async resendOtp(@Body() dto: ResendOtpDto) {
     return this.authService.refresh(dto.userId, dto.refreshToken);
   }
 
-  // 📧 Request password reset
+  // Request password reset
   @Post('forgot-password')
   @ApiOperation({ summary: 'Send OTP for password reset' })
   @ApiResponse({ status: 200, description: 'OTP sent to email' })
@@ -128,7 +128,7 @@ async resendOtp(@Body() dto: ResendOtpDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
-  // 🔑 Reset password with OTP
+  // Reset password with OTP
   @Post('reset-password')
   @ApiOperation({ summary: 'Reset password using OTP' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
@@ -156,7 +156,7 @@ async registerFcmToken(
 
 
 
-  // 👤 Complete profile after authentication
+  // Complete profile after authentication
  @Post('complete-profile')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
@@ -167,7 +167,7 @@ async completeProfile(@Req() req, @Body() dto: UpdateProfileDto) {
 }
 
 
-  // 🙋‍♂️ Get authenticated user details
+  // Get authenticated user details
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
