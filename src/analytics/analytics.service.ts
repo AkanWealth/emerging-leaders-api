@@ -464,119 +464,199 @@ async getUserGrowthChart(period: '7d' | '30d' | '12m' = '12m') {
 //   };
 // }
 
-  async getMonthlyGrowthChart() {
+async getMonthlyGrowthChart() {
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const previousMonthEnd = currentMonthStart;
 
-  // 1. Fetch only ACTIVE users
-  const activeUsers = await this.prisma.user.findMany({
-    select: { id: true, createdAt: true },
-    where: { status: 'ACTIVE', createdAt: { lt: now } },
+  // -------------------------------
+  // TOTAL USERS (ACTIVE ONLY)
+  // -------------------------------
+  const totalUsersCurrent = await this.prisma.user.count({
+    where: { status: 'ACTIVE' },
   });
 
-  const activeUserIds = new Set(activeUsers.map(u => u.id));
-
-  // 2. Users created since previous month
-  const recentUsers = activeUsers.filter(u => u.createdAt >= previousMonthStart);
-
-  // 3. Fetch activity logs since previous month
-  const activityLogs = await this.prisma.activityLog.findMany({
-    select: { userId: true, createdAt: true },
-    where: { createdAt: { gte: previousMonthStart, lt: now } },
+  const totalUsersPrevious = await this.prisma.user.count({
+    where: {
+      status: 'ACTIVE',
+      createdAt: { lt: currentMonthStart },
+    },
   });
 
-  // 4. Compute new registrations
-  let newRegistrationsCurrent = 0;
-  let newRegistrationsPrevious = 0;
-
-  recentUsers.forEach(u => {
-    const date = new Date(u.createdAt);
-    if (date >= currentMonthStart) newRegistrationsCurrent += 1;
-    else newRegistrationsPrevious += 1;
+  // -------------------------------
+  // NEW REGISTRATIONS
+  // -------------------------------
+  const newRegistrationsCurrent = await this.prisma.user.count({
+    where: {
+      status: 'ACTIVE',
+      createdAt: { gte: currentMonthStart },
+    },
   });
 
-  // 5. Compute active users per month
-  const currentMonthActiveSet = new Set<string>();
-  const previousMonthActiveSet = new Set<string>();
-
-  // a) Include activity log users
-  activityLogs.forEach(a => {
-    if (!a.userId || !activeUserIds.has(a.userId)) return;
-    const date = new Date(a.createdAt);
-    if (date >= currentMonthStart) currentMonthActiveSet.add(a.userId);
-    else previousMonthActiveSet.add(a.userId);
+  const newRegistrationsPrevious = await this.prisma.user.count({
+    where: {
+      status: 'ACTIVE',
+      createdAt: {
+        gte: previousMonthStart,
+        lt: currentMonthStart,
+      },
+    },
   });
 
-  // b) Include users created this month (even without activity logs)
-  activeUsers.forEach(u => {
-    const createdDate = new Date(u.createdAt);
-    if (createdDate >= currentMonthStart) currentMonthActiveSet.add(u.id);
-    else if (createdDate >= previousMonthStart && createdDate < currentMonthStart) previousMonthActiveSet.add(u.id);
+  // -------------------------------
+  // ACTIVE USERS (THIS IS THE FIX 🔥)
+  // -------------------------------
+  const activeUsersCurrent = await this.prisma.user.count({
+    where: {
+      status: 'ACTIVE',
+      OR: [
+        // created this month
+        { createdAt: { gte: currentMonthStart } },
+
+        // OR had activity this month
+        {
+          ActivityLog: {
+            some: {
+              createdAt: { gte: currentMonthStart },
+            },
+          },
+        },
+      ],
+    },
   });
 
-  const activeUsersCurrent = currentMonthActiveSet.size;
-  const activeUsersPrevious = previousMonthActiveSet.size;
+  const activeUsersPrevious = await this.prisma.user.count({
+    where: {
+      status: 'ACTIVE',
+      OR: [
+        {
+          createdAt: {
+            gte: previousMonthStart,
+            lt: currentMonthStart,
+          },
+        },
+        {
+          ActivityLog: {
+            some: {
+              createdAt: {
+                gte: previousMonthStart,
+                lt: currentMonthStart,
+              },
+            },
+          },
+        },
+      ],
+    },
+  });
 
-  // 6. Compute cumulative total users
-  const totalUsersCurrent = activeUsers.length;
-  const totalUsersPrevious = activeUsers.filter(u => u.createdAt < previousMonthEnd).length;
-
-  // Helper to compute growth and trend
+  // -------------------------------
+  // GROWTH HELPER
+  // -------------------------------
   const computeGrowth = (current: number, previous: number) => {
     const growth = current - previous;
-    const growthPercentage = previous > 0 ? (growth / previous) * 100 : current > 0 ? 100 : 0;
-    const trend = growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral';
+    const growthPercentage =
+      previous > 0 ? (growth / previous) * 100 : current > 0 ? 100 : 0;
+
     return {
       current,
       previous,
       growth,
       growthPercentage: Number(growthPercentage.toFixed(2)),
-      trend,
+      trend:
+        growth > 0 ? 'positive' : growth < 0 ? 'negative' : 'neutral',
     };
   };
 
-  // 7. Build daily chart data (last 30 days)
+  // -------------------------------
+  // DAILY CHARTS (LAST 30 DAYS)
+  // -------------------------------
   const days = Array.from({ length: 30 }, (_, i) => {
     const day = new Date();
     day.setDate(now.getDate() - (29 - i));
     return {
       date: day,
-      label: day.toLocaleDateString('default', { day: 'numeric', month: 'short' }),
+      label: day.toLocaleDateString('default', {
+        day: 'numeric',
+        month: 'short',
+      }),
     };
   });
 
-  const newRegistrationsChart = days.map(({ date, label }) => {
-    const count = recentUsers.filter(u => new Date(u.createdAt).toDateString() === date.toDateString()).length;
-    return { label, value: count };
-  });
+  const newRegistrationsChart = await Promise.all(
+    days.map(async ({ date, label }) => {
+      const nextDay = new Date(date);
+      nextDay.setDate(date.getDate() + 1);
 
-  const activeUsersChart = days.map(({ date, label }) => {
-    const set = new Set(
-      activityLogs
-        .filter(a => a.userId && activeUserIds.has(a.userId) && new Date(a.createdAt).toDateString() === date.toDateString())
-        .map(a => a.userId)
-    );
+      const value = await this.prisma.user.count({
+        where: {
+          status: 'ACTIVE',
+          createdAt: {
+            gte: date,
+            lt: nextDay,
+          },
+        },
+      });
 
-    // Include users created this day even if no activity log
-    activeUsers.forEach(u => {
-      if (new Date(u.createdAt).toDateString() === date.toDateString()) set.add(u.id);
-    });
+      return { label, value };
+    })
+  );
 
-    return { label, value: set.size };
-  });
+  const activeUsersChart = await Promise.all(
+    days.map(async ({ date, label }) => {
+      const nextDay = new Date(date);
+      nextDay.setDate(date.getDate() + 1);
 
-  const totalUsersChart = days.map(({ date, label }) => {
-    const count = activeUsers.filter(u => u.createdAt <= date).length;
-    return { label, value: count };
-  });
+      const value = await this.prisma.user.count({
+        where: {
+          status: 'ACTIVE',
+          OR: [
+            {
+              createdAt: {
+                gte: date,
+                lt: nextDay,
+              },
+            },
+            {
+              ActivityLog: {
+                some: {
+                  createdAt: {
+                    gte: date,
+                    lt: nextDay,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
 
-  // 8. Return final structured data
+      return { label, value };
+    })
+  );
+
+  const totalUsersChart = await Promise.all(
+    days.map(async ({ date, label }) => {
+      const value = await this.prisma.user.count({
+        where: {
+          status: 'ACTIVE',
+          createdAt: { lte: date },
+        },
+      });
+
+      return { label, value };
+    })
+  );
+
+  // -------------------------------
+  // FINAL RESPONSE
+  // -------------------------------
   return {
     totalUsers: computeGrowth(totalUsersCurrent, totalUsersPrevious),
     activeUsers: computeGrowth(activeUsersCurrent, activeUsersPrevious),
-    newRegistrations: computeGrowth(newRegistrationsCurrent, newRegistrationsPrevious),
+    newRegistrations: computeGrowth(
+      newRegistrationsCurrent,
+      newRegistrationsPrevious
+    ),
     charts: {
       newRegistrations: newRegistrationsChart,
       activeUsers: activeUsersChart,
