@@ -59,30 +59,66 @@ export class AdminService {
     return { message: 'OTP sent to your email' };
   }
 
+  // async verifyOtp(email: string, otp: string) {
+  //   const user = await this.prisma.user.findUnique({ where: { email } });
+  //   if (!user || !user.isAdmin) throw new UnauthorizedException('Invalid user');
+
+  //   const otpRecord = await this.prisma.otp.findFirst({
+  //     where: { userId: user.id },
+  //     orderBy: { createdAt: 'desc' },
+  //   });
+
+  //   if (!otpRecord || otpRecord.otp !== otp) {
+  //     throw new UnauthorizedException('Invalid OTP');
+  //   }
+
+  //   if (otpRecord.expiresAt < new Date()) {
+  //     throw new UnauthorizedException('OTP expired');
+  //   }
+
+  //   await this.prisma.otp.deleteMany({ where: { userId: user.id } });
+
+  //   return {
+  //     message: 'OTP verified',
+  //     tokens: await this.getTokens(user),
+  //   };
+  // }
   async verifyOtp(email: string, otp: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.isAdmin) throw new UnauthorizedException('Invalid user');
-
-    const otpRecord = await this.prisma.otp.findFirst({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (!otpRecord || otpRecord.otp !== otp) {
-      throw new UnauthorizedException('Invalid OTP');
-    }
-
-    if (otpRecord.expiresAt < new Date()) {
-      throw new UnauthorizedException('OTP expired');
-    }
-
-    await this.prisma.otp.deleteMany({ where: { userId: user.id } });
-
-    return {
-      message: 'OTP verified',
-      tokens: await this.getTokens(user),
-    };
+  const user = await this.prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isAdmin) {
+    throw new UnauthorizedException('Invalid user');
   }
+
+  const otpRecord = await this.prisma.otp.findFirst({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!otpRecord || otpRecord.otp !== otp) {
+    throw new UnauthorizedException('Invalid OTP');
+  }
+
+  if (otpRecord.expiresAt < new Date()) {
+    throw new UnauthorizedException('OTP expired');
+  }
+
+  // ✅ Mark user as ACTIVE
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { status: 'ACTIVE' },
+  });
+
+  // Cleanup OTPs
+  await this.prisma.otp.deleteMany({
+    where: { userId: user.id },
+  });
+
+  return {
+    message: 'OTP verified, account is now active',
+    tokens: await this.getTokens(user),
+  };
+}
+
 
 async login(email: string, password: string) {
   const user = await this.prisma.user.findUnique({ where: { email } });
