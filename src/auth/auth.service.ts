@@ -238,7 +238,7 @@ async loginWithCredentials(email: string, password: string) {
       lastname: true,
       password: true,
       isAdmin: true,
-      status: true, // 👈 required
+      status: true, // required
     },
   });
 
@@ -251,7 +251,7 @@ async loginWithCredentials(email: string, password: string) {
     throw new UnauthorizedException('Invalid email or password');
   }
 
-  // 🚫 Block users that are not verified/active
+  // Block users that are not verified/active
   if (user.status !== 'ACTIVE') {
     let message = 'Account not active.';
 
@@ -260,7 +260,7 @@ async loginWithCredentials(email: string, password: string) {
     } else if (user.status === 'INACTIVE') {
       message = 'Your account is inactive. Please contact support.';
     } else if (user.status === 'DEACTIVATED') {
-      message = 'Your account has been deactivated.';
+      message = 'Your account has been deactivated. Please contact support';
     }
 
     throw new ForbiddenException(message);
@@ -294,7 +294,7 @@ async resendOtp(email: string) {
     throw new NotFoundException('User not found');
   }
 
-  // 🚫 Only pending users can resend OTP
+  // Only pending users can resend OTP
   if (user.status !== 'PENDING') {
     throw new BadRequestException('Account is already verified or inactive');
   }
@@ -339,7 +339,7 @@ async loginWithGoogle(email: string, name: string) {
       email: newUser.email,
       firstname: newUser.firstname,
       lastname: newUser.lastname,
-      isAdmin: false, // ✅ default new users to false
+      isAdmin: false, // default new users to false
     };
   }
 
