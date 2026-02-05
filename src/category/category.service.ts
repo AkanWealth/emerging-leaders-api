@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 
@@ -6,17 +6,47 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 export class CategoryService {
   constructor(private prisma: PrismaService) {}
 
-  create(userId: string, dto: CreateCategoryDto) {
+//   create(userId: string, dto: CreateCategoryDto) {
+//   return this.prisma.category.create({
+//     data: {
+//       icon: dto.icon,
+//       title: dto.title,
+//       description: dto.description,
+//       usageContext: dto.usageContext,
+//       userId, 
+//     },
+//   });
+// }
+
+async create(userId: string, dto: CreateCategoryDto) {
+  const existingDefault = await this.prisma.category.findFirst({
+    where: {
+      title: dto.title,
+      defaultCate: true,
+      // optional but recommended if categories differ by context
+      usageContext: dto.usageContext ?? undefined,
+    },
+  });
+
+  if (existingDefault) {
+    throw new BadRequestException(
+      'This category already exists as a default category'
+    );
+  }
+
   return this.prisma.category.create({
     data: {
       icon: dto.icon,
       title: dto.title,
       description: dto.description,
       usageContext: dto.usageContext,
-      userId, // attach the user here
+      userId,
+      defaultCate: false, 
     },
   });
 }
+
+
 
 
   findAll() {
