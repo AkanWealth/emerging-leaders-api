@@ -1,11 +1,12 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards, Patch, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequestWithUser } from 'src/types/request-with-user'; 
 
 @ApiTags('Categories')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard) // Ensure all category routes are protected
 @Controller('categories')
 export class CategoryController {

@@ -27,7 +27,7 @@ findAllUserCate(userId: string) {
   return this.prisma.category.findMany({
     where: {
       OR: [
-        { userId },                 // user-created
+        { userId },                 
         { defaultCate: true },      // system defaults
       ],
     },
