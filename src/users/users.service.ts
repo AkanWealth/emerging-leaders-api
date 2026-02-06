@@ -77,6 +77,44 @@ async updateRefreshToken(
   });
 }
 
+ async findOrCreateGoogleUser(data: {
+    email: string;
+    name?: string;
+    avatar?: string;
+  }) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const [firstname, ...rest] = data.name?.split(' ') || [];
+    const lastname = rest.join(' ') || null;
+
+    const dummyPassword = await bcrypt.hash(
+      'GOOGLE_AUTH_USER',
+      10,
+    );
+
+    return this.prisma.user.create({
+  data: {
+    email: data.email,
+    password: dummyPassword,
+    firstname,
+    lastname,
+    profilePicture: data.avatar,
+    profileComplete: false,
+    financeCompleted: false,
+    status: 'ACTIVE', 
+    lastLogin: new Date(),
+  },
+  });
+
+  }
+
+
 
   async validateRefreshToken(userId: string, token: string): Promise<boolean> {
     const user = await this.findById(userId);

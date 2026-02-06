@@ -25,19 +25,58 @@ export class AuthService {
   /**
    * For mobile apps – verify Google ID token from client SDK.
    */
-  async verifyGoogleIdToken(idToken: string) {
+  // async verifyGoogleIdToken(idToken: string) {
+  //   const ticket = await this.googleClient.verifyIdToken({
+  //     idToken,
+  //     audience: process.env.GOOGLE_CLIENT_ID_MOBILE,
+  //   });
+
+  //   const payload = ticket.getPayload();
+  //   if (!payload?.email || !payload?.name) {
+  //     throw new UnauthorizedException('Invalid Google ID token');
+  //   }
+
+  //   const { email, name } = payload;
+  //   return this.login(email, name);
+  // }
+
+   async verifyGoogleIdToken(idToken: string) {
+  if (!idToken) {
+    throw new BadRequestException('Google ID token is required');
+  }
+
+  let payload;
+  try {
     const ticket = await this.googleClient.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID_MOBILE,
     });
+    payload = ticket.getPayload();
+  } catch {
+    throw new UnauthorizedException('Invalid Google ID token');
+  }
 
-    const payload = ticket.getPayload();
-    if (!payload?.email || !payload?.name) {
-      throw new UnauthorizedException('Invalid Google ID token');
-    }
+  if (!payload?.email || !payload.email_verified) {
+    throw new UnauthorizedException('Unverified Google account');
+  }
 
-    const { email, name } = payload;
-    return this.login(email, name);
+  // Ensure user exists (Google-specific creation)
+  await this.usersService.findOrCreateGoogleUser({
+    email: payload.email,
+    name: payload.name,
+    avatar: payload.picture,
+  });
+
+  return this.login(payload.email, payload.name);
+}
+
+
+  private issueJwt(user: any) {
+    const payload = { sub: user.id, email: user.email };
+    return {
+      accessToken: this.jwtService.sign(payload),
+      user,
+    };
   }
 
   /**
