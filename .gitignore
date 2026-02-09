@@ -4,6 +4,7 @@
 /build
 src/firebase/*.json
 /encoded.txt
+.yarn/*
 
 # Logs
 logs
