@@ -71,13 +71,6 @@ export class AuthService {
 }
 
 
-  private issueJwt(user: any) {
-    const payload = { sub: user.id, email: user.email };
-    return {
-      accessToken: this.jwtService.sign(payload),
-      user,
-    };
-  }
 
   /**
    * Login or create Google user.
@@ -334,9 +327,9 @@ async resendOtp(email: string) {
   }
 
   // Only pending users can resend OTP
-  if (user.status !== 'PENDING') {
-    throw new BadRequestException('Account is already verified or inactive');
-  }
+  // if (user.status !== 'PENDING') {
+  //   throw new BadRequestException('Account is already verified or inactive');
+  // }
 
   const otp = this.generateOtp();
 
