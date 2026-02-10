@@ -16,7 +16,7 @@ export class QuarterlyAssessmentJob {
     {
       question: 'What is your source of income?',
       type: QuestionType.SHORT_TEXT,
-    }, 
+    },
     {
       question: 'What is your current monthly income?',
       type: QuestionType.SHORT_TEXT,
