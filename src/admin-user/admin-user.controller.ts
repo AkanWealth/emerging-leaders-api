@@ -282,49 +282,54 @@ export class AdminUserController {
     return this.adminUserService.resendAdminInvite(dto.email);
   }
 
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get('assessment/summary')
-  @ApiOperation({
-    summary:
-      'Get summary of all assessments (filterable by year, search text, and paginated)',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search assessments by title, month, or category',
-    example: 'Quarterly',
-  })
-  @ApiQuery({
-    name: 'year',
-    required: false,
-    description: 'Filter assessments by scheduled year',
-    example: 2024,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: 'Page number (default: 1)',
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    description: 'Number of records per page (default: 10)',
-    example: 10,
-  })
-  async getSummary(
-    @Query('search') search?: string,
-    @Query('year') year?: number,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
-    return this.adminUserService.getAssessmentSummary(
-      search,
-      year,
-      page,
-      limit,
-    );
-  }
+@UseGuards(JwtAuthGuard, AdminGuard)
+@Get('assessment/summary')
+@ApiOperation({
+  summary:
+    'Get summary of all assessments (filterable by year, search text, and paginated)',
+})
+@ApiQuery({
+  name: 'search',
+  required: false,
+  description: 'Search assessments by title, month, or category',
+  example: 'Quarterly',
+})
+@ApiQuery({
+  name: 'year',
+  required: false,
+  description: 'Filter assessments by scheduled year',
+  example: 2024,
+})
+@ApiQuery({
+  name: 'page',
+  required: false,
+  description: 'Page number (default: 1)',
+  example: 1,
+})
+@ApiQuery({
+  name: 'limit',
+  required: false,
+  description: 'Number of records per page (default: 10)',
+  example: 10,
+})
+async getSummary(
+  @Query('search') search?: string,
+  @Query('year') year?: string, // keep as string for conversion
+  @Query('page') page = '1',    // default as string
+  @Query('limit') limit = '10', // default as string
+) {
+  // Convert query strings to numbers
+  const pageNumber = Number(page) || 1;
+  const limitNumber = Number(limit) || 10;
+  const yearNumber = year ? Number(year) : undefined;
+
+  return this.adminUserService.getAssessmentSummary(
+    search,
+    yearNumber,
+    pageNumber,
+    limitNumber,
+  );
+}
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('assessments/details')
