@@ -871,8 +871,9 @@ export class AdminUserService {
   //   };
   // }
 
+  
 
-  async getUserAssessmentReport(
+ async getUserAssessmentReport(
   year?: number,
   search?: string,
   page: number = 1,
@@ -880,6 +881,7 @@ export class AdminUserService {
 ) {
   const selectedYear = year ?? new Date().getFullYear();
 
+  // 1️⃣ Build user filter
   const userWhere: any = {
     isAdmin: false,
     isSuperAdmin: false,
@@ -910,6 +912,7 @@ export class AdminUserService {
 
   const userIds = users.map((u) => u.id);
 
+  // 2️⃣ Get all user assessments for the selected year
   const userAssessments = await this.prisma.userAssessment.findMany({
     where: {
       userId: { in: userIds },
@@ -929,25 +932,17 @@ export class AdminUserService {
     },
   });
 
-  const intervalMap = [
-    '1 Month Interval',
-    '3 Month Interval',
-    '6 Month Interval',
-  ];
+  const intervalMap = ['1 Month Interval', '3 Month Interval', '6 Month Interval'];
 
+  // 3️⃣ Build report
   const data = users.map((user) => {
-    const assessments = userAssessments.filter(
-      (ua) => ua.userId === user.id,
-    );
+    const assessments = userAssessments.filter((ua) => ua.userId === user.id);
 
     const totalAssigned = assessments.length;
-
-    const completed = assessments.filter(
-      (a) => a.submittedAt !== null,
-    ).length;
-
+    const completed = assessments.filter((a) => a.submittedAt !== null).length;
     const pending = totalAssigned - completed;
 
+    // Determine the latest interval (for display purposes)
     const latest = [...assessments].sort((a, b) => {
       const aDate = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
       const bDate = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
@@ -955,20 +950,21 @@ export class AdminUserService {
     })[0];
 
     let currentInterval = 'Not Started';
-
-    if (
-      latest &&
-      latest.intervalIndex !== null &&
-      latest.intervalIndex !== undefined &&
-      intervalMap[latest.intervalIndex]
-    ) {
-      currentInterval = intervalMap[latest.intervalIndex];
+    if (latest && latest.intervalIndex !== null && latest.intervalIndex !== undefined) {
+      currentInterval = intervalMap[latest.intervalIndex] ?? 'Not Started';
     }
 
-    const completionRate =
-      totalAssigned > 0
-        ? Math.round((completed / totalAssigned) * 100)
-        : 0;
+    // Determine status: DONE / NOT DONE / NULL
+    let status: string;
+    if (totalAssigned === 0) {
+      status = 'NULL'; // no assessment assigned
+    } else if (completed === totalAssigned) {
+      status = 'DONE'; // all submitted
+    } else {
+      status = 'NOT DONE'; // some assigned, not all submitted
+    }
+
+    const completionRate = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
 
     return {
       userId: user.id,
@@ -978,7 +974,8 @@ export class AdminUserService {
       completed,
       pending,
       completionRate: `${completionRate}%`,
-      currentInterval,
+      currentInterval, // shows next scheduled period
+      status,          // DONE / NOT DONE / NULL
     };
   });
 
@@ -994,6 +991,111 @@ export class AdminUserService {
   };
 }
 
+
+async getUserQuarterlyAssessmentReport(
+  year?: number,
+  search?: string,
+  page: number = 1,
+  limit: number = 10,
+) {
+  const selectedYear = year ?? new Date().getFullYear();
+
+  // 1️⃣ Build user filter
+  const userWhere: any = {
+    isAdmin: false,
+    isSuperAdmin: false,
+  };
+
+  if (search) {
+    userWhere.OR = [
+      { firstname: { contains: search, mode: 'insensitive' } },
+      { lastname: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const totalUsers = await this.prisma.user.count({ where: userWhere });
+
+  const users = await this.prisma.user.findMany({
+    where: userWhere,
+    select: {
+      id: true,
+      firstname: true,
+      lastname: true,
+    },
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const userIds = users.map((u) => u.id);
+
+  // 2️⃣ Get all user assessments for the year
+  const userAssessments = await this.prisma.userAssessment.findMany({
+    where: {
+      userId: { in: userIds },
+      assessment: {
+        scheduledYear: selectedYear,
+      },
+    },
+    select: {
+      userId: true,
+      submittedAt: true,
+      intervalIndex: true,
+      assessment: {
+        select: {
+          scheduledMonth: true,
+          scheduledYear: true,
+        },
+      },
+    },
+  });
+
+  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+  const intervalMap = ['1 Month Interval', '3 Month Interval', '6 Month Interval'];
+
+  // 3️⃣ Build quarterly report
+  const data = users.map((user) => {
+    const assessments = userAssessments.filter((ua) => ua.userId === user.id);
+
+    // Initialize each quarter as NULL
+    const quarterStatus: Record<string, string> = {
+      Q1: 'NULL',
+      Q2: 'NULL',
+      Q3: 'NULL',
+      Q4: 'NULL',
+    };
+
+    // Map each assessment to the appropriate quarter based on intervalIndex
+    assessments.forEach((a) => {
+      // intervalIndex: 0 => 1M → Q1, 1 => 3M → Q2, 2 => 6M → Q3 (adjust as needed)
+      const interval = a.intervalIndex ?? 0;
+      let quarterKey = 'Q4'; // default if out of bounds
+      if (interval === 0) quarterKey = 'Q1';
+      else if (interval === 1) quarterKey = 'Q2';
+      else if (interval === 2) quarterKey = 'Q3';
+
+      quarterStatus[quarterKey] = a.submittedAt ? 'DONE' : 'NOT DONE';
+    });
+
+    return {
+      userId: user.id,
+      fullname: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+      ...quarterStatus,
+    };
+  });
+
+  return {
+    meta: {
+      year: selectedYear,
+      totalUsers,
+      currentPage: page,
+      limit,
+      totalPages: Math.ceil(totalUsers / limit),
+    },
+    data,
+  };
+}
 
 
   async getAssessmentsSummary(

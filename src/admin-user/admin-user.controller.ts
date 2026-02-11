@@ -384,7 +384,7 @@ export class AdminUserController {
   }
 
   @UseGuards(JwtAuthGuard, AdminGuard)
-  @Get('assessment/report')
+  @Get('assessment/report-quarterly')
   @ApiOperation({
     summary:
       'Get user-by-month assessment completion report (filterable by search, year, and paginated)',
@@ -430,6 +430,56 @@ export class AdminUserController {
       Number(limit),
     );
   }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+@Get('assessment/report')
+@ApiOperation({
+  summary:
+    'Get user-by-quarter assessment completion report (filterable by search, year, and paginated)',
+})
+@ApiQuery({
+  name: 'search',
+  required: false,
+  type: String,
+  description: 'Search users by name or month (e.g. "John" or "March")',
+  example: 'John',
+})
+@ApiQuery({
+  name: 'year',
+  required: false,
+  type: Number,
+  description: 'Filter by year (default: current year)',
+  example: 2025,
+})
+@ApiQuery({
+  name: 'page',
+  required: false,
+  type: Number,
+  description: 'Page number (default: 1)',
+  example: 1,
+})
+@ApiQuery({
+  name: 'limit',
+  required: false,
+  type: Number,
+  description: 'Number of records per page (default: 10)',
+  example: 10,
+})
+async getReports(
+  @Query('search') search?: string,
+  @Query('year') year?: number,
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+) {
+  // call the new quarterly report method
+  return this.adminUserService.getUserQuarterlyAssessmentReport(
+    year ? +year : undefined,
+    search,
+    Number(page),
+    Number(limit),
+  );
+}
+
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('assessment/report/summary')
