@@ -493,42 +493,47 @@ export class AssessmentCronJob {
    * Returns an existing recent OPEN assessment or creates a new numbered one
    */
   private async getOrCreateAssessmentForCurrentWave(now: Date) {
-    // Look for a recent OPEN assessment (created in last 10 days)
-    let assessment = await this.prisma.assessment.findFirst({
-      where: {
-        status: AssessmentStatus.OPEN,
-        createdAt: {
-          gte: addDays(now, -10),
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  const year = now.getFullYear();
+  const month = now.toLocaleString('default', { month: 'long' }); 
+  // Example: "January"
 
-    if (assessment) {
-      this.logger.log(`Re-using existing assessment: ${assessment.title}`);
-      return assessment;
-    }
+  // Look for existing OPEN assessment in current month/year
+  let assessment = await this.prisma.assessment.findFirst({
+    where: {
+      status: AssessmentStatus.OPEN,
+      scheduledYear: year,
+      scheduledMonth: month,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
-    // No recent open assessment → create new one
-    const count = await this.prisma.assessment.count();
-    const title = `${String(count + 1).padStart(3, '0')} Assessment`;
-
-    this.logger.log(`Creating new assessment version: ${title}`);
-
-    assessment = await this.prisma.assessment.create({
-      data: {
-        title,
-        categoryId: '8685bda7-4cee-4557-8464-daa0a24483e3',
-        status: AssessmentStatus.OPEN,
-        scheduledFor: now,
-      },
-    });
-
-    // Create questions (same every time)
-    await this.createQuestions(assessment.id);
-
+  if (assessment) {
+    this.logger.log(`Re-using existing assessment: ${assessment.title}`);
     return assessment;
   }
+
+  // No assessment for this month → create new one
+  const count = await this.prisma.assessment.count();
+  const title = `${String(count + 1).padStart(3, '0')} Assessment`;
+
+  this.logger.log(`Creating new assessment version: ${title}`);
+
+  assessment = await this.prisma.assessment.create({
+    data: {
+      title,
+      categoryId: '8685bda7-4cee-4557-8464-daa0a24483e3',
+      status: AssessmentStatus.OPEN,
+      scheduledFor: now,
+      scheduledYear: year,
+      scheduledMonth: month,
+    },
+  });
+
+  await this.createQuestions(assessment.id);
+
+  return assessment;
+}
+
 
   /**
    * Creates the same set of questions and options for the given assessment

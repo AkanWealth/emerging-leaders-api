@@ -655,7 +655,7 @@ model UserAssessment {
   id               String     @id @default(cuid())
   userId           String?
   assessmentId     String
-  submittedAt      DateTime   @default(now())
+  submittedAt      DateTime?   
   answers          Json
   nextScheduledFor DateTime? // <-- when user should get it next
   intervalIndex    Int? // 0 = 1 month, 1 = 3 months, 2 = 6 months
