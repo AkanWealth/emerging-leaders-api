@@ -127,25 +127,30 @@ async createAssessment(dto: CreateAssessmentDto, senderId: string) {
 }
 
 
-  // async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
-  //   const existing = await this.prisma.userAssessment.findFirst({
-  //     where: { userId, assessmentId: dto.assessmentId },
-  //   });
-  //   if (existing) {
-  //     throw new Error('You have already submitted this assessment');
-  //   }
 
-  //   return this.prisma.userAssessment.create({
-  //     data: {
-  //       userId,
-  //       assessmentId: dto.assessmentId,
-  //       answers: dto.answers,
-  //     },
-  //   });
-  // }
+// async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
+//   // Check if the user has already submitted this assessment
+//   const existing = await this.prisma.userAssessment.findFirst({
+//     where: { userId, assessmentId: dto.assessmentId },
+//   });
 
-  async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
-  //  Find the existing assignment for this user and assessment
+//   if (existing) {
+//     throw new Error('You have already submitted this assessment');
+//   }
+
+//   // Create a new UserAssessment record
+//   return this.prisma.userAssessment.create({
+//     data: {
+//       userId,
+//       assessmentId: dto.assessmentId,
+//       answers: dto.answers,
+//       submittedAt: new Date(), 
+//     },
+//   });
+// }
+
+async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
+  // Find the existing assignment for this user and assessment
   const existing = await this.prisma.userAssessment.findFirst({
     where: { userId, assessmentId: dto.assessmentId },
   });
@@ -158,12 +163,12 @@ async createAssessment(dto: CreateAssessmentDto, senderId: string) {
     throw new Error('You have already submitted this assessment');
   }
 
-  // Update the record with answers and submittedAt
+  //Update the record with answers and submittedAt
   return this.prisma.userAssessment.update({
     where: { id: existing.id },
     data: {
       answers: dto.answers,
-      submittedAt: new Date(), 
+      submittedAt: new Date(), // tick the submission time
     },
   });
 }
