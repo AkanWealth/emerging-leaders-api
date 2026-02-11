@@ -766,110 +766,234 @@ export class AdminUserService {
     };
   }
 
+  // async getUserAssessmentReport(
+  //   year: number = new Date().getFullYear(),
+  //   search?: string,
+  //   page = 1,
+  //   limit = 10,
+  // ) {
+  //   // 1️⃣ Build search filter for users
+  //   const userWhere: any = {
+  //     isAdmin: false,
+  //     isSuperAdmin: false,
+  //   };
+
+  //   if (search) {
+  //     userWhere.OR = [
+  //       { firstname: { contains: search, mode: 'insensitive' } },
+  //       { lastname: { contains: search, mode: 'insensitive' } },
+  //     ];
+  //   }
+
+  //   // 2️⃣ Count and paginate users
+  //   const totalUsers = await this.prisma.user.count({ where: userWhere });
+  //   const skip = (page - 1) * limit;
+  //   const take = limit;
+
+  //   const users = await this.prisma.user.findMany({
+  //     where: userWhere,
+  //     select: {
+  //       id: true,
+  //       firstname: true,
+  //       lastname: true,
+  //       profilePicture: true,
+  //     },
+  //     skip,
+  //     take,
+  //     orderBy: { createdAt: 'desc' },
+  //   });
+
+  //   // 3️⃣ Fetch all assessments for the given year (optionally filtered by search month)
+  //   const assessmentsWhere: any = { scheduledYear: year };
+  //   if (search) {
+  //     // If the search matches a month (e.g., "March"), include that
+  //     assessmentsWhere.OR = [
+  //       { scheduledMonth: { contains: search, mode: 'insensitive' } },
+  //       { title: { contains: search, mode: 'insensitive' } },
+  //     ];
+  //   }
+
+  //   const assessments = await this.prisma.assessment.findMany({
+  //     where: assessmentsWhere,
+  //     select: { id: true, scheduledMonth: true, scheduledYear: true },
+  //   });
+
+  //   // 4️⃣ Fetch all user responses for that year
+  //   const userAssessments = await this.prisma.userAssessment.findMany({
+  //     where: { assessment: { scheduledYear: year } },
+  //     select: {
+  //       userId: true,
+  //       assessment: { select: { scheduledMonth: true } },
+  //     },
+  //   });
+
+  //   // 5️⃣ Define all 4 quarters
+  //   const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+  //   // 6️⃣ Build report
+  //   const data = users.map((user) => {
+  //     const quarterStatus: Record<string, string> = {};
+
+  //     for (const quarter of quarters) {
+  //       const quarterAssessment = assessments.find(
+  //         (a) => a.scheduledMonth === quarter && a.scheduledYear === year,
+  //       );
+
+  //       if (!quarterAssessment) {
+  //         quarterStatus[quarter] = 'NULL'; // no assessment that quarter
+  //       } else {
+  //         const hasSubmitted = userAssessments.some(
+  //           (ua) =>
+  //             ua.userId === user.id && ua.assessment.scheduledMonth === quarter,
+  //         );
+  //         quarterStatus[quarter] = hasSubmitted ? 'DONE' : 'NOT DONE';
+  //       }
+  //     }
+
+  //     return {
+  //       userId: user.id,
+  //       fullname: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+  //       profilePicture: user.profilePicture,
+  //       ...quarterStatus,
+  //     };
+  //   });
+
+  //   // 7️⃣ Return with pagination metadata
+  //   return {
+  //     meta: {
+  //       year,
+  //       totalUsers,
+  //       currentPage: page,
+  //       limit,
+  //       totalPages: Math.ceil(totalUsers / limit),
+  //     },
+  //     data,
+  //   };
+  // }
+
   async getUserAssessmentReport(
-    year: number = new Date().getFullYear(),
-    search?: string,
-    page = 1,
-    limit = 10,
-  ) {
-    // 1️⃣ Build search filter for users
-    const userWhere: any = {
-      isAdmin: false,
-      isSuperAdmin: false,
-    };
+  year?: number,
+  search?: string,
+  page: number = 1,
+  limit: number = 10,
+) {
+  const selectedYear = year ?? new Date().getFullYear();
 
-    if (search) {
-      userWhere.OR = [
-        { firstname: { contains: search, mode: 'insensitive' } },
-        { lastname: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+  const userWhere: any = {
+    isAdmin: false,
+    isSuperAdmin: false,
+  };
 
-    // 2️⃣ Count and paginate users
-    const totalUsers = await this.prisma.user.count({ where: userWhere });
-    const skip = (page - 1) * limit;
-    const take = limit;
-
-    const users = await this.prisma.user.findMany({
-      where: userWhere,
-      select: {
-        id: true,
-        firstname: true,
-        lastname: true,
-        profilePicture: true,
-      },
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // 3️⃣ Fetch all assessments for the given year (optionally filtered by search month)
-    const assessmentsWhere: any = { scheduledYear: year };
-    if (search) {
-      // If the search matches a month (e.g., "March"), include that
-      assessmentsWhere.OR = [
-        { scheduledMonth: { contains: search, mode: 'insensitive' } },
-        { title: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const assessments = await this.prisma.assessment.findMany({
-      where: assessmentsWhere,
-      select: { id: true, scheduledMonth: true, scheduledYear: true },
-    });
-
-    // 4️⃣ Fetch all user responses for that year
-    const userAssessments = await this.prisma.userAssessment.findMany({
-      where: { assessment: { scheduledYear: year } },
-      select: {
-        userId: true,
-        assessment: { select: { scheduledMonth: true } },
-      },
-    });
-
-    // 5️⃣ Define all 4 quarters
-    const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
-
-    // 6️⃣ Build report
-    const data = users.map((user) => {
-      const quarterStatus: Record<string, string> = {};
-
-      for (const quarter of quarters) {
-        const quarterAssessment = assessments.find(
-          (a) => a.scheduledMonth === quarter && a.scheduledYear === year,
-        );
-
-        if (!quarterAssessment) {
-          quarterStatus[quarter] = 'NULL'; // no assessment that quarter
-        } else {
-          const hasSubmitted = userAssessments.some(
-            (ua) =>
-              ua.userId === user.id && ua.assessment.scheduledMonth === quarter,
-          );
-          quarterStatus[quarter] = hasSubmitted ? 'DONE' : 'NOT DONE';
-        }
-      }
-
-      return {
-        userId: user.id,
-        fullname: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
-        profilePicture: user.profilePicture,
-        ...quarterStatus,
-      };
-    });
-
-    // 7️⃣ Return with pagination metadata
-    return {
-      meta: {
-        year,
-        totalUsers,
-        currentPage: page,
-        limit,
-        totalPages: Math.ceil(totalUsers / limit),
-      },
-      data,
-    };
+  if (search) {
+    userWhere.OR = [
+      { firstname: { contains: search, mode: 'insensitive' } },
+      { lastname: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ];
   }
+
+  const totalUsers = await this.prisma.user.count({ where: userWhere });
+
+  const users = await this.prisma.user.findMany({
+    where: userWhere,
+    select: {
+      id: true,
+      firstname: true,
+      lastname: true,
+      profilePicture: true,
+    },
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const userIds = users.map((u) => u.id);
+
+  const userAssessments = await this.prisma.userAssessment.findMany({
+    where: {
+      userId: { in: userIds },
+      assessment: {
+        scheduledYear: selectedYear,
+      },
+    },
+    select: {
+      userId: true,
+      submittedAt: true,
+      intervalIndex: true,
+      assessment: {
+        select: {
+          scheduledYear: true,
+        },
+      },
+    },
+  });
+
+  const intervalMap = [
+    '1 Month Interval',
+    '3 Month Interval',
+    '6 Month Interval',
+  ];
+
+  const data = users.map((user) => {
+    const assessments = userAssessments.filter(
+      (ua) => ua.userId === user.id,
+    );
+
+    const totalAssigned = assessments.length;
+
+    const completed = assessments.filter(
+      (a) => a.submittedAt !== null,
+    ).length;
+
+    const pending = totalAssigned - completed;
+
+    const latest = [...assessments].sort((a, b) => {
+      const aDate = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+      const bDate = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+      return bDate - aDate;
+    })[0];
+
+    let currentInterval = 'Not Started';
+
+    if (
+      latest &&
+      latest.intervalIndex !== null &&
+      latest.intervalIndex !== undefined &&
+      intervalMap[latest.intervalIndex]
+    ) {
+      currentInterval = intervalMap[latest.intervalIndex];
+    }
+
+    const completionRate =
+      totalAssigned > 0
+        ? Math.round((completed / totalAssigned) * 100)
+        : 0;
+
+    return {
+      userId: user.id,
+      fullname: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+      profilePicture: user.profilePicture,
+      totalAssigned,
+      completed,
+      pending,
+      completionRate: `${completionRate}%`,
+      currentInterval,
+    };
+  });
+
+  return {
+    meta: {
+      year: selectedYear,
+      totalUsers,
+      currentPage: page,
+      limit,
+      totalPages: Math.ceil(totalUsers / limit),
+    },
+    data,
+  };
+}
+
+
 
   async getAssessmentsSummary(
     title?: string,

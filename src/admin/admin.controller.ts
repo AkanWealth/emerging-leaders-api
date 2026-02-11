@@ -16,6 +16,7 @@ import { RequestWithCookies } from '../types/request-with-cookies.interface';
 import {  ChangePasswordDto } from './dto/change-password.dto'
  
 @ApiTags('Admin Auth')
+@ApiBearerAuth()
 @Controller('admin/auth')
 export class AdminController {
   constructor(private readonly adminAuthService: AdminService) {}
