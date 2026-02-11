@@ -150,25 +150,34 @@ async createAssessment(dto: CreateAssessmentDto, senderId: string) {
 // }
 
 async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
-  // Find the existing assignment for this user and assessment
+  // Check if a UserAssessment already exists
   const existing = await this.prisma.userAssessment.findFirst({
     where: { userId, assessmentId: dto.assessmentId },
   });
 
-  if (!existing) {
-    throw new Error('No assigned assessment found for this user');
+  if (existing) {
+    // Prevent double submissions
+    if (existing.submittedAt) {
+      throw new Error('You have already submitted this assessment');
+    }
+
+    //Update the existing record
+    return this.prisma.userAssessment.update({
+      where: { id: existing.id },
+      data: {
+        answers: dto.answers,
+        submittedAt: new Date(),
+      },
+    });
   }
 
-  if (existing.submittedAt) {
-    throw new Error('You have already submitted this assessment');
-  }
-
-  //Update the record with answers and submittedAt
-  return this.prisma.userAssessment.update({
-    where: { id: existing.id },
+  // If no assignment exists, create one and mark it submitted
+  return this.prisma.userAssessment.create({
     data: {
+      userId,
+      assessmentId: dto.assessmentId,
       answers: dto.answers,
-      submittedAt: new Date(), // tick the submission time
+      submittedAt: new Date(),
     },
   });
 }
@@ -184,7 +193,7 @@ async submitResponse(userId: string, dto: SubmitAssessmentResponseDto) {
     include: {
       category: true,
       questions: { include: { AssessmentOption: true } },
-      userResponses: {       // ✅ use the correct relation name
+      userResponses: {     
         where: { userId },
         select: { id: true },
       },
